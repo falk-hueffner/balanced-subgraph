@@ -17,6 +17,9 @@
 
 (** General helper functions.  *)
 
+(** [output_int channel i] prints [i] on [channel].  *)
+val output_int : out_channel -> int -> unit
+
 (** [split_string s] splits the string [s] into a list of strings
     which are separated by whitespace.  *)
 val split_string : string -> string list

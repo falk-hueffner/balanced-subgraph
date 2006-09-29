@@ -19,33 +19,34 @@
     integers. No self loops or multiple edges are possible.  *)
 
 (** The type of a graph.  *)
-type t
+type 'a t
 
 (** The empty graph.  *)
-val empty : t
+val empty : 'a t
 
-(** [neighbors g i] returns the set of neighbors of [i] in [g]. Raises
-    [Not_found] if [i] is not in [g]. O(log n) time.  *)
-val neighbors : t -> int -> IntSet.t
+(** [neighbors g i] returns a map that maps neighbors of [i] in [g] to
+    the corresponding edge label. Raises [Not_found] if [i] is not in [g].
+    O(log n) time.  *)
+val neighbors : 'a t -> int -> 'a IntMap.t
 
 (** [new_vertex g] returns [g', i], where [g'] is [g] with an
     additional new vertex [i]. O(log n) time.  *)
-val new_vertex : t -> t * int
+val new_vertex : 'a t -> 'a t * int
 
 (** [connect g v w] returns [g] with vertices [v] and [w] connected.
     Raises [Not_found] when [v] or [w] do not exist in [g], or
     [Invalid_argument] when [v] = [w] or when [v] and [w] are already
     connected. O(log n) time.  *)
-val connect : t -> int -> int -> t
+val connect : 'a t -> int -> int -> 'a -> 'a t
 
 (** [fold_edges f g a] computes [(f iN jN ... (f i1 j1 a)...)], where
     [(i1, j1) ... (iN, jN)] are the edges of [g]. O(m) time.  *)
-val fold_edges : ('a -> int -> int -> 'a) -> t -> 'a -> 'a
+val fold_edges : ('b -> int -> int -> 'a -> 'b) -> 'a t -> 'b -> 'b
   
 (** [iter_edges f g] calls [f u v] for each edge [(u, v)] in
     [g]. O(m) time.  *)
-val iter_edges : (int -> int -> unit) -> t -> unit
+val iter_edges : (int -> int -> 'a -> unit) -> 'a t -> unit
 
-(** [output c g] prints a debug representation of [g] to channel [c].
-    O(m) time.  *)
-val output : out_channel -> t -> unit
+(** [output c output_label g] prints a debug representation of [g] to
+    channel [c]. O(m) time.  *)
+val output : out_channel -> (out_channel -> 'a -> unit) -> 'a t -> unit
