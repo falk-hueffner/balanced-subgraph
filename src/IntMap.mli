@@ -53,4 +53,4 @@ val add : 'a t -> int -> 'a -> 'a t
 (** [fold f m a] computes [(f iN xN ... (f i1 x1 a)...)], where [i1
     ... iN] are the keys of all bindings in [m] (in increasing order),
     and [x1 ... xN] are the associated data.  *)
-val fold : ('a -> int -> 'b -> 'a) -> 'b t -> 'a -> 'a
+val fold : ('b -> int -> 'a -> 'b) -> 'a t -> 'b -> 'b
