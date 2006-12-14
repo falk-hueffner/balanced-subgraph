@@ -30,7 +30,6 @@ let neighbors = IntMap.get;;
 
 let connect g i j label =
   if not (has_vertex g i && has_vertex g j) then invalid_arg "Graph.connect: invalid vertex";
-  if i = j then invalid_arg "Graph.connect: cannot handle self loop";
   let neighbors_i = neighbors g i in
   let neighbors_j = neighbors g j in
   let neighbors_i' = IntMap.add neighbors_i j label in
