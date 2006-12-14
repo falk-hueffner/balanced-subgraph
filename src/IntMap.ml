@@ -42,7 +42,7 @@ let size = function
 ;;
 
 let rec has_key s i =
-  if i < 0 then invalid_arg "IntMap.get_default: negative key";
+  if i < 0 then invalid_arg "IntMap.has_key: negative key";
   match s with
       Empty -> false
     | Leaf (j, _) -> j = i
