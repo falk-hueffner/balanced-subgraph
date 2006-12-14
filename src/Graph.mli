@@ -15,10 +15,11 @@
    with this program; if not, write to the Free Software Foundation, Inc.,
    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.  *)
 
-(** Undirected functional graphs. Vertices are represented by
-    integers. No self loops or multiple edges are possible.  *)
+(** Edge-labeled undirected functional graphs. Vertices are represented
+    by nonnegative integers. No multiple edges are possible (but
+    self-loops are).  *)
 
-(** The type of a graph.  *)
+(** The type of a graph, parameterized by the edge label type.  *)
 type 'a t
 
 (** The empty graph.  *)
@@ -35,8 +36,8 @@ val new_vertex : 'a t -> 'a t * int
 
 (** [connect g v w] returns [g] with vertices [v] and [w] connected.
     Raises [Not_found] when [v] or [w] do not exist in [g], or
-    [Invalid_argument] when [v] = [w] or when [v] and [w] are already
-    connected. O(log n) time.  *)
+    [Invalid_argument] when [v] = [w]. Raises [IntMap.Already_present]
+    when [v] and [w] are already connected. O(log n) time.  *)
 val connect : 'a t -> int -> int -> 'a -> 'a t
 
 (** [fold_edges f g a] computes [(f iN jN ... (f i1 j1 a)...)], where
