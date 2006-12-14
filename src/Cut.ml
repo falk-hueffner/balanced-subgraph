@@ -20,7 +20,11 @@ let vertex_cut_transform g =
   let entry i = i in
   let outlet i = i + d in
   let g' = Graph.fold_vertices
-    (fun g' i _ -> Digraph.add_vertex (Digraph.add_vertex g' i) (i + d))
+    (fun g' i _ ->
+       let g' = Digraph.add_vertex g' (entry i) in
+       let g' = Digraph.add_vertex g' (outlet i) in
+       let g' = Digraph.connect g' (entry i) (outlet i) in
+	 g')
     g
     Digraph.empty in
   Graph.fold_edges
