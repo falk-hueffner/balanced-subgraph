@@ -29,6 +29,8 @@ type 'a t =
         [r] contains all the keys with a 1 in the branching bit  *)
 ;;
 
+exception Already_present;;
+
 let empty = Empty;;
 
 let is_empty s = (s = Empty);;
@@ -56,7 +58,9 @@ let rec max_key s = match s with
   | Branch (_, _, _, _, r) -> max_key r
 ;;
 
-let rec get s i = match s with
+let rec get s i =
+  if i < 0 then invalid_arg "IntMap.get: negative key";
+  match s with
   | Leaf (j, x) when j = i -> x
   | Branch (p, _, _, l, r) ->
       if i <= p
@@ -107,11 +111,26 @@ let join m p1 s1 p2 s2 c =
   
 let branch p m l r = Branch (p, m, size l + size r, l, r);;
 
+let rec set s i x =
+  if i < 0 then invalid_arg "IntMap.set: negative key";
+  match s with
+      Empty -> Leaf (i, x)
+    | Leaf (j, _) when j = i -> Leaf (i, x)
+    | Leaf (j, _) -> join 1 i (Leaf (i, x)) j s 2
+    | Branch (p, m, c, l, r) ->
+	if prefix_matches i p m then
+          if i <= p
+          then branch p m (set l i x) r
+          else branch p m l (set r i x)
+	else
+          join (m lsl 1) i (Leaf (i, x)) p s (c + 1)
+;;
+
 let rec add s i x =
   if i < 0 then invalid_arg "IntMap.add: negative key";
   match s with
       Empty -> Leaf (i, x)
-    | Leaf (j, _) when j = i -> Leaf (i, x)
+    | Leaf (j, _) when j = i -> raise Already_present
     | Leaf (j, _) -> join 1 i (Leaf (i, x)) j s 2
     | Branch (p, m, c, l, r) ->
 	if prefix_matches i p m then

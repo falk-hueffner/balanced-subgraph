@@ -20,6 +20,9 @@
 (** The type of the map.  *)
 type 'a t
 
+(** Exception raised by [add].  *)
+exception Already_present
+
 (** The empty map.  *)
 val empty : 'a t
 
@@ -44,10 +47,14 @@ val get : 'a t -> int -> 'a
     negative. O(log n) time.  *)
 val get_default : 'a t -> int -> 'a -> 'a
 
-(** [add m i x] returns a map containing the same bindings as [m],
+(** [set m i x] returns a map containing the same bindings as [m],
     plus a binding of [i] to [x]. If [x] was already bound in [m], its
     previous binding disappears. Raises [Invalid_argument] when [i] is
     negative. O(log n) time.  *)
+val set : 'a t -> int -> 'a -> 'a t
+
+(** Like [set m i x], except that it raises [Already_present] if there
+    is already a binding of [i] in [m]. O(log n) time.  *)
 val add : 'a t -> int -> 'a -> 'a t
 
 (** [fold f m a] computes [(f iN xN ... (f i1 x1 a)...)], where [i1
