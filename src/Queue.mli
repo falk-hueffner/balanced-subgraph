@@ -23,6 +23,9 @@ type 'a t
 (** The empty queue.  *)
 val empty : 'a t
 
+(** Creates a single-element queue.  *)
+val make : 'a -> 'a t
+
 (** [push q x] prepends [x] to [q]. Amortized O(1). *)
 val push : 'a t -> 'a -> 'a t
 

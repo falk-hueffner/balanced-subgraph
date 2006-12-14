@@ -19,12 +19,17 @@ type 'a t = 'a list * 'a list;;
 
 exception Empty
 
-let empty = [], []
-let is_empty (f, r) = f = []
+let empty = [], [];;
+let make x = [x], [];;
+  
+let is_empty (f, r) = f = [];;
 
 let checkf (f, r as q) = if f = [] then List.rev r, f else q
 
-let push (f, r) x = checkf (f, x :: r)
+let push (f, r) x = checkf (f, x :: r);;
+
 let pop = function
     [], _ -> raise Empty
   | x :: f, r -> x, checkf (f, r)
+;;
+
