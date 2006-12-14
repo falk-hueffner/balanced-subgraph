@@ -15,11 +15,11 @@
    with this program; if not, write to the Free Software Foundation, Inc.,
    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.  *)
 
-(** Edge-labeled directed functional graphs. Vertices are represented
-    by nonnegative integers. No multiple edges are possible (but
+(** Arc-labeled directed functional graphs. Vertices are represented
+    by nonnegative integers. No multiple arcs are possible (but
     self-loops are).  *)
 
-(** The type of a graph, parameterized by the edge label type.  *)
+(** The type of a graph, parameterized by the arc label type.  *)
 type 'a t
 
 (** The empty graph.  *)
@@ -42,12 +42,12 @@ val get_label : 'a t -> int -> int -> 'a
 val neighbors : 'a t -> int -> 'a IntMap.t * 'a IntMap.t
 
 (** [succs g i] returns a map that maps successors of [i] in [g] to
-    the corresponding edge label. Raises [Not_found] if [i] is not in [g].
+    the corresponding arc label. Raises [Not_found] if [i] is not in [g].
     O(log n) time.  *)
 val succs : 'a t -> int -> 'a IntMap.t
 
 (** [preds g i] returns a map that maps predecessors of [i] in [g] to
-    the corresponding edge label. Raises [Not_found] if [i] is not in [g].
+    the corresponding arc label. Raises [Not_found] if [i] is not in [g].
     O(log n) time.  *)
 val preds : 'a t -> int -> 'a IntMap.t
 
@@ -61,19 +61,19 @@ val new_vertex : 'a t -> 'a t * int
     from [v] to [w]. O(log n) time.  *)
 val connect : 'a t -> int -> int -> 'a -> 'a t
 
-(** [relabel g v w l] returns [g] with the edge label of [(i, j)]
+(** [relabel g v w l] returns [g] with the arc label of [(i, j)]
     changed to [l]. Raises [Not_found] when [v] or [w] do not exist in
     [g], or when the arc [(i, j)] is not present. O(log n) time.  *)
 val relabel : 'a t -> int -> int -> 'a -> 'a t
 
-(** [fold_edges f g a] computes [(f iN jN lN ... (f i1 j1 lN a)...)],
-    where [(i1, j1) ... (iN, jN)] are the edges of [g], and [lN] is the
+(** [fold_arcs f g a] computes [(f iN jN lN ... (f i1 j1 lN a)...)],
+    where [(i1, j1) ... (iN, jN)] are the arcs of [g], and [lN] is the
     label of [(iN, jN)]. O(m) time.  *)
-val fold_edges : ('b -> int -> int -> 'a -> 'b) -> 'a t -> 'b -> 'b
+val fold_arcs : ('b -> int -> int -> 'a -> 'b) -> 'a t -> 'b -> 'b
 
-(** [iter_edges f g] calls [f u v l] for each edge [(u, v)] with label
+(** [iter_arcs f g] calls [f u v l] for each arc [(u, v)] with label
     [l] in [g]. O(m) time.  *)
-val iter_edges : (int -> int -> 'a -> unit) -> 'a t -> unit
+val iter_arcs : (int -> int -> 'a -> unit) -> 'a t -> unit
 
 (** [output c output_label g] prints a debug representation of [g] to
     channel [c]. O(m) time.  *)

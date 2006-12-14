@@ -68,7 +68,7 @@ let fold_vertices f g x =
 ;;
 let iter_vertices f g = fold_vertices (fun () i preds succs -> f i preds succs) g ();;
 
-let fold_edges f g accu =
+let fold_arcs f g accu =
   fold_vertices
     (fun accu i _ succs ->
        IntMap.fold
@@ -79,7 +79,7 @@ let fold_edges f g accu =
     accu
 ;;
 
-let iter_edges f g = fold_edges (fun () i j l -> f i j l) g ();;
+let iter_arcs f g = fold_arcs (fun () i j l -> f i j l) g ();;
 
 let output channel output_label g =
   Printf.fprintf channel "{\n";
@@ -87,7 +87,7 @@ let output channel output_label g =
   iter_vertices (fun i preds succs ->
                    if IntMap.is_empty preds && IntMap.is_empty succs
                    then Printf.fprintf channel "%d\n" i) g;
-  iter_edges (fun i j l ->
+  iter_arcs (fun i j l ->
 		Printf.fprintf channel "%d %d " i j;
 		output_label channel l;
 		Printf.fprintf channel "\n") g;
