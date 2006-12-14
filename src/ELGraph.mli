@@ -40,8 +40,9 @@ val new_vertex : 'a t -> 'a t * int
     connected.  O(log n) time.  *)
 val connect : 'a t -> int -> int -> 'a -> 'a t
 
-(** [fold_edges f g a] computes [(f iN jN ... (f i1 j1 a)...)], where
-    [(i1, j1) ... (iN, jN)] are the edges of [g]. O(m) time.  *)
+(** [fold_edges f g a] computes [(f iN jN lN ... (f i1 j1 lN a)...)],
+    where [(i1, j1) ... (iN, jN)] are the edges of [g], and [lN] is the
+    label of [(iN, jN)]. O(m) time.  *)
 val fold_edges : ('b -> int -> int -> 'a -> 'b) -> 'a t -> 'b -> 'b
   
 (** [iter_edges f g] calls [f u v] for each edge [(u, v)] in
