@@ -43,6 +43,12 @@ val new_vertex : t -> t * int
     [w]. O(log n) time.  *)
 val connect : t -> int -> int -> t
 
+(** [fold_vertices f g a] computes [(f iN pN sN ... (f i1 p1 s1
+    a)...)], where [i1, ... iN] are the vertices of [g], [pN] is the set
+    of predecessors of [iN], and [sN] is the set of successors of [iN].
+    O(n) time.  *)
+val fold_vertices : ('a -> int -> IntSet.t -> IntSet.t -> 'a) -> t -> 'a -> 'a
+
 (** [fold_arcs f g a] computes [(f iN jN ... (f i1 j1 a)...)], where
     [(i1, j1) ... (iN, jN)] are the arcs of [g]. O(m) time.  *)
 val fold_arcs : ('a -> int -> int -> 'a) -> t -> 'a -> 'a
