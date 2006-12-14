@@ -29,6 +29,10 @@ val empty : t
     [Not_found] if [i] is not in [g]. O(log n) time.  *)
 val neighbors : t -> int -> IntSet.t
 
+(** [max_vertex g] returns the highest vertex of [g], or raises
+    [Not_found] if [g] is empty.  *)
+val max_vertex : t -> int
+
 (** [new_vertex g] returns [g', i], where [g'] is [g] with an
     additional new vertex [i]. O(log n) time.  *)
 val new_vertex : t -> t * int

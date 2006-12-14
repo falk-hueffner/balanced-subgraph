@@ -20,13 +20,13 @@ type t = IntSet.t IntMap.t;;
 let empty = IntMap.empty;;
 
 let has_vertex = IntMap.has_key;;
+let neighbors = IntMap.get;;
+let max_vertex = IntMap.max_key;;
 
 let new_vertex g =
   let i = if IntMap.is_empty g then 0 else (IntMap.max_key g) + 1 in
     IntMap.add g i IntSet.empty, i
 ;;
-
-let neighbors = IntMap.get;;
 
 let connect g i j =
   if not (has_vertex g i && has_vertex g j) then invalid_arg "Graph.connect: invalid vertex";
