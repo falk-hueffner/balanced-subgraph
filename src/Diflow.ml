@@ -19,6 +19,10 @@ type t = (int * int) ELDigraph.t;;	(* capacity, flow *)
 
 let make g cap = ELDigraph.make g (fun i j -> (cap i j), 0);;
 
+let inflow  g i = IntMap.fold (fun total _ (_, flow) -> total + flow) (ELDigraph.preds g i) 0;;
+let outflow g i = IntMap.fold (fun total _ (_, flow) -> total + flow) (ELDigraph.succs g i) 0;;
+let influx  g i = (outflow g i) - (inflow g i);;
+
 let augment g s t =
   let preds =
     let rec loop q preds =

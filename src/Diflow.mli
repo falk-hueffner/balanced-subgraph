@@ -25,6 +25,10 @@ type t
     has capacity [cap i j]. O(m) time. *)
 val make : Digraph.t -> (int -> int -> int) -> t
 
+(** [influx g i] returns the total outflow minus the total inflow at
+    [i] in [g].  *)
+val influx : t -> int -> int
+
 (** [augment g s t] tries to find an augmenting path from [s] to [t]
     in [g] and then augments the flow along it. If no such path exists, g
     is returned unchanged. O(m) time.  *)
