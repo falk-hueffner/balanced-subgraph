@@ -57,6 +57,7 @@ let iter_edges f g = fold_edges (fun () i j l -> f i j l) g ();;
 
 let output channel output_label g =
   Printf.fprintf channel "{\n";
+  (* List degree-0 vertices.  *)
   iter_vertices (fun i neighbors ->
                    if IntMap.is_empty neighbors
                    then Printf.fprintf channel "%d\n" i) g;
