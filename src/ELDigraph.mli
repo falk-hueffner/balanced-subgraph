@@ -25,6 +25,10 @@ type 'a t
 (** The empty graph.  *)
 val empty : 'a t
 
+(** [make g f] creates a labeled graph from an unlabeled graph [g]
+    where [(i, j)] is labeled [f i j].  *)
+val make : Graph.t -> (int -> int -> 'a) -> 'a t
+
 (** [succs g i] returns a map that maps successors of [i] in [g] to
     the corresponding edge label. Raises [Not_found] if [i] is not in [g].
     O(log n) time.  *)

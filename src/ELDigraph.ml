@@ -40,6 +40,13 @@ let connect g i j label =
     g
 ;;
 
+let make ulg f =
+  Graph.fold_edges
+    (fun g i j -> connect g i j (f i j))
+    ulg
+    empty
+;;
+
 let fold_vertices f g x =
   IntMap.fold
     (fun accu i (preds, succs) -> f accu i preds succs)
