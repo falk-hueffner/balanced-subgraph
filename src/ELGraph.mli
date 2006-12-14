@@ -44,9 +44,9 @@ val connect : 'a t -> int -> int -> 'a -> 'a t
     where [(i1, j1) ... (iN, jN)] are the edges of [g], and [lN] is the
     label of [(iN, jN)]. O(m) time.  *)
 val fold_edges : ('b -> int -> int -> 'a -> 'b) -> 'a t -> 'b -> 'b
-  
-(** [iter_edges f g] calls [f u v] for each edge [(u, v)] in
-    [g]. O(m) time.  *)
+
+(** [iter_edges f g] calls [f u v l] for each edge [(u, v)] with label
+    [l] in [g]. O(m) time.  *)
 val iter_edges : (int -> int -> 'a -> unit) -> 'a t -> unit
 
 (** [output c output_label g] prints a debug representation of [g] to

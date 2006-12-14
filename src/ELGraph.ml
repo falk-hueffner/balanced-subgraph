@@ -34,8 +34,8 @@ let connect g i j label =
   let neighbors_j = neighbors g j in
   let neighbors_i' = IntMap.add neighbors_i j label in
   let neighbors_j' = IntMap.add neighbors_j i label in
-  let g = IntMap.add g i neighbors_i' in
-  let g = IntMap.add g j neighbors_j' in
+  let g = IntMap.set g i neighbors_i' in
+  let g = IntMap.set g j neighbors_j' in
     g
 ;;
 
@@ -53,7 +53,7 @@ let fold_edges f g accu =
     accu
 ;;
 
-let iter_edges f g = fold_edges (fun () i j -> f i j) g ();;
+let iter_edges f g = fold_edges (fun () i j l -> f i j l) g ();;
 
 let output channel output_label g =
   Printf.fprintf channel "{\n";
