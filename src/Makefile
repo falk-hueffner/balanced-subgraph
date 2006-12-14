@@ -6,6 +6,7 @@ SOURCES   = \
 	IntMap.ml	\
 	IntSet.ml	\
 	Graph.ml	\
+	Digraph.ml	\
 	ELGraph.ml	\
 	ELDigraph.ml
 
