@@ -36,7 +36,7 @@ let input_graph channel =
 		vertex_number g vertex_numbers vertex_names v in
               let g, vertex_numbers, vertex_names, j =
 		vertex_number g vertex_numbers vertex_names w in
-		loop (Graph.connect g i j 23) vertex_numbers vertex_names
+		loop (Graph.connect g i j) vertex_numbers vertex_names
           | _ -> invalid_arg "bad edge syntax"
     with End_of_file -> g, vertex_numbers, vertex_names
   in
@@ -45,5 +45,5 @@ let input_graph channel =
 
 let () =
   let g, vertex_numbers, vertex_names = input_graph stdin in
-    Graph.output stderr Util.output_int g
+    Graph.output stderr g
 ;;
