@@ -37,6 +37,10 @@ val neighbors : t -> int -> IntSet.t * IntSet.t
     additional new vertex [i]. O(log n) time.  *)
 val new_vertex : t -> t * int
 
+(** [add_vertex g i] adds vertex [i] to [g]. Raises
+    [IntMap.Already_present] when [i] is already present.  *)
+val add_vertex : t -> int -> t
+
 (** [connect g v w] returns [g] with an additional arc from [v] to
     [w].  Raises [Not_found] when [v] or [w] do not exist in [g]. Raises
     [IntMap.Already_present] when there is already an arc from [v] to

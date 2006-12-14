@@ -21,9 +21,11 @@ let empty = IntMap.empty;;
 
 let has_vertex = IntMap.has_key;;
 
+let add_vertex g i = IntMap.add g i (IntSet.empty, IntSet.empty);;
 let new_vertex g =
-  let i = if IntMap.is_empty g then 0 else (IntMap.max_key g) + 1 in
-    IntMap.add g i (IntSet.empty, IntSet.empty), i
+  let i = if IntMap.is_empty g then 0 else (IntMap.max_key g) + 1
+  in
+    add_vertex g i, i
 ;;
 
 let neighbors = IntMap.get;;
