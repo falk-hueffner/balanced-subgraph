@@ -30,8 +30,9 @@ let neighbors = IntMap.get;;
 let succs g i = let _, succs = IntMap.get g i in succs;;
 let preds g i = let preds, _ = IntMap.get g i in preds;;
 
+let has_arc g i j = IntMap.has_key (succs g i) j;;
+
 let connect g i j label =
-  if not (has_vertex g i && has_vertex g j) then invalid_arg "Graph.connect: invalid vertex";
   let preds_i, succs_i = IntMap.get g i in
   let preds_j, succs_j = IntMap.get g i in
   let succs_i = IntMap.add succs_i j label in

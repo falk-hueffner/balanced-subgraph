@@ -29,6 +29,10 @@ val empty : 'a t
     where [(i, j)] is labeled [f i j].  *)
 val make : Graph.t -> (int -> int -> 'a) -> 'a t
 
+(** [has_arc g i j] returns true if there is an arc from [i] to
+    [j]. Raises [Not_found] when [i] or [j] are not in [g]. *)
+val has_arc : 'a t -> int -> int -> bool
+  
 (** [neighbors g i] returns a tuple of the predecessors and the
     successors of [i] in [g]. *)
 val neighbors : 'a t -> int -> 'a IntMap.t * 'a IntMap.t
