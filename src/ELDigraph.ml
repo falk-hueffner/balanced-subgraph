@@ -35,7 +35,7 @@ let get_label g i j = IntMap.get (succs g i) j;;
 
 let connect g i j label =
   let preds_i, succs_i = IntMap.get g i in
-  let preds_j, succs_j = IntMap.get g i in
+  let preds_j, succs_j = IntMap.get g j in
   let succs_i = IntMap.add succs_i j label in
   let preds_j = IntMap.add preds_j i label in
   let g = IntMap.set g i (preds_i, succs_i) in
