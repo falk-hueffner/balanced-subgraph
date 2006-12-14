@@ -43,6 +43,11 @@ val new_vertex : t -> t * int
     O(log n) time.  *)
 val connect : t -> int -> int -> t
 
+(** [fold_vertices f g a] computes [(f iN nN ... (f i1 n1 a)...)],
+    where [i1, ... iN] are the vertices of [g] and [nN] is the set of
+    neighbors of [iN]. O(n) time.  *)
+val fold_vertices : ('a -> int -> IntSet.t -> 'a) -> t -> 'a -> 'a
+
 (** [fold_edges f g a] computes [(f iN jN ... (f i1 j1 a)...)], where
     [(i1, j1) ... (iN, jN)] are the edges of [g]. O(m) time.  *)
 val fold_edges : ('a -> int -> int -> 'a) -> t -> 'a -> 'a
