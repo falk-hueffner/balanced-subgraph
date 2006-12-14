@@ -54,7 +54,7 @@ let relabel g i j label =
 ;;
 
 let make ulg f =
-  Graph.fold_edges
+  Digraph.fold_arcs
     (fun g i j -> connect g i j (f i j))
     ulg
     empty
