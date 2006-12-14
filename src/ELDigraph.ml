@@ -21,9 +21,10 @@ let empty = IntMap.empty;;
 
 let has_vertex = IntMap.has_key;;
 
+let add_vertex g i = IntMap.add g i (IntMap.empty, IntMap.empty)
 let new_vertex g =
   let i = if IntMap.is_empty g then 0 else (IntMap.max_key g) + 1 in
-    IntMap.add g i (IntMap.empty, IntMap.empty), i
+    add_vertex g i, i
 ;;
 
 let neighbors = IntMap.get;;
@@ -54,10 +55,12 @@ let relabel g i j label =
 ;;
 
 let make ulg f =
-  Digraph.fold_arcs
-    (fun g i j -> connect g i j (f i j))
-    ulg
-    empty
+  let g = Digraph.fold_vertices (fun g i _ _ -> add_vertex g i) ulg empty
+  in
+    Digraph.fold_arcs
+      (fun g i j -> connect g i j (f i j))
+      ulg
+      g
 ;;
 
 let fold_vertices f g x =

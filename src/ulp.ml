@@ -30,20 +30,22 @@ let input_graph channel =
 		if StringMap.mem v vertex_numbers
 		then g, vertex_numbers, vertex_names, StringMap.find v vertex_numbers
 		else
-		  let g, i = Graph.new_vertex g in
+		  let g, i = Digraph.new_vertex g in
 		    g, StringMap.add v i vertex_numbers, IntMap.add vertex_names i v, i in
               let g, vertex_numbers, vertex_names, i =
 		vertex_number g vertex_numbers vertex_names v in
               let g, vertex_numbers, vertex_names, j =
 		vertex_number g vertex_numbers vertex_names w in
-		loop (Graph.connect g i j) vertex_numbers vertex_names
+		loop (Digraph.connect g i j) vertex_numbers vertex_names
           | _ -> invalid_arg "bad edge syntax"
     with End_of_file -> g, vertex_numbers, vertex_names
   in
-    loop Graph.empty StringMap.empty IntMap.empty
+    loop Digraph.empty StringMap.empty IntMap.empty
 ;;
 
 let () =
   let g, vertex_numbers, vertex_names = input_graph stdin in
-    Graph.output stderr g
+    Digraph.output stderr g;
+    let lg = ELDigraph.make g (fun i j -> i + j) in
+      ELDigraph.output stderr Util.output_int lg;
 ;;
