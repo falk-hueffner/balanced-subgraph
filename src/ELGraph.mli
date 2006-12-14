@@ -36,8 +36,8 @@ val new_vertex : 'a t -> 'a t * int
 
 (** [connect g v w] returns [g] with vertices [v] and [w] connected.
     Raises [Not_found] when [v] or [w] do not exist in [g]. Raises
-    [IntMap.Already_present] when [v] and [w] are already connected. O(log
-    n) time.  *)
+    [IntMap.Already_present] when [v] and [w] are already connected.
+    O(log n) time.  *)
 val connect : 'a t -> int -> int -> 'a -> 'a t
 
 (** [fold_edges f g a] computes [(f iN jN ... (f i1 j1 a)...)], where
