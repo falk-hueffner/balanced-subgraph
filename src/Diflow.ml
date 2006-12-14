@@ -73,5 +73,5 @@ let augment g s t =
 ;;
 
 let output channel g =
-  ELDigraph.output channel (fun channel (cap, flow) -> Printf.fprintf channel "(%d/%d)" cap flow) g
+  ELDigraph.output channel (fun channel (cap, flow) -> Printf.fprintf channel "(%d/%d)" flow cap) g
 ;;
