@@ -15,6 +15,8 @@
    with this program; if not, write to the Free Software Foundation, Inc.,
    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.  *)
 
+(* Because Ocaml is too lame to optimize it, this wastes one word per
+   node, and some computation time. Might optimize by hand later. *)
 type t = unit IntMap.t;;
 
 let empty = IntMap.empty;;
