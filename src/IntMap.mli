@@ -57,6 +57,10 @@ val set : 'a t -> int -> 'a -> 'a t
     is already a binding of [i] in [m]. O(log n) time.  *)
 val add : 'a t -> int -> 'a -> 'a t
 
+(** Like [set m i x], except that it raises [Not_found] if there
+    is not already a binding of [i] in [m]. O(log n) time.  *)
+val update : 'a t -> int -> 'a -> 'a t
+
 (** [fold f m a] computes [(f iN xN ... (f i1 x1 a)...)], where [i1
     ... iN] are the keys of all bindings in [m] (in increasing order),
     and [x1 ... xN] are the associated data.  *)

@@ -141,6 +141,21 @@ let rec add s i x =
           join (m lsl 1) i (Leaf (i, x)) p s (c + 1)
 ;;
 
+let rec update s i x =
+  if i < 0 then invalid_arg "IntMap.update: negative key";
+  match s with
+      Empty -> Leaf (i, x)
+    | Leaf (j, _) when j = i -> Leaf (i, x)
+    | Leaf (_, _) -> raise Not_found
+    | Branch (p, m, c, l, r) ->
+	if prefix_matches i p m then
+          if i <= p
+          then branch p m (update l i x) r
+          else branch p m l (update r i x)
+	else
+          join (m lsl 1) i (Leaf (i, x)) p s (c + 1)
+;;
+
 let rec fold f s accu = match s with
     Empty -> accu
   | Leaf (i, x) -> f accu i x
