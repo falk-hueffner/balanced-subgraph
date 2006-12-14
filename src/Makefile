@@ -2,6 +2,7 @@ EXECS	  = ulp
 
 SOURCES   = \
 	Util.ml		\
+	Queue.ml	\
 	IntMap.ml	\
 	IntSet.ml	\
 	Graph.ml	\
