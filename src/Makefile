@@ -4,7 +4,7 @@ SOURCES   = \
 	Util.ml		\
 	IntMap.ml	\
 	IntSet.ml	\
-	Graph.ml
+	ELGraph.ml
 
 OCAMLC    = ocamlc -g -warn-error A $(INCLUDES)
 OCAMLOPT  = ocamlopt -warn-error A $(INCLUDES)
