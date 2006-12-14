@@ -23,6 +23,9 @@ type 'a t
 (** The empty queue.  *)
 val empty : 'a t
 
+(** Returns true if the queue is empty.  *)
+val is_empty : 'a t -> bool
+
 (** Creates a single-element queue.  *)
 val make : 'a -> 'a t
 
