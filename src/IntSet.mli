@@ -20,6 +20,9 @@
 (** The type of the set.  *)
 type t
 
+(** Exception raised by [add].  *)
+exception Already_present
+
 (** The empty set.  *)
 val empty : t
 
@@ -30,8 +33,13 @@ val is_empty : t -> bool
     [Invalid_argument] when [i] is negative. O(log n) time.  *)
 val contains : t -> int -> bool
 
-(** [add s i] returns a set containing all elements of [s], plus
+(** [put s i] returns a set containing all elements of [s], plus
     [i]. If [i] was already in [s], [s] is returned unchanged.  Raises
+    [Invalid_argument] when [i] is negative.  O(log n) time.  *)
+val put : t -> int -> t
+
+(** [add s i] returns a set containing all elements of [s], plus
+    [i]. Raises [Already_present] if [i] was already in [s]. Raises
     [Invalid_argument] when [i] is negative.  O(log n) time.  *)
 val add : t -> int -> t
 

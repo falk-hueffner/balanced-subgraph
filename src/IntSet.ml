@@ -19,12 +19,15 @@
    node, and some computation time. Might optimize by hand later. *)
 type t = unit IntMap.t;;
 
+exception Already_present;;
+
 let empty = IntMap.empty;;
 
 let is_empty = IntMap.is_empty;;
 
 let contains = IntMap.has_key;;
 
+let put s x = IntMap.set s x ();;
 let add s x = IntMap.add s x ();;
 
 let rec fold f = IntMap.fold (fun a i () -> f a i);;
