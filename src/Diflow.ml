@@ -27,21 +27,21 @@ let augment g s t =
       else
 	let i, q = Queue.pop q in
 	let p, s = ELDigraph.neighbors g i in
-	let (q, preds) =
+	let q, preds =
 	  IntMap.fold
 	    (fun (q, preds) j (cap, flow) ->
 	       if not (IntMap.has_key preds j) && flow < cap
 	       then Queue.push q j, IntMap.add preds j i
 	       else q, preds)
-	    p
+	    s
 	    (q, preds) in
-	let (q, preds) =
+	let q, preds =
 	  IntMap.fold
 	    (fun (q, preds) j (cap, flow) ->
 	       if not (IntMap.has_key preds j) && flow > 0
 	       then Queue.push q j, IntMap.add preds j i
 	       else q, preds)
-	    s
+	    p
 	    (q, preds) in
 	  if IntMap.has_key preds t
 	  then preds
@@ -61,7 +61,7 @@ let augment g s t =
 	    then
 	      let cap, flow = ELDigraph.get_label g p i
 	      in
-		assert (flow + 1 < cap);
+		assert (flow + 1 <= cap);
 		loop p (ELDigraph.relabel g p i (cap, flow + 1))
 	    else
 	      let cap, flow = ELDigraph.get_label g i p
