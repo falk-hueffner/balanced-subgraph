@@ -33,6 +33,10 @@ val make : Graph.t -> (int -> int -> 'a) -> 'a t
     [j]. Raises [Not_found] when [i] or [j] are not in [g]. *)
 val has_arc : 'a t -> int -> int -> bool
   
+(** [get_label g i j] returns the label of the arc [(i, j)]. Raises
+    [Not_found] when [i] or [j] are not in [g]. *)
+val get_label : 'a t -> int -> int -> 'a
+
 (** [neighbors g i] returns a tuple of the predecessors and the
     successors of [i] in [g]. *)
 val neighbors : 'a t -> int -> 'a IntMap.t * 'a IntMap.t
@@ -56,6 +60,11 @@ val new_vertex : 'a t -> 'a t * int
     in [g]. Raises [IntMap.Already_present] when there is already an arc
     from [v] to [w]. O(log n) time.  *)
 val connect : 'a t -> int -> int -> 'a -> 'a t
+
+(** [relabel g v w l] returns [g] with the edge label of [(i, j)]
+    changed to [l]. Raises [Not_found] when [v] or [w] do not exist in
+    [g], or when the arc [(i, j)] is not present. O(log n) time.  *)
+val relabel : 'a t -> int -> int -> 'a -> 'a t
 
 (** [fold_edges f g a] computes [(f iN jN lN ... (f i1 j1 lN a)...)],
     where [(i1, j1) ... (iN, jN)] are the edges of [g], and [lN] is the

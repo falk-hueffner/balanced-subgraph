@@ -31,12 +31,23 @@ let succs g i = let _, succs = IntMap.get g i in succs;;
 let preds g i = let preds, _ = IntMap.get g i in preds;;
 
 let has_arc g i j = IntMap.has_key (succs g i) j;;
+let get_label g i j = IntMap.get (succs g i) j;;
 
 let connect g i j label =
   let preds_i, succs_i = IntMap.get g i in
   let preds_j, succs_j = IntMap.get g i in
   let succs_i = IntMap.add succs_i j label in
   let preds_j = IntMap.add preds_j i label in
+  let g = IntMap.set g i (preds_i, succs_i) in
+  let g = IntMap.set g j (preds_j, succs_j) in
+    g
+;;
+
+let relabel g i j label =
+  let preds_i, succs_i = IntMap.get g i in
+  let preds_j, succs_j = IntMap.get g i in
+  let succs_i = IntMap.update succs_i j label in
+  let preds_j = IntMap.update preds_j i label in
   let g = IntMap.set g i (preds_i, succs_i) in
   let g = IntMap.set g j (preds_j, succs_j) in
     g
