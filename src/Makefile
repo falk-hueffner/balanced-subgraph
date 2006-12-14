@@ -9,7 +9,8 @@ SOURCES   = \
 	Digraph.ml	\
 	ELGraph.ml	\
 	ELDigraph.ml	\
-	Diflow.ml
+	Diflow.ml	\
+	Cut.ml
 
 OCAMLC    = ocamlc -g -warn-error A $(INCLUDES)
 OCAMLOPT  = ocamlopt -warn-error A $(INCLUDES)
