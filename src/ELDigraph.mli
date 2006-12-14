@@ -29,6 +29,10 @@ val empty : 'a t
     where [(i, j)] is labeled [f i j].  *)
 val make : Graph.t -> (int -> int -> 'a) -> 'a t
 
+(** [neighbors g i] returns a tuple of the predecessors and the
+    successors of [i] in [g]. *)
+val neighbors : 'a t -> int -> 'a IntMap.t * 'a IntMap.t
+
 (** [succs g i] returns a map that maps successors of [i] in [g] to
     the corresponding edge label. Raises [Not_found] if [i] is not in [g].
     O(log n) time.  *)

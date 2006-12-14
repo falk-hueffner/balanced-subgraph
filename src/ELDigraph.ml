@@ -26,6 +26,7 @@ let new_vertex g =
     IntMap.add g i (IntMap.empty, IntMap.empty), i
 ;;
 
+let neighbors = IntMap.get;;
 let succs g i = let _, succs = IntMap.get g i in succs;;
 let preds g i = let preds, _ = IntMap.get g i in preds;;
 
