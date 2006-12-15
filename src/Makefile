@@ -5,6 +5,7 @@ SOURCES   = \
 	Queue.ml	\
 	IntMap.ml	\
 	IntSet.ml	\
+	UnionFind.ml	\
 	Graph.ml	\
 	Digraph.ml	\
 	ELGraph.ml	\
