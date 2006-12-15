@@ -33,6 +33,10 @@ val is_empty : t -> bool
     [Invalid_argument] when [i] is negative. O(log n) time.  *)
 val contains : t -> int -> bool
 
+(** [draw s] returns an arbitrary element of [s], or raises
+    [Not_found] when [s] is empty. O(log n) time.  *)
+val draw : t -> int
+
 (** [put s i] returns a set containing all elements of [s], plus
     [i]. If [i] was already in [s], [s] is returned unchanged.  Raises
     [Invalid_argument] when [i] is negative.  O(log n) time.  *)

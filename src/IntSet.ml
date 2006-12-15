@@ -26,6 +26,7 @@ let empty = IntMap.empty;;
 let is_empty = IntMap.is_empty;;
 
 let contains = IntMap.has_key;;
+let draw = IntMap.max_key;;
 
 let put s x = IntMap.set s x ();;
 let add s x = IntMap.add s x ();;
