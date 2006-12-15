@@ -35,6 +35,12 @@ let empty = Empty;;
 
 let is_empty s = s = Empty;;
 
+let size = function
+    Empty -> 0
+  | Leaf _ -> 1
+  | Branch (_, _, c, _, _) -> c
+;;
+
 let rec contains s i = match s with
     Empty -> false
   | Leaf j -> j = i
@@ -106,10 +112,75 @@ let rec add s i = match s with
 	join (m lsl 1) i (Leaf i) p s (c + 1)
 ;;
 
+let rec remove s i =
+  let branch = function
+    | (_, _, _, Empty, s) -> s
+    | (_, _, _, s, Empty) -> s
+    | (p, m, c, l, r) -> Branch (p, m, c, l, r)
+  in
+    match s with
+	Empty -> Empty
+      | Leaf j when j = i -> Empty
+      | Leaf _ -> s
+      | Branch (p, m, c, l, r) ->
+	  if prefix_matches i p m then
+	    if i <= p
+	    then branch (p, m, c - 1, (remove l i), r)
+	    else branch (p, m, c - 1, l, (remove r i))
+	  else
+	    s
+;;
+
 let rec fold f s accu = match s with
     Empty -> accu
   | Leaf i -> f accu i
   | Branch (_, _, _, l, r) -> fold f r (fold f l accu)
+;;
+
+let branch p m l r = Branch (p, m, size l + size r, l, r);;
+
+let rec union s1 s2 = match s1, s2 with
+    Empty, t  -> t
+  | t, Empty  -> t
+  | Leaf k, t -> add t k
+  | t, Leaf k -> add t k
+  | Branch (p1, m1, c1, l1, r1), Branch (p2, m2, c2, l2, r2) ->
+      if m1 = m2 && p1 = p2 then
+	(* The trees have the same prefix. Merge the subtrees.  *)
+	branch p1 m1 (union l1 l2) (union r1 r2)
+      else if m1 > m2 && prefix_matches p2 p1 m1 then
+	(* [p2] contains [p1]. Merge [s2] with a subtree of [s1].  *)
+	if p2 <= p1
+	then branch p1 m1 (union l1 s2) r1
+	else branch p1 m1 l1 (union r1 s2)
+      else if m1 < m2 && prefix_matches p1 p2 m2 then
+	(* [p1] contains [p2]. Merge [s1] with a subtree of [s2].  *)
+	if p1 <= p2
+	then branch p2 m2 (union s1 l2) r2
+	else branch p2 m2 l2 (union s1 r2)
+      else
+	(* The prefixes disagree.  *)
+	join (m1 lsl 1) p1 s1 p2 s2 (c1 + c2)
+;;
+
+let rec minus s1 s2 = match s1, s2 with
+    Empty, _ -> Empty
+  | _, Empty -> s1
+  | Leaf i, _ -> if contains s2 i then Empty else s1
+  | _, Leaf i -> remove s1 i
+  | Branch (p1, m1, _, l1, r1), Branch (p2, m2, _, l2, r2) ->
+      if m1 = m2 && p1 = p2 then
+	union (minus l1 l2) (minus r1 r2)
+      else if m1 > m2 && prefix_matches p2 p1 m1 then
+	if p2 <= p1
+	then union (minus l1 s2) r1
+	else union l1 (minus r1 s2)
+      else if m1 < m2 && prefix_matches p1 p2 m2 then
+	if p1 <= p2
+	then minus s1 l2
+	else minus s1 r2
+      else
+	s1
 ;;
 
 let output channel s =

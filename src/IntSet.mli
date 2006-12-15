@@ -35,7 +35,7 @@ val contains : t -> int -> bool
 
 (** [draw s] returns an arbitrary element of [s], or raises
     [Not_found] when [s] is empty. O(log n) time.  *)
-val draw : t -> int
+val choose : t -> int
 
 (** [put s i] returns a set containing all elements of [s], plus
     [i]. If [i] was already in [s], [s] is returned unchanged.  Raises
@@ -51,6 +51,9 @@ val add : t -> int -> t
     are the elements of [s].  *)
 val fold : ('a -> int -> 'a) -> t -> 'a -> 'a
 
+(** Set difference.  *)
+val minus : t -> t -> t
+  
 (** [output c s] prints a debug representation of [s] to channel [c].
     O(n) time.  *)
 val output : out_channel -> t -> unit
