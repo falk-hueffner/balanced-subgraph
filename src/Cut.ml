@@ -49,3 +49,7 @@ let is_n_connected g n v w =
   let flow = loop 0 flow in
     Diflow.influx flow outlet_v >= n
 ;;
+
+let n_connected_components g n =
+  UnionFind.equivalence_classes (Graph.vertex_set g) (is_n_connected g n)
+;;
