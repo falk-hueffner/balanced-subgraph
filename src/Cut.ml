@@ -35,3 +35,17 @@ let vertex_cut_transform g =
     g
     g'
 ;;
+
+let is_n_connected g n v w =
+  let g' = vertex_cut_transform g in
+  let d = (Graph.max_vertex g) + 1 in
+  let outlet_v = v + d in
+  let entry_w = w in
+  let flow = Diflow.make g' (fun _ _ -> 1) in
+  let rec loop i flow =
+    if i >= n || Diflow.influx flow outlet_v < i
+    then flow
+    else loop (i + 1) (Diflow.augment flow outlet_v entry_w) in
+  let flow = loop 0 flow in
+    Diflow.influx flow outlet_v >= n
+;;
