@@ -46,3 +46,7 @@ val add : t -> int -> t
 (** [fold f s a] computes [(f iN ... (f i1 a)...)], where [i1 ... In]
     are the elements of [s].  *)
 val fold : ('a -> int -> 'a) -> t -> 'a -> 'a
+
+(** [output c s] prints a debug representation of [s] to channel [c].
+    O(n) time.  *)
+val output : out_channel -> t -> unit

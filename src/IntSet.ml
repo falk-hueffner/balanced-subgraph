@@ -31,3 +31,15 @@ let put s x = IntMap.set s x ();;
 let add s x = IntMap.add s x ();;
 
 let rec fold f = IntMap.fold (fun a i () -> f a i);;
+
+let output channel s =
+  Printf.fprintf channel "{";  
+  ignore (fold
+    (fun first i ->
+       if not first then Printf.fprintf channel ", ";
+       Printf.fprintf channel "%d" i;
+       false)
+    s
+    true);
+  Printf.fprintf channel "}";
+;;
