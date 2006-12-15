@@ -25,6 +25,9 @@ type t
 (** The empty graph.  *)
 val empty : t
 
+(** Returns the vertex set of the graph. O(n) time.  *)
+val vertex_set : t -> IntSet.t
+
 (** [neighbors g i] returns the set of neighbors of [i] in [g]. Raises
     [Not_found] if [i] is not in [g]. O(log n) time.  *)
 val neighbors : t -> int -> IntSet.t

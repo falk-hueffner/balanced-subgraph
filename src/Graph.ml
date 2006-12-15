@@ -39,8 +39,10 @@ let connect g i j =
     g
 ;;
 
-let fold_vertices f g x = IntMap.fold f g x;;
+let fold_vertices = IntMap.fold;;
 let iter_vertices f g = fold_vertices (fun () i neighbors -> f i neighbors) g ();;
+
+let vertex_set g = fold_vertices (fun s i _ -> IntSet.add s i) g IntSet.empty;;
 
 let fold_edges f g accu =
   fold_vertices
