@@ -29,3 +29,7 @@ val join : t -> int -> int -> t
 
 (** Return a list of equivalence classes.  *)
 val classes : t -> IntSet.t list
+
+(** [equivalence_classes s r] calculates the equivalence classes of
+    [s] under the equivalence relation [r].  *)  
+val equivalence_classes : IntSet.t -> (int -> int -> bool) -> IntSet.t list

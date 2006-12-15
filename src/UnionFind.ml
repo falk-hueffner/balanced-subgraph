@@ -50,3 +50,18 @@ let classes m =
       classes
       []
 ;;
+
+let equivalence_classes s r =
+  let uf = make s in
+  let fold_pairs f x =
+    IntSet.fold
+      (fun accu i -> IntSet.fold (fun accu j -> if i < j then f accu i j else accu) s accu)
+      s
+      x in
+  let uf =
+    fold_pairs
+      (fun uf i j -> if r i j then join uf i j else uf)
+      uf
+  in
+    classes uf
+;;
