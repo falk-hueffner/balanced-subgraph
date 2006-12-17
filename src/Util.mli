@@ -20,6 +20,10 @@
 (** [output_int channel i] prints [i] on [channel].  *)
 val output_int : out_channel -> int -> unit
 
+(** [output_list c p l] prints a debug representation of list [l] to
+    channel [c], using [p] to print values.  O(n) time.  *)
+val output_list : out_channel -> (out_channel -> 'a -> unit) -> 'a list -> unit
+
 (** [split_string s] splits the string [s] into a list of strings
     which are separated by whitespace.  *)
 val split_string : string -> string list
