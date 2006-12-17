@@ -45,16 +45,6 @@ let connect g i j =
     g
 ;;
 
-let relabel g i j label =
-  let preds_i, succs_i = IntMap.get g i in
-  let preds_j, succs_j = IntMap.get g i in
-  let succs_i = IntMap.update succs_i j label in
-  let preds_j = IntMap.update preds_j i label in
-  let g = IntMap.set g i (preds_i, succs_i) in
-  let g = IntMap.set g j (preds_j, succs_j) in
-    g
-;;
-
 let fold_vertices f g x =
   IntMap.fold
     (fun accu i (preds, succs) -> f accu i preds succs)
