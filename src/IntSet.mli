@@ -29,6 +29,9 @@ val empty : t
 (** Test whether the set is empty. O(1) time.  *)
 val is_empty : t -> bool
 
+(** Returns the number of elements. O(1) time.  *)
+val size : t -> int
+
 (** [contains s i] returns true if [i] is element of [s].  Raises
     [Invalid_argument] when [i] is negative. O(log n) time.  *)
 val contains : t -> int -> bool
@@ -55,9 +58,12 @@ val fold : ('a -> int -> 'a) -> t -> 'a -> 'a
     elements of [s]. O(n) time.  *)
 val iter : (int -> unit) -> t -> unit
 
+(** Set intersection.  *)
+val intersection : t -> t -> t
+
 (** Set difference.  *)
 val minus : t -> t -> t
-  
+
 (** [output c s] prints a debug representation of [s] to channel [c].
     O(n) time.  *)
 val output : out_channel -> t -> unit

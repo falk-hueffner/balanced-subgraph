@@ -172,6 +172,22 @@ let rec minus s1 s2 = match s1, s2 with
 	s1
 ;;
 
+let rec intersection s1 s2 = match s1, s2 with
+    Empty, _
+  | _, Empty -> Empty
+  | Leaf i, _ -> if contains s2 i then s1 else Empty
+  | _, Leaf i -> if contains s1 i then s2 else Empty
+  | Branch (p1, m1, _, l1, r1), Branch (p2, m2, _, l2, r2) ->
+      if m1 = m2 && p1 = p2 then
+        union (intersection l1 l2) (intersection r1 r2)
+      else if m1 > m2 && prefix_matches p2 p1 m1 then
+        intersection (if p2 <= p1 then l1 else r1) s2
+      else if m1 < m2 && prefix_matches p1 p2 m2 then
+        intersection s1 (if p1 <= p2 then l2 else r2)
+      else
+        Empty
+;;
+
 let output channel s =
   Printf.fprintf channel "{[%d] " (size s);
   ignore (fold
