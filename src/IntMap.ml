@@ -142,22 +142,58 @@ let rec add s i x =
 ;;
 
 let rec update s i x =
+  if i < 0 then invalid_arg "IntMap.set: negative key";
+  match s with
+    | Leaf (j, _) when j = i -> Leaf (i, x)
+    | Branch (p, m, _, l, r) ->
+        if i <= p
+        then branch p m (update l i x) r
+        else branch p m l (update r i x)
+    | _ -> raise Not_found
+;;
+
+let rec modify f s i =
   if i < 0 then invalid_arg "IntMap.update: negative key";
   match s with
+      Leaf (j, x) when j = i -> Leaf (i, f x)
+    | Branch (p, m, _, l, r) ->
+        if i <= p
+        then branch p m (modify f l i) r
+        else branch p m l (modify f r i)
+    | _ -> raise Not_found
+;;
+
+let rec modify_default f s i x =
+  if i < 0 then invalid_arg "IntMap.set: negative key";
+  match s with
       Empty -> Leaf (i, x)
-    | Leaf (j, _) when j = i -> Leaf (i, x)
-    | Leaf (_, _) -> raise Not_found
+    | Leaf (j, y) when j = i -> Leaf (i, f y)
+    | Leaf (j, _) -> join 1 i (Leaf (i, f x)) j s 2
     | Branch (p, m, c, l, r) ->
 	if prefix_matches i p m then
           if i <= p
-          then branch p m (update l i x) r
-          else branch p m l (update r i x)
+          then branch p m (modify_default f l i x) r
+          else branch p m l (modify_default f r i x)
 	else
-          join (m lsl 1) i (Leaf (i, x)) p s (c + 1)
+          join (m lsl 1) i (Leaf (i, f x)) p s (c + 1)
 ;;
 
 let rec fold f s accu = match s with
     Empty -> accu
   | Leaf (i, x) -> f accu i x
   | Branch (_, _, _, l, r) -> fold f r (fold f l accu)
+;;
+
+let iter f s = fold (fun () k x -> f k x) s ();;
+
+let output channel p m =
+  Printf.fprintf channel "{[%d] " (size m);
+  ignore (fold
+    (fun first i x ->
+       if not first then Printf.fprintf channel ", ";
+       Printf.fprintf channel "%d:%a" i p x;
+       false)
+    m
+    true);
+  Printf.fprintf channel "}";
 ;;

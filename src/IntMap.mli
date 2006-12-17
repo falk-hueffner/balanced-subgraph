@@ -61,7 +61,26 @@ val add : 'a t -> int -> 'a -> 'a t
     is not already a binding of [i] in [m]. O(log n) time.  *)
 val update : 'a t -> int -> 'a -> 'a t
 
+(** [modify f m i] returns [m] where the binding [x] of [i] is
+    replaced by [f x]. Raises [Not_found] when [i] has no binding.
+    O(log n) time.  *)
+val modify : ('a -> 'a) -> 'a t -> int -> 'a t
+
+(** [modify_default f m i x] returns [m] where the binding [y] of [i]
+    is replaced by [f y], or set to [f x] if [i] has no binding. O(log n)
+    time.  *)
+val modify_default : ('a -> 'a) -> 'a t -> int -> 'a -> 'a t
+
 (** [fold f m a] computes [(f iN xN ... (f i1 x1 a)...)], where [i1
     ... iN] are the keys of all bindings in [m] (in increasing order),
     and [x1 ... xN] are the associated data.  *)
 val fold : ('b -> int -> 'a -> 'b) -> 'a t -> 'b -> 'b
+
+(**  [iter f m] calls [f i1 x1, ..., f iN xN], where [i1 ... iN] are
+     the keys of all bindings in [m] (in increasing order), and [x1 ... xN]
+     are the associated data.  *)
+val iter : (int -> 'a -> unit) -> 'a t -> unit
+
+(** [output c p m] prints a debug representation of [s] to channel
+    [c], using [p] to print values.  O(n) time.  *)
+val output : out_channel -> (out_channel -> 'a -> unit) -> 'a t -> unit
