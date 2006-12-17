@@ -53,3 +53,77 @@ let is_n_connected g n v w =
 let n_connected_components g n =
   UnionFind.equivalence_classes (Graph.vertex_set g) (is_n_connected g n)
 ;;
+
+(*
+let connected_components g =
+  let rec dfs v seen =
+    let seen = IntSet.add seen v in
+      IntSet.fold
+	(fun seen w -> if not (IntSet.contains seen w) then dfs w seen else seen)
+	(Graph.neighbors g v)
+	seen in
+  let rec loop components fresh =
+    if IntSet.is_empty fresh
+    then components
+    else
+      let v = IntSet.choose fresh in
+      let component = dfs v IntSet.empty in
+	loop (component :: components) (IntSet.minus fresh component)
+  in
+    loop [] (Graph.vertex_set g)
+;;
+*)
+
+(* Closely following H. Gabow: "Path-based depth-first search for
+   strong and biconnected components", Inf. Proc. Lett. 2000 *)
+let biconnected_components g =
+  let n = Graph.max_vertex g in
+  let s = Array.make (n+1) 0 and top_s = ref (-1) in
+  let b = Array.make (2 *(n+1)) 0 and top_b = ref (-1) in
+  let push_s x = incr top_s; s.(!top_s) <- x in
+  let push_b x = incr top_b; b.(!top_b) <- x in
+  let pop_s () = let r = s.(!top_s) in decr top_s; r in
+  let pop_b () = let r = b.(!top_b) in decr top_b; r in
+  let i = Array.make (n+1) (-1) in
+  let c = ref n in
+  let rec dfs v =
+    push_s v;
+    i.(v) <- !top_s;
+    if i.(v) > 0 then push_b i.(v);
+    Graph.iter_neighbors
+      (fun w ->
+	 if i.(w) = -1 then begin
+	   push_b i.(v);
+	   dfs w;
+	 end else
+	   while i.(v) > 0 && i.(w) < b.(!top_b - 1) do
+	     ignore (pop_b ());
+	     ignore (pop_b ());
+	   done) g v;
+    if i.(v) = 0
+    then i.(pop_s ()) <- !c
+    else if i.(v) = b.(!top_b) then begin
+      ignore (pop_b ());
+      ignore (pop_b ());
+      incr c;
+      while i.(v) <= !top_s do
+ 	i.(pop_s ()) <- !c
+      done
+    end
+  in
+    Graph.iter_vertices
+      (fun v _ ->
+	 if i.(v) = -1 && not (Graph.is_deg0 g v) then dfs v)
+      g;
+    let components = 
+      Graph.fold_edges
+	(fun components v w ->
+	   let c = min i.(v) i.(w) in
+	     IntMap.modify_default
+	       (fun component -> IntSet.put (IntSet.put component v) w)
+	       components c IntSet.empty)
+	g
+	IntMap.empty
+    in
+      IntMap.fold (fun components _ component -> component :: components) components []
+;;
