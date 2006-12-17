@@ -21,6 +21,7 @@ let empty = IntMap.empty;;
 
 let has_vertex = IntMap.has_key;;
 let neighbors = IntMap.get;;
+let is_deg0 g i = IntSet.is_empty (neighbors g i);;
 let max_vertex = IntMap.max_key;;
 
 let new_vertex g =
@@ -43,6 +44,8 @@ let fold_vertices = IntMap.fold;;
 let iter_vertices f g = fold_vertices (fun () i neighbors -> f i neighbors) g ();;
 
 let vertex_set g = fold_vertices (fun s i _ -> IntSet.add s i) g IntSet.empty;;
+
+let iter_neighbors f g i = IntSet.iter f (neighbors g i)
 
 let fold_edges f g accu =
   fold_vertices

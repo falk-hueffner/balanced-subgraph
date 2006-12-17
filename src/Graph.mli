@@ -32,6 +32,10 @@ val vertex_set : t -> IntSet.t
     [Not_found] if [i] is not in [g]. O(log n) time.  *)
 val neighbors : t -> int -> IntSet.t
 
+(** [is_deg0 g i] is true if the [i] has no neighbors in [g].
+    O(log n) time.  *)
+val is_deg0 : t -> int -> bool
+
 (** [max_vertex g] returns the highest vertex of [g], or raises
     [Not_found] if [g] is empty.  *)
 val max_vertex : t -> int
@@ -59,6 +63,10 @@ val fold_edges : ('a -> int -> int -> 'a) -> t -> 'a -> 'a
     where [nu] is the set of neighbors of [u].  O(n) time.  *)
 val iter_vertices : (int -> IntSet.t -> unit) -> t -> unit
 
+(** [iter_neighbors f g v] calls [f w] for each neighbor [w] of [v] in
+    [g]. O(deg v) time.  *)
+val iter_neighbors : (int -> unit) -> t -> int -> unit
+  
 (** [iter_edges f g] calls [f u v] for each edge [(u, v)] in [g].
     O(m) time.  *)
 val iter_edges : (int -> int -> unit) -> t -> unit
