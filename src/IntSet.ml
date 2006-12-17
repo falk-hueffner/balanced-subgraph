@@ -86,19 +86,6 @@ let join m p1 s1 p2 s2 c =
     else Branch (p, m, c, s2, s1)
 ;;
 
-let rec put s i = match s with
-    Empty -> Leaf i
-  | Leaf j when j = i -> s
-  | Leaf j -> join 1 i (Leaf i) j s 2
-  | Branch (p, m, c, l, r) ->
-      if prefix_matches i p m then
-	if i <= p
-	then Branch (p, m, c + 1, (put l i), r)
-	else Branch (p, m, c + 1, l, (put r i))
-      else
-	join (m lsl 1) i (Leaf i) p s (c + 1)
-;;
-
 let rec add s i = match s with
     Empty -> Leaf i
   | Leaf j when j = i -> raise Already_present
@@ -112,30 +99,32 @@ let rec add s i = match s with
 	join (m lsl 1) i (Leaf i) p s (c + 1)
 ;;
 
-let rec remove s i =
+let put s i = try add s i with Already_present -> s;;
+
+let rec delete s i =
   let branch = function
     | (_, _, _, Empty, s) -> s
     | (_, _, _, s, Empty) -> s
     | (p, m, c, l, r) -> Branch (p, m, c, l, r)
   in
     match s with
-	Empty -> Empty
-      | Leaf j when j = i -> Empty
-      | Leaf _ -> s
+	Leaf j when j = i -> Empty
       | Branch (p, m, c, l, r) ->
-	  if prefix_matches i p m then
-	    if i <= p
-	    then branch (p, m, c - 1, (remove l i), r)
-	    else branch (p, m, c - 1, l, (remove r i))
-	  else
-	    s
+	  if i <= p
+	  then branch (p, m, c - 1, (delete l i), r)
+	  else branch (p, m, c - 1, l, (delete r i))
+      | _ -> raise Not_found
 ;;
+
+let remove s i = try delete s i with Not_found -> s;;
 
 let rec fold f s accu = match s with
     Empty -> accu
   | Leaf i -> f accu i
   | Branch (_, _, _, l, r) -> fold f r (fold f l accu)
 ;;
+
+let iter f s = fold (fun () i -> f i) s ();;
 
 let branch p m l r = Branch (p, m, size l + size r, l, r);;
 
@@ -184,7 +173,7 @@ let rec minus s1 s2 = match s1, s2 with
 ;;
 
 let output channel s =
-  Printf.fprintf channel "{";  
+  Printf.fprintf channel "{[%d] " (size s);
   ignore (fold
     (fun first i ->
        if not first then Printf.fprintf channel ", ";

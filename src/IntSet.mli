@@ -39,17 +39,21 @@ val choose : t -> int
 
 (** [put s i] returns a set containing all elements of [s], plus
     [i]. If [i] was already in [s], [s] is returned unchanged.  Raises
-    [Invalid_argument] when [i] is negative.  O(log n) time.  *)
+    [Invalid_argument] when [i] is negative. O(log n) time.  *)
 val put : t -> int -> t
 
 (** [add s i] returns a set containing all elements of [s], plus
     [i]. Raises [Already_present] if [i] was already in [s]. Raises
-    [Invalid_argument] when [i] is negative.  O(log n) time.  *)
+    [Invalid_argument] when [i] is negative. O(log n) time.  *)
 val add : t -> int -> t
 
-(** [fold f s a] computes [(f iN ... (f i1 a)...)], where [i1 ... In]
-    are the elements of [s].  *)
+(** [fold f s a] computes [(f iN ... (f i1 a)...)], where [i1 ... iN]
+    are the elements of [s].  O(n) time.  *)
 val fold : ('a -> int -> 'a) -> t -> 'a -> 'a
+
+(** [iter f s] calls [f i1, ..., f iN], where [i1 ... iN] are the
+    elements of [s]. O(n) time.  *)
+val iter : (int -> unit) -> t -> unit
 
 (** Set difference.  *)
 val minus : t -> t -> t
