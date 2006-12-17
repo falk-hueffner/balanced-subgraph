@@ -29,6 +29,8 @@ val empty : 'a t
 (** Test whether the map is empty. O(1) time.  *)
 val is_empty : 'a t -> bool
 
+(** Returns the number of key/value pairs. O(1) time.  *)
+val size : 'a t -> int
 
 (** [has_key m i] returns true if there is a mapping [(i, x)] in
     [m]. Raises [Invalid_argument] when [i] is negative. O(log n) time.  *)
