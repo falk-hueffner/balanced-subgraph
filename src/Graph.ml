@@ -20,6 +20,7 @@ type t = IntSet.t IntMap.t;;
 let empty = IntMap.empty;;
 
 let has_vertex = IntMap.has_key;;
+let num_vertices = IntMap.size;;
 let neighbors = IntMap.get;;
 let is_deg0 g i = IntSet.is_empty (neighbors g i);;
 let max_vertex = IntMap.max_key;;
@@ -60,8 +61,25 @@ let fold_edges f g accu =
 
 let iter_edges f g = fold_edges (fun () i j -> f i j) g ();;
 
+let num_edges g =
+  let num =
+    fold_vertices
+      (fun num _ neighbors -> num + IntSet.size neighbors) g 0
+  in
+    assert (num mod 2 = 0);
+    num / 2
+;;
+
+let subgraph g vs =
+  IntSet.fold
+    (fun g' v ->
+       IntMap.add g' v (IntSet.intersection (neighbors g v) vs))
+    vs
+    empty
+;;
+
 let output channel g =
-  Printf.fprintf channel "{\n";
+  Printf.fprintf channel "{ n = %d, m = %d\n" (num_vertices g) (num_edges g);
   (* List degree-0 vertices.  *)
   iter_vertices (fun i neighbors ->
                    if IntSet.is_empty neighbors

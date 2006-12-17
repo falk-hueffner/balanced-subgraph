@@ -71,6 +71,9 @@ val iter_neighbors : (int -> unit) -> t -> int -> unit
     O(m) time.  *)
 val iter_edges : (int -> int -> unit) -> t -> unit
 
+(** [subgraph g s] returns the subgraph of [g] induced by [s].  O(n^2 log n) time.  *)
+val subgraph : t -> IntSet.t -> t
+
 (** [output c g] prints a debug representation of [g] to
     channel [c]. O(m) time.  *)
 val output : out_channel -> t -> unit
