@@ -20,22 +20,19 @@ type 'a t = 'a IntMap.t IntMap.t;;
 let empty = IntMap.empty;;
 
 let has_vertex = IntMap.has_key;;
+let num_vertices = IntMap.size;;
 
+let add_vertex g i = IntMap.add g i IntMap.empty;;
 let new_vertex g =
   let i = if IntMap.is_empty g then 0 else (IntMap.max_key g) + 1 in
-    IntMap.add g i IntMap.empty, i
+    add_vertex g i, i
 ;;
 
 let neighbors = IntMap.get;;
 
 let connect g i j label =
-  if not (has_vertex g i && has_vertex g j) then invalid_arg "Graph.connect: invalid vertex";
-  let neighbors_i = neighbors g i in
-  let neighbors_j = neighbors g j in
-  let neighbors_i' = IntMap.add neighbors_i j label in
-  let neighbors_j' = IntMap.add neighbors_j i label in
-  let g = IntMap.set g i neighbors_i' in
-  let g = IntMap.set g j neighbors_j' in
+  let g = IntMap.modify (fun neighbors_i -> IntMap.add neighbors_i j label) g i in
+  let g = IntMap.modify (fun neighbors_j -> IntMap.add neighbors_j i label) g j in
     g
 ;;
 
@@ -55,8 +52,33 @@ let fold_edges f g accu =
 
 let iter_edges f g = fold_edges (fun () i j l -> f i j l) g ();;
 
+let num_edges g =
+  let num =
+    fold_vertices
+      (fun num _ neighbors -> num + IntMap.size neighbors) g 0
+  in
+    assert (num mod 2 = 0);
+    num / 2
+;;
+
+let unlabeled g =
+  let g' = fold_vertices (fun g' i _ -> Graph.add_vertex g' i) g Graph.empty in
+    fold_edges (fun g' i j _ -> Graph.connect g' i j) g g'
+;;
+
+let subgraph g s =
+  let g' = IntSet.fold add_vertex s empty in
+  fold_edges
+    (fun g' i j l ->
+       if IntSet.contains s i && IntSet.contains s j
+       then connect g' i j l
+       else g')
+    g
+    g'
+;;
+
 let output channel output_label g =
-  Printf.fprintf channel "{\n";
+  Printf.fprintf channel "{ n = %d, m = %d\n" (num_vertices g) (num_edges g);
   (* List degree-0 vertices.  *)
   iter_vertices (fun i neighbors ->
                    if IntMap.is_empty neighbors

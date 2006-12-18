@@ -49,6 +49,11 @@ val fold_edges : ('b -> int -> int -> 'a -> 'b) -> 'a t -> 'b -> 'b
     [l] in [g]. O(m) time.  *)
 val iter_edges : (int -> int -> 'a -> unit) -> 'a t -> unit
 
+val unlabeled : 'a t -> Graph.t
+
+(** [subgraph g s] returns the subgraph of [g] induced by [s].  O(n^2 log n) time.  *)
+val subgraph : 'a t -> IntSet.t -> 'a t
+
 (** [output c output_label g] prints a debug representation of [g] to
     channel [c]. O(m) time.  *)
 val output : out_channel -> (out_channel -> 'a -> unit) -> 'a t -> unit
