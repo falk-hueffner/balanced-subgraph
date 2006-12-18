@@ -52,7 +52,8 @@ clean:
 	rm -f *.cm[iox] *.o $(PROJ)
 
 realclean: clean
-	rm -f *~ *.old *.bak doc
+	rm -rf doc
+	rm -f *~ *.old *.bak
 
 .depend: depend
 
