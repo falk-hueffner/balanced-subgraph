@@ -55,7 +55,14 @@ let iter_vertex_pairs f g =
 let () =
   let g, vertex_numbers, vertex_names = input_graph stdin in
   (* Graph.output stderr g; *)
+  (*
   let components = Cut.biconnected_components g in
-    Util.output_list stdout IntSet.output components;
-    print_newline ();
+    List.iter
+      (fun component ->
+	 let g' = Graph.subgraph g component in
+	   Graph.output stdout g')
+      components;     
+  *)
+    Cut.cut_corner g;
+
 ;;

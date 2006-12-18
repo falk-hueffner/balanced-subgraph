@@ -127,3 +127,38 @@ let biconnected_components g =
     in
       IntMap.fold (fun components _ component -> component :: components) components []
 ;;
+
+let cut_corner g =
+  let rec grow s neighbors best_s best_neighbors =
+(*     Printf.eprintf "s = %a neighbors = %a\n%!" IntSet.output s IntSet.output neighbors; *)
+    if IntSet.size s >= 200
+    then best_s, best_neighbors
+    else
+      let best, best_new =
+	IntSet.fold
+	  (fun (best, best_size) v ->
+		  let v_size = IntSet.size (IntSet.minus (Graph.neighbors g v) neighbors) in
+		    if v_size < best_size then v, v_size else best, best_size)
+	  neighbors
+	  (0, max_int)
+      in
+	let s = IntSet.add s best in
+	let neighbors = IntSet.delete neighbors best in
+	let new_neighbors = IntSet.minus (Graph.neighbors g best) s in
+	let neighbors = IntSet.union neighbors new_neighbors in
+	  if IntSet.size s > IntSet.size neighbors && IntSet.size neighbors <= IntSet.size best_neighbors
+	  then grow s neighbors s neighbors
+	  else grow s neighbors best_s best_neighbors
+  in
+    Graph.iter_vertices
+      (fun v neighbors_v ->
+	 let s, neighbors = grow (IntSet.singleton v) neighbors_v (IntSet.singleton v) neighbors_v in
+	   if IntSet.size s > 1 && IntSet.size neighbors <= 3 then
+(* 	   Printf.eprintf "v = %d s = %a neighbors = %a\n" v IntSet.output s IntSet.output neighbors *)
+	   Printf.eprintf "neighbors = %a g = %a\n"
+	     IntSet.output neighbors
+	     Graph.output (Graph.subgraph g (IntSet.union s neighbors))
+      )
+      g
+;;
+
