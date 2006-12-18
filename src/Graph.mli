@@ -44,6 +44,8 @@ val max_vertex : t -> int
     additional new vertex [i]. O(log n) time.  *)
 val new_vertex : t -> t * int
 
+val add_vertex : t -> int -> t
+
 (** [connect g v w] returns [g] with vertices [v] and [w] connected.
     Raises [Not_found] when [v] or [w] do not exist in [g]. Raises
     [IntMap.Already_present] when [v] and [w] are already connected.

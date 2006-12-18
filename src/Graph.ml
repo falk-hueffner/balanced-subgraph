@@ -25,9 +25,10 @@ let neighbors = IntMap.get;;
 let is_deg0 g i = IntSet.is_empty (neighbors g i);;
 let max_vertex = IntMap.max_key;;
 
+let add_vertex g i = IntMap.add g i IntSet.empty;;
 let new_vertex g =
   let i = if IntMap.is_empty g then 0 else (IntMap.max_key g) + 1 in
-    IntMap.add g i IntSet.empty, i
+    add_vertex g i, i
 ;;
 
 let connect g i j =
