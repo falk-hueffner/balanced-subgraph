@@ -32,6 +32,7 @@ type t =
 exception Already_present;;
 
 let empty = Empty;;
+let singleton i = Leaf i;;
 
 let is_empty s = s = Empty;;
 
@@ -131,8 +132,8 @@ let branch p m l r = Branch (p, m, size l + size r, l, r);;
 let rec union s1 s2 = match s1, s2 with
     Empty, t  -> t
   | t, Empty  -> t
-  | Leaf k, t -> add t k
-  | t, Leaf k -> add t k
+  | Leaf k, t -> put t k
+  | t, Leaf k -> put t k
   | Branch (p1, m1, c1, l1, r1), Branch (p2, m2, c2, l2, r2) ->
       if m1 = m2 && p1 = p2 then
 	(* The trees have the same prefix. Merge the subtrees.  *)

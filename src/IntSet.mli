@@ -26,6 +26,9 @@ exception Already_present
 (** The empty set.  *)
 val empty : t
 
+(** Returns a one-element set.  *)
+val singleton : int -> t
+
 (** Test whether the set is empty. O(1) time.  *)
 val is_empty : t -> bool
 
@@ -50,6 +53,11 @@ val put : t -> int -> t
     [Invalid_argument] when [i] is negative. O(log n) time.  *)
 val add : t -> int -> t
 
+(** [delete s i] returns a set containing all elements of [s], minus
+    [i]. Raises [Not_found] if [i] is not in [s]. Raises
+    [Invalid_argument] when [i] is negative. O(log n) time.  *)
+val delete : t -> int -> t
+
 (** [fold f s a] computes [(f iN ... (f i1 a)...)], where [i1 ... iN]
     are the elements of [s].  O(n) time.  *)
 val fold : ('a -> int -> 'a) -> t -> 'a -> 'a
@@ -57,6 +65,9 @@ val fold : ('a -> int -> 'a) -> t -> 'a -> 'a
 (** [iter f s] calls [f i1, ..., f iN], where [i1 ... iN] are the
     elements of [s]. O(n) time.  *)
 val iter : (int -> unit) -> t -> unit
+
+(** Set union.  *)
+val union : t -> t -> t
 
 (** Set intersection.  *)
 val intersection : t -> t -> t
