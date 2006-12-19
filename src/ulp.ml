@@ -19,13 +19,20 @@ module StringMap = Map.Make(struct type t = string let compare = String.compare 
 
 type sign = Equal | Unequal
 type edge = {
-  sign: sign;
-  multiplicity: int;
+  equal_edges:   int;
+  unequal_edges: int;
 };;
 
 let output_edge channel e =
-  output_char channel (if e.sign = Equal then '-' else '+');
-  if e.multiplicity > 1 then Printf.fprintf channel " (*%d)" e.multiplicity;
+  if e.equal_edges > 0 then begin
+    output_char channel '+';
+    if e.equal_edges > 1 then Printf.fprintf channel "(*%d)" e.equal_edges;
+  end;
+  if e.unequal_edges > 0 then begin
+    if e.equal_edges > 0 then output_char channel ' ';
+    output_char channel '-';
+    if e.unequal_edges > 1 then Printf.fprintf channel "(*%d)" e.unequal_edges;
+  end
 ;;
 
 let input_signed_graph channel =
@@ -47,10 +54,17 @@ let input_signed_graph channel =
 		vertex_number g vertex_numbers vertex_names v in
               let g, vertex_numbers, vertex_names, j =
 		vertex_number g vertex_numbers vertex_names w in
-(* 		Printf.eprintf "%d %d %d\n%!" lineno i j; *)
-	      let edge = { sign         = if s = "1" || s = "+" then Equal else Unequal;
-			   multiplicity = 1 } in
-		loop (ELGraph.connect g i j edge) vertex_numbers vertex_names (lineno + 1)
+(*  		Printf.eprintf "%d %d %d\n%!" lineno i j; *)
+	      let label =
+		if ELGraph.is_connected g i j
+		then ELGraph.get_label g i j
+		else { equal_edges = 0; unequal_edges = 0 } in
+	      let label =
+		if s = "1" || s = "+"
+		then { label with   equal_edges = label.  equal_edges + 1}
+		else { label with unequal_edges = label.unequal_edges + 1} in
+	      let g = ELGraph.set_label g i j label in
+		loop g vertex_numbers vertex_names (lineno + 1)
           | _ -> invalid_arg "bad edge syntax"
     with End_of_file -> g, vertex_numbers, vertex_names
   in
@@ -66,9 +80,28 @@ let iter_vertex_pairs f g =
     g
 ;;
 
+let is_sign_consistent g =
+  let rec dfs v color colors =
+    if IntMap.has_key colors v
+    then IntMap.get colors v = color
+    else
+      let colors = IntMap.set colors v color in
+	ELGraph.fold_neighbors
+	  (fun consistent w e ->
+	     consistent
+	     && (not (e.equal_edges > 0 && e.unequal_edges > 0))
+	     && if e.equal_edges > 0
+	       then dfs w color colors
+	       else dfs w (not color) colors)
+	  g v true
+  in
+    dfs (ELGraph.max_vertex g) false IntMap.empty
+;;
+  
+  
 let () =
   let g, vertex_numbers, vertex_names = input_signed_graph stdin in
-  (* Graph.output stderr g; *)
+    ELGraph.output stderr output_edge g;
 
     (*
   let components = Cut.biconnected_components (ELGraph.unlabeled g) in
@@ -81,7 +114,7 @@ let () =
   let l = Cut.cut_corner (ELGraph.unlabeled g) in
     List.iter
       (fun (s, exits) ->
-	 if IntSet.size exits <= 4 then
+	 if IntSet.size exits <= 2 then
 	   Printf.eprintf "exits = %a g = %a\n"
 	     IntSet.output exits
 	     (fun channel g -> ELGraph.output channel output_edge g) (ELGraph.subgraph g s))
