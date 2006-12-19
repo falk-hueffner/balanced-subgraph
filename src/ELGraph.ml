@@ -63,7 +63,7 @@ let fold_edges f g accu =
   fold_vertices
     (fun accu i neighbors ->
        IntMap.fold
-         (fun accu j label -> if i < j then f accu i j label else accu)
+         (fun accu j label -> if i <= j then f accu i j label else accu)
          neighbors
          accu)
     g

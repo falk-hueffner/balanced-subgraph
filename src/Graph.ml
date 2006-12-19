@@ -56,7 +56,7 @@ let fold_edges f g accu =
   fold_vertices
     (fun accu i neighbors ->
        IntSet.fold
-         (fun accu j -> if i < j then f accu i j else accu)
+         (fun accu j -> if i <= j then f accu i j else accu)
          neighbors
          accu)
     g
