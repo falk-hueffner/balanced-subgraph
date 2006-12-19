@@ -40,6 +40,11 @@ val new_vertex : 'a t -> 'a t * int
     connected.  O(log n) time.  *)
 val connect : 'a t -> int -> int -> 'a -> 'a t
 
+(** [fold_neighbors f g i a] computes [(f jN lN ... (f j1 l1 a)...)],
+    where [j1, ..., jN] are the neighbors of [i] in [g], and [lN] is the
+    label of [(iN, jN)]. O(log n + deg i) time.  *)
+val fold_neighbors : ('b -> int -> 'a -> 'b) -> 'a t -> int -> 'b -> 'b
+
 (** [fold_edges f g a] computes [(f iN jN lN ... (f i1 j1 lN a)...)],
     where [(i1, j1) ... (iN, jN)] are the edges of [g], and [lN] is the
     label of [(iN, jN)]. O(m) time.  *)

@@ -47,7 +47,8 @@ let iter_vertices f g = fold_vertices (fun () i neighbors -> f i neighbors) g ()
 
 let vertex_set g = fold_vertices (fun s i _ -> IntSet.add s i) g IntSet.empty;;
 
-let iter_neighbors f g i = IntSet.iter f (neighbors g i)
+let fold_neighbors f g i = IntSet.fold f (neighbors g i);;
+let iter_neighbors f g i = IntSet.iter f (neighbors g i);;
 
 let fold_edges f g accu =
   fold_vertices

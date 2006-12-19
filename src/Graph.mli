@@ -65,6 +65,11 @@ val fold_edges : ('a -> int -> int -> 'a) -> t -> 'a -> 'a
     where [nu] is the set of neighbors of [u].  O(n) time.  *)
 val iter_vertices : (int -> IntSet.t -> unit) -> t -> unit
 
+(** [fold_neighbors f g i a] computes [(f jN ... (f j1 a)...)], where
+    [j1, ..., jN] are the neighbors of [i] in [g]. O(log n + deg i)
+    time.  *)
+val fold_neighbors : ('a -> int -> 'a) -> t -> int -> 'a -> 'a
+
 (** [iter_neighbors f g v] calls [f w] for each neighbor [w] of [v] in
     [g]. O(deg v) time.  *)
 val iter_neighbors : (int -> unit) -> t -> int -> unit

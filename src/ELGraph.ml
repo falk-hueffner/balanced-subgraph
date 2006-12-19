@@ -36,8 +36,11 @@ let connect g i j label =
     g
 ;;
 
-let fold_vertices f g x = IntMap.fold f g x;;
-let iter_vertices f g = fold_vertices (fun () i neighbors -> f i neighbors) g ();;
+let fold_vertices = IntMap.fold;;
+let iter_vertices = IntMap.iter;;
+
+let fold_neighbors f g i = IntMap.fold f (neighbors g i);;
+let iter_neighbors f g i = IntMap.iter f (neighbors g i);;
 
 let fold_edges f g accu =
   fold_vertices
