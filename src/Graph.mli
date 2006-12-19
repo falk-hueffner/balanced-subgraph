@@ -25,6 +25,12 @@ type t
 (** The empty graph.  *)
 val empty : t
 
+(** Number of vertices. O(1) time.  *)
+val num_vertices : t -> int
+
+(** Number of edges. O(n) time.  *)
+val num_edges : t -> int
+
 (** Returns the vertex set of the graph. O(n) time.  *)
 val vertex_set : t -> IntSet.t
 

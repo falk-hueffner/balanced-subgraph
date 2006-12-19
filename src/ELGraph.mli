@@ -25,6 +25,12 @@ type 'a t
 (** The empty graph.  *)
 val empty : 'a t
 
+(** Number of vertices. O(1) time.  *)
+val num_vertices : 'a t -> int
+
+(** Number of edges. O(n) time.  *)
+val num_edges : 'a t -> int
+
 (** [neighbors g i] returns a map that maps neighbors of [i] in [g] to
     the corresponding edge label. Raises [Not_found] if [i] is not in [g].
     O(log n) time.  *)
