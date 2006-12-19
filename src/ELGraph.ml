@@ -21,6 +21,7 @@ let empty = IntMap.empty;;
 
 let has_vertex = IntMap.has_key;;
 let num_vertices = IntMap.size;;
+let max_vertex = IntMap.max_key;;
 
 let add_vertex g i = IntMap.add g i IntMap.empty;;
 let new_vertex g =
@@ -30,9 +31,18 @@ let new_vertex g =
 
 let neighbors = IntMap.get;;
 
+let is_connected g i j = IntMap.has_key (IntMap.get g i) j;;
+let get_label g i j = IntMap.get (IntMap.get g i) j;;
+
 let connect g i j label =
   let g = IntMap.modify (fun neighbors_i -> IntMap.add neighbors_i j label) g i in
   let g = IntMap.modify (fun neighbors_j -> IntMap.add neighbors_j i label) g j in
+    g
+;;
+
+let set_label g i j label =
+  let g = IntMap.modify (fun neighbors_i -> IntMap.set neighbors_i j label) g i in
+  let g = IntMap.modify (fun neighbors_j -> IntMap.set neighbors_j i label) g j in
     g
 ;;
 
@@ -85,9 +95,9 @@ let output channel output_label g =
   (* List degree-0 vertices.  *)
   iter_vertices (fun i neighbors ->
                    if IntMap.is_empty neighbors
-                   then Printf.fprintf channel "%d\n" i) g;
+                   then Printf.fprintf channel "%3d\n" i) g;
   iter_edges (fun i j l ->
-		Printf.fprintf channel "%d %d " i j;
+		Printf.fprintf channel "%3d %3d " i j;
 		output_label channel l;
 		Printf.fprintf channel "\n") g;
   Printf.fprintf channel "}\n";

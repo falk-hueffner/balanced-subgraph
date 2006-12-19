@@ -30,15 +30,31 @@ val empty : 'a t
     O(log n) time.  *)
 val neighbors : 'a t -> int -> 'a IntMap.t
 
+(** [max_vertex g] returns the highest vertex of [g], or raises
+    [Not_found] if [g] is empty.  *)
+val max_vertex : 'a t -> int
+
 (** [new_vertex g] returns [g', i], where [g'] is [g] with an
     additional new vertex [i]. O(log n) time.  *)
 val new_vertex : 'a t -> 'a t * int
+
+(** [is_connected g i j] returns true if there is an edge between [i]
+    and [j] in [g]. O(log n) time. *)
+val is_connected : 'a t -> int -> int -> bool
+
+(** [get_label g i j] returns the label of the edge [(i, j)], or
+    raises [Not_found] when there is no such edge. O(log n) time. *)
+val get_label : 'a t -> int -> int -> 'a
 
 (** [connect g v w l] returns [g] with vertices [v] and [w] connected
     and labeled by [l].  Raises [Not_found] when [v] or [w] do not exist
     in [g]. Raises [IntMap.Already_present] when [v] and [w] are already
     connected.  O(log n) time.  *)
 val connect : 'a t -> int -> int -> 'a -> 'a t
+
+(** [set_label g i j l] sets the label of the edge [(i, j)]. If [(i, j)]
+    is not already an edge, it will be created. O(log n) time. *)
+val set_label : 'a t -> int -> int -> 'a -> 'a t
 
 (** [fold_neighbors f g i a] computes [(f jN lN ... (f j1 l1 a)...)],
     where [j1, ..., jN] are the neighbors of [i] in [g], and [lN] is the
