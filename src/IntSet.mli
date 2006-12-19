@@ -39,9 +39,14 @@ val size : t -> int
     [Invalid_argument] when [i] is negative. O(log n) time.  *)
 val contains : t -> int -> bool
 
-(** [draw s] returns an arbitrary element of [s], or raises
+(** [choose s] returns an arbitrary element of [s], or raises
     [Not_found] when [s] is empty. O(log n) time.  *)
 val choose : t -> int
+
+(** [pop s] returns a tuple of an arbitrary element [i] of [s] and [s]
+    with [i] removed. Raises [Not_found] when [s] is empty. O(log n)
+    time.  *)
+val pop : t -> int * t
 
 (** [put s i] returns a set containing all elements of [s], plus
     [i]. If [i] was already in [s], [s] is returned unchanged.  Raises

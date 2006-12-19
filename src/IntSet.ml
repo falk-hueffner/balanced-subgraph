@@ -119,6 +119,11 @@ let rec delete s i =
 
 let remove s i = try delete s i with Not_found -> s;;
 
+let pop s =
+  let i = choose s in
+    i, remove s i
+;;
+
 let rec fold f s accu = match s with
     Empty -> accu
   | Leaf i -> f accu i
