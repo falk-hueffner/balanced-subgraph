@@ -100,6 +100,8 @@ let rec add s i = match s with
 	join (m lsl 1) i (Leaf i) p s (c + 1)
 ;;
 
+let of_list l = List.fold_left add empty l;;
+
 let put s i = try add s i with Already_present -> s;;
 
 let rec delete s i =

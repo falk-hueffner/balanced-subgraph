@@ -29,6 +29,10 @@ val empty : t
 (** Returns a one-element set.  *)
 val singleton : int -> t
 
+(** Returns a set from the elements of a list. Raises
+    [Already_present] on duplicate entries.  *)
+val of_list : int list -> t
+  
 (** Test whether the set is empty. O(1) time.  *)
 val is_empty : t -> bool
 
