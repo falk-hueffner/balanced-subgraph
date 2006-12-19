@@ -129,9 +129,46 @@ let biconnected_components g =
 ;;
 
 let cut_corner g =
+  let better s1 c1 s2 c2 =
+    if IntSet.size c1 < IntSet.size c2
+      || (IntSet.size c1 = IntSet.size c2 && IntSet.size s1 < IntSet.size s2)
+    then s1, c1
+    else s2, c2 in
+  let rec grow s c best_s best_c =
+    if IntSet.size s > Graph.num_vertices g / 2
+    then best_s, best_c
+    else
+      let best_v, best_c_size =
+	IntSet.fold
+	  (fun (best_v, best_c_size) v ->
+	     let v_c_size = IntSet.size (IntSet.minus (Graph.neighbors g v) c) in
+	       if v_c_size < best_c_size then v, v_c_size else best_v, best_c_size)
+	  c (0, max_int) in
+      let s = IntSet.add s best_v in
+      let c = IntSet.delete c best_v in
+      let new_c = IntSet.minus (Graph.neighbors g best_v) s in
+      let c = IntSet.union c new_c in
+      let best_s, best_c = better s c best_s best_c in
+	grow s c best_s best_c
+  in
+    Graph.fold_vertices
+      (fun (best_s, best_c) v neighbors_v ->
+	 let s, c =
+	   grow (IntSet.singleton v) neighbors_v (IntSet.singleton v) neighbors_v
+	 in
+	   if IntSet.size c <= 3 then
+	     Printf.eprintf "s = %a c = %a\n" IntSet.output s IntSet.output c;
+	   better s c best_s best_c)
+      g
+      (IntSet.singleton (Graph.max_vertex g), Graph.neighbors g (Graph.max_vertex g))
+;;
+
+(*
+
+let cut_corner g =
   let rec grow s neighbors best_s best_neighbors =
 (*     Printf.eprintf "s = %a neighbors = %a\n%!" IntSet.output s IntSet.output neighbors; *)
-    if IntSet.size s >= 64
+    if IntSet.size s >= 64 || IntSet.size s > Graph.num_vertices g / 2
     then best_s, best_neighbors
     else
       let best, best_new =
@@ -166,3 +203,4 @@ let cut_corner g =
       g
       []
 ;;
+*)

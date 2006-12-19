@@ -19,19 +19,19 @@ module StringMap = Map.Make(struct type t = string let compare = String.compare 
 
 type sign = Equal | Unequal
 type edge = {
-  equal_edges:   int;
-  unequal_edges: int;
+  equal:   int;
+  unequal: int;
 };;
 
 let output_edge channel e =
-  if e.equal_edges > 0 then begin
+  if e.equal > 0 then begin
     output_char channel '+';
-    if e.equal_edges > 1 then Printf.fprintf channel "(*%d)" e.equal_edges;
+    if e.equal > 1 then Printf.fprintf channel "(*%d)" e.equal;
   end;
-  if e.unequal_edges > 0 then begin
-    if e.equal_edges > 0 then output_char channel ' ';
+  if e.unequal > 0 then begin
+    if e.equal > 0 then output_char channel ' ';
     output_char channel '-';
-    if e.unequal_edges > 1 then Printf.fprintf channel "(*%d)" e.unequal_edges;
+    if e.unequal > 1 then Printf.fprintf channel "(*%d)" e.unequal;
   end
 ;;
 
@@ -58,11 +58,11 @@ let input_signed_graph channel =
 	      let label =
 		if ELGraph.is_connected g i j
 		then ELGraph.get_label g i j
-		else { equal_edges = 0; unequal_edges = 0 } in
+		else { equal = 0; unequal = 0 } in
 	      let label =
 		if s = "1" || s = "+"
-		then { label with   equal_edges = label.  equal_edges + 1}
-		else { label with unequal_edges = label.unequal_edges + 1} in
+		then { label with   equal = label.  equal + 1}
+		else { label with unequal = label.unequal + 1} in
 	      let g = ELGraph.set_label g i j label in
 		loop g vertex_numbers vertex_names (lineno + 1)
           | _ -> invalid_arg "bad edge syntax"
@@ -89,20 +89,87 @@ let is_sign_consistent g =
 	ELGraph.fold_neighbors
 	  (fun consistent w e ->
 	     consistent
-	     && (not (e.equal_edges > 0 && e.unequal_edges > 0))
-	     && if e.equal_edges > 0
+	     && (not (e.equal > 0 && e.unequal > 0))
+	     && if e.equal > 0
 	       then dfs w color colors
 	       else dfs w (not color) colors)
 	  g v true
   in
     dfs (ELGraph.max_vertex g) false IntMap.empty
 ;;
-  
-  
+
+(* No useful cuts at all in G.  *)
+let solve_uncuttable g =
+  ()
+
+let solve_2cut g =
+  Printf.eprintf "solve_2cut\tn = %3d m = %4d\n" (ELGraph.num_vertices g) (ELGraph.num_edges g);
+  let s, c = Cut.cut_corner (ELGraph.unlabeled g) in
+    Printf.eprintf "xx s = %a c = %a\n" IntSet.output s IntSet.output c;
+;;
+
+let solve_deg2 g =
+  Printf.eprintf "solve_deg2\tn = %3d m = %4d\n"
+     (ELGraph.num_vertices g) (ELGraph.num_edges g);
+  let g =
+    let rec loop g s =
+      if IntSet.is_empty s
+      then g
+      else
+	let v, s = IntSet.pop s in
+	let n = ELGraph.neighbors g v in
+	  if IntMap.size n <> 2
+	  then loop g s
+	  else begin
+	    let v1, { equal = p1; unequal = m1 } =
+	      IntMap.choose n in
+	    let v2, { equal = p2; unequal = m2 } =
+	      IntMap.choose (IntMap.remove n v1) in
+(* 	       Printf.eprintf "%d %d / %d %d\n" p1 m1 p2 m2; *)
+	      Printf.eprintf "v = %3d v1 = %3d v2 = %3d\n" v v1 v2;
+	      let p, m =
+		if not (ELGraph.is_connected g v1 v2)
+		then 0, 0
+		else let { equal = p; unequal = m } = ELGraph.get_label g v1 v2 in p, m in
+	      let p = p + min (m1 + p2) (p1 + m2) in
+	      let m = m + min (m1 + m2) (p1 + p2) in
+	      let g = ELGraph.delete_vertex g v in	  	 
+	      let g = ELGraph.set_label g v1 v2 { equal = p; unequal = m } in
+	      let s = IntSet.put s v1 in
+	      let s = IntSet.put s v2 in
+		loop g s
+	  end
+    in
+      loop g (ELGraph.vertex_set g)
+  in
+    solve_2cut g
+;;
+
+(* G is biconnected.  *)
+let solve_component g =
+   Printf.eprintf "solve_component\tn = %3d m = %4d\n"
+     (ELGraph.num_vertices g) (ELGraph.num_edges g);
+  if is_sign_consistent g
+  then prerr_string " already sign consistent\n"
+  else
+    solve_deg2 g
+;;
+
+let solve g =
+  Printf.eprintf "solve\t\tn = %3d m = %4d\n" (ELGraph.num_vertices g) (ELGraph.num_edges g);
+  if is_sign_consistent g
+  then prerr_string " already sign consistent\n"
+  else
+    let components = Cut.biconnected_components (ELGraph.unlabeled g) in
+      List.iter
+	(fun component -> solve_component (ELGraph.subgraph g component))
+	components;
+;;
+
 let () =
   let g, vertex_numbers, vertex_names = input_signed_graph stdin in
-    ELGraph.output stderr output_edge g;
-
+(*     ELGraph.output stderr output_edge g; *)
+    solve g;
     (*
   let components = Cut.biconnected_components (ELGraph.unlabeled g) in
     List.iter
@@ -111,6 +178,7 @@ let () =
 	   ELGraph.output stdout output_edge g')
       components;
     *)
+    (*
   let l = Cut.cut_corner (ELGraph.unlabeled g) in
     List.iter
       (fun (s, exits) ->
@@ -119,5 +187,5 @@ let () =
 	     IntSet.output exits
 	     (fun channel g -> ELGraph.output channel output_edge g) (ELGraph.subgraph g s))
       l
-
+    *)
 ;;
