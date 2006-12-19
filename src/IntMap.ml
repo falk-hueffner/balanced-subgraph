@@ -81,6 +81,12 @@ let rec get_default s i x =
 	else get_default r i x
 ;;
 
+let rec choose = function
+  | Empty -> raise Not_found
+  | Leaf (i, x) -> i, x
+  | Branch (_, _, _, l, _) -> choose l
+;;
+
 (* Return an integer where only the highest bit that was set in [x] is
    still set.  *)
 let rec highest_bit x =
@@ -139,6 +145,24 @@ let rec add s i x =
           else branch p m l (add r i x)
 	else
           join (m lsl 1) i (Leaf (i, x)) p s (c + 1)
+;;
+
+let rec remove s i =
+  let branch = function
+    | (_, _, Empty, s) -> s
+    | (_, _, s, Empty) -> s
+    | (p, m, l, r) -> Branch (p, m, size l + size r, l, r)
+  in
+    match s with
+	Leaf (j, _) when j = i -> Empty
+      | Branch (p, m, c, l, r) ->
+          if prefix_matches i p m then
+            if i <= p
+            then branch (p, m, remove l i, r)
+            else branch (p, m, l, remove r i)
+          else
+            s
+      | _ -> raise Not_found
 ;;
 
 let rec update s i x =

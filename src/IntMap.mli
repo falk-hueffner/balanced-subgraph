@@ -49,6 +49,10 @@ val get : 'a t -> int -> 'a
     negative. O(log n) time.  *)
 val get_default : 'a t -> int -> 'a -> 'a
 
+(** [choose m] returns an arbitrary key/value pair of [m], or raises
+    [Not_found] when [m] is empty. O(log n) time.  *)
+val choose : 'a t -> int * 'a
+
 (** [set m i x] returns a map containing the same bindings as [m],
     plus a binding of [i] to [x]. If [x] was already bound in [m], its
     previous binding disappears. Raises [Invalid_argument] when [i] is
@@ -72,6 +76,11 @@ val modify : ('a -> 'a) -> 'a t -> int -> 'a t
     is replaced by [f y], or set to [f x] if [i] has no binding. O(log n)
     time.  *)
 val modify_default : ('a -> 'a) -> 'a t -> int -> 'a -> 'a t
+
+(** [remove m i] returns a map containing the same bindings as [m],
+    except for [i] which is unbound in the returned map. Raises
+    [Not_found] when [i] has no binding.  *)
+val remove : 'a t -> int -> 'a t
 
 (** [fold f m a] computes [(f iN xN ... (f i1 x1 a)...)], where [i1
     ... iN] are the keys of all bindings in [m] (in increasing order),
