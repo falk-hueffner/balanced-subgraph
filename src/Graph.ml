@@ -31,6 +31,8 @@ let new_vertex g =
     add_vertex g i, i
 ;;
 
+let is_connected g i j = IntSet.contains (IntMap.get g i) j;;
+
 let connect g i j =
   if not (has_vertex g i && has_vertex g j) then invalid_arg "Graph.connect: invalid vertex";
   let neighbors_i = neighbors g i in
@@ -66,7 +68,7 @@ let iter_edges f g = fold_edges (fun () i j -> f i j) g ();;
 let num_edges g =
   let num =
     fold_vertices
-      (fun num _ neighbors -> num + IntSet.size neighbors) g 0
+      (fun num v neighbors -> num + IntSet.size neighbors + if is_connected g v v then 1 else 0) g 0
   in
     assert (num mod 2 = 0);
     num / 2

@@ -101,6 +101,68 @@ let is_sign_consistent g =
 (* No useful cuts at all in G.  *)
 let solve_uncuttable g =
   ()
+;;
+
+let solve_brute_force g =
+  let n = ELGraph.num_vertices g in
+  let numbers, _ = ELGraph.fold_vertices
+    (fun (numbers, n) i _ -> IntMap.add numbers i n, n + 1) g (IntMap.empty, 0) in
+  let rec loop best_del best_colors colors =
+    if colors >= (1 lsl (n - 1))
+    then best_del, best_colors
+    else
+      let color v = colors land (1 lsl (IntMap.get numbers v)) <> 0 in
+      let del =
+	ELGraph.fold_edges
+	  (fun del v w { equal = eq; unequal = un } ->
+	     if color v = color w then del + un else del + eq)
+	  g
+	  0
+      in
+	if del < best_del
+	then loop del colors (colors + 1)
+	else loop best_del best_colors (colors + 1) in
+  let best_del, best_colors = loop max_int 0 0 in
+    ELGraph.iter_vertices
+      (fun v _ ->
+	 Printf.printf "%2d %b\n" v (best_colors land (1 lsl (IntMap.get numbers v)) <> 0))
+      g;
+    Printf.printf "deletions: %d\n" best_del;
+;;
+
+let reduce_cut g s c =
+  let merge g v1 v2 =
+    ELGraph.fold_neighbors
+      (fun g j { equal = eq1; unequal = un1 } ->
+	 ELGraph.modify_label_default
+	   (fun { equal = eq2; unequal = un2 } -> { equal = eq1 + eq2; unequal = un1 + un2 })
+	   g v1 j { equal = 0; unequal = 0 })
+      g v2 g in
+  let c_n = IntSet.size c in
+  let g' = ELGraph.subgraph g s in
+  let g', b = ELGraph.new_vertex g in (*BUG*)
+
+    ELGraph.iter_vertices
+      (fun i n -> Printf.eprintf "%3d %3d %a\n" i (ELGraph.deg g' i) (fun c -> IntMap.output c output_edge) n) g';
+
+  let g', w = ELGraph.new_vertex g' in
+    prerr_newline();
+    for c_colors = 0 to (1 lsl (c_n - 1)) - 1 do
+      let g', _ = IntSet.fold
+	(fun (g', i) v ->
+	   (if c_colors land (1 lsl i) <> 0
+	   then merge g' b i
+	   else merge g' w i), (i + 1))
+	c
+	(g', 0)
+      in
+
+	ELGraph.iter_vertices
+	  (fun i n -> Printf.eprintf "%3d %3d %a\n" i (ELGraph.deg g' i) (fun c -> IntMap.output c output_edge) n) g';
+	
+	ELGraph.output stdout output_edge g';
+    done
+;;
 
 let solve_2cut g =
   Printf.eprintf "solve_2cut\tn = %3d m = %4d\n" (ELGraph.num_vertices g) (ELGraph.num_edges g);
@@ -168,8 +230,15 @@ let solve g =
 
 let () =
   let g, vertex_numbers, vertex_names = input_signed_graph stdin in
+    ELGraph.output stderr output_edge g;
+    let s = IntSet.of_list [3; 4] in
+    let c = IntSet.of_list [0; 1; 2] in
+      reduce_cut g s c
+	
+(*     solve_brute_force g; *)
+    
 (*     ELGraph.output stderr output_edge g; *)
-    solve g;
+(*     solve g; *)
     (*
   let components = Cut.biconnected_components (ELGraph.unlabeled g) in
     List.iter

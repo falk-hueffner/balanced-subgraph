@@ -34,6 +34,7 @@ let deg g i = IntMap.size (neighbors g i);;
 
 let is_connected g i j = IntMap.has_key (IntMap.get g i) j;;
 let get_label g i j = IntMap.get (IntMap.get g i) j;;
+let get_label_default g i j l = IntMap.get_default (IntMap.get g i) j l;;
 
 let connect g i j label =
   let g = IntMap.modify (fun neighbors_i -> IntMap.add neighbors_i j label) g i in
@@ -48,9 +49,8 @@ let set_label g i j label =
 ;;
 
 let modify_label_default f g i j label =
-  let g = IntMap.modify (fun neighbors_i -> IntMap.modify_default f neighbors_i j label) g i in
-  let g = IntMap.modify (fun neighbors_j -> IntMap.modify_default f neighbors_j i label) g j in
-    g
+  let label = f (get_label_default g i j label) in
+    set_label g i j label
 ;;
 
 let fold_vertices = IntMap.fold;;
@@ -77,7 +77,7 @@ let vertex_set g = fold_vertices (fun s i _ -> IntSet.add s i) g IntSet.empty;;
 let num_edges g =
   let num =
     fold_vertices
-      (fun num _ neighbors -> num + IntMap.size neighbors) g 0
+      (fun num v neighbors -> num + IntMap.size neighbors + if is_connected g v v then 1 else 0) g 0
   in
     assert (num mod 2 = 0);
     num / 2
