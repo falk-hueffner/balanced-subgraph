@@ -31,10 +31,17 @@ val num_vertices : 'a t -> int
 (** Number of edges. O(n) time.  *)
 val num_edges : 'a t -> int
 
+(** Returns the vertex set of the graph. O(n) time.  *)
+val vertex_set : 'a t -> IntSet.t
+
 (** [neighbors g i] returns a map that maps neighbors of [i] in [g] to
     the corresponding edge label. Raises [Not_found] if [i] is not in [g].
     O(log n) time.  *)
 val neighbors : 'a t -> int -> 'a IntMap.t
+
+(** [deg g i] returns the number of neighbors of [i] in [g]. O(log n)
+    time.  *)
+val deg : 'a t -> int -> int
 
 (** [max_vertex g] returns the highest vertex of [g], or raises
     [Not_found] if [g] is empty.  *)
@@ -62,10 +69,23 @@ val connect : 'a t -> int -> int -> 'a -> 'a t
     is not already an edge, it will be created. O(log n) time. *)
 val set_label : 'a t -> int -> int -> 'a -> 'a t
 
+(** [delete_vertex g i] returns [g] with vertex [i] deleted. O(m)
+    time.  *)
+val delete_vertex : 'a t -> int -> 'a t
+
 (** [fold_neighbors f g i a] computes [(f jN lN ... (f j1 l1 a)...)],
     where [j1, ..., jN] are the neighbors of [i] in [g], and [lN] is the
     label of [(iN, jN)]. O(log n + deg i) time.  *)
 val fold_neighbors : ('b -> int -> 'a -> 'b) -> 'a t -> int -> 'b -> 'b
+
+(** [fold_vertices f g a] computes [(f iN nN ... (f i1 n1 a)...)],
+    where [i1, ... iN] are the vertices of [g] and [nN] is the map of
+    neighbors of [iN]. O(n) time.  *)
+val fold_vertices : ('b -> int -> 'a IntMap.t -> 'b) -> 'a t -> 'b -> 'b
+
+(** [iter_vertices f g] calls [f u nu] for each vertex [u] in [g],
+    where [nu] is the map of neighbors of [u].  O(n) time.  *)
+val iter_vertices : (int -> 'a IntMap.t -> unit) -> 'a t -> unit
 
 (** [fold_edges f g a] computes [(f iN jN lN ... (f i1 j1 lN a)...)],
     where [(i1, j1) ... (iN, jN)] are the edges of [g], and [lN] is the

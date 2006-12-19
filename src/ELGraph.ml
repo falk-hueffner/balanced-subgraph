@@ -30,6 +30,7 @@ let new_vertex g =
 ;;
 
 let neighbors = IntMap.get;;
+let deg g i = IntMap.size (neighbors g i);;
 
 let is_connected g i j = IntMap.has_key (IntMap.get g i) j;;
 let get_label g i j = IntMap.get (IntMap.get g i) j;;
@@ -65,6 +66,8 @@ let fold_edges f g accu =
 
 let iter_edges f g = fold_edges (fun () i j l -> f i j l) g ();;
 
+let vertex_set g = fold_vertices (fun s i _ -> IntSet.add s i) g IntSet.empty;;
+
 let num_edges g =
   let num =
     fold_vertices
@@ -77,6 +80,16 @@ let num_edges g =
 let unlabeled g =
   let g' = fold_vertices (fun g' i _ -> Graph.add_vertex g' i) g Graph.empty in
     fold_edges (fun g' i j _ -> Graph.connect g' i j) g g'
+;;
+
+let delete_vertex g i =
+  let n = neighbors g i in
+  let g = IntMap.remove g i in
+    IntMap.fold
+      (fun g j _ ->
+	 IntMap.modify (fun n -> IntMap.remove n i) g j)
+      n
+      g      
 ;;
 
 let subgraph g s =
