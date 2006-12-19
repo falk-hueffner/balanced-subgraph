@@ -65,9 +65,14 @@ val get_label : 'a t -> int -> int -> 'a
     connected.  O(log n) time.  *)
 val connect : 'a t -> int -> int -> 'a -> 'a t
 
-(** [set_label g i j l] sets the label of the edge [(i, j)]. If [(i, j)]
-    is not already an edge, it will be created. O(log n) time. *)
+(** [set_label g i j l] sets the label of the edge [(i, j)] to l. If
+    [(i, j)] is not already an edge, it will be created. O(log n) time. *)
 val set_label : 'a t -> int -> int -> 'a -> 'a t
+
+(** [modify_label_default g f i j l] sets the label [l0] of the edge
+    [(i, j)] to [f l0]. If [(i, j)] is not already an edge, it will be
+    created and the label set to [f l]. O(log n) time. *)
+val modify_label_default : ('a -> 'a) -> 'a t -> int -> int -> 'a -> 'a t
 
 (** [delete_vertex g i] returns [g] with vertex [i] deleted. O(m)
     time.  *)

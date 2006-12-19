@@ -47,6 +47,12 @@ let set_label g i j label =
     g
 ;;
 
+let modify_label_default f g i j label =
+  let g = IntMap.modify (fun neighbors_i -> IntMap.modify_default f neighbors_i j label) g i in
+  let g = IntMap.modify (fun neighbors_j -> IntMap.modify_default f neighbors_j i label) g j in
+    g
+;;
+
 let fold_vertices = IntMap.fold;;
 let iter_vertices = IntMap.iter;;
 
