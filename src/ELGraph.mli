@@ -51,6 +51,8 @@ val max_vertex : 'a t -> int
     additional new vertex [i]. O(log n) time.  *)
 val new_vertex : 'a t -> 'a t * int
 
+val add_vertex : 'a t -> int -> 'a t
+
 (** [is_connected g i j] returns true if there is an edge between [i]
     and [j] in [g]. O(log n) time. *)
 val is_connected : 'a t -> int -> int -> bool
