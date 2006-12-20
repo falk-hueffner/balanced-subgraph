@@ -26,7 +26,7 @@ let output_list channel p l =
        false)
     true
     l);
-  Printf.fprintf channel ")";
+  Printf.fprintf channel "]";
 ;;
 
 let is_whitespace = function
