@@ -130,8 +130,10 @@ let biconnected_components g =
 
 let cut_corner g =
   let better s1 c1 s2 c2 =
-    if IntSet.size c1 < IntSet.size c2
-      || (IntSet.size c1 = IntSet.size c2 && IntSet.size s1 < IntSet.size s2)
+    if IntSet.size s1 >= IntSet.size c1 - 1
+      && (IntSet.size c2 = 0
+	  || IntSet.size c1 < IntSet.size c2
+	  || (IntSet.size c1 = IntSet.size c2 && IntSet.size s1 < IntSet.size s2))
     then s1, c1
     else s2, c2 in
   let rec grow s c best_s best_c =
@@ -154,13 +156,14 @@ let cut_corner g =
     Graph.fold_vertices
       (fun (best_s, best_c) v neighbors_v ->
 	 let s, c =
-	   grow (IntSet.singleton v) neighbors_v (IntSet.singleton v) neighbors_v
+	   grow (IntSet.singleton v) neighbors_v IntSet.empty IntSet.empty (*  (IntSet.singleton v) neighbors_v *)
 	 in
 	   if IntSet.size c <= 3 then
 	     Printf.eprintf "s = %a c = %a\n" IntSet.output s IntSet.output c;
 	   better s c best_s best_c)
       g
-      (IntSet.singleton (Graph.max_vertex g), Graph.neighbors g (Graph.max_vertex g))
+      (IntSet.empty, IntSet.empty)
+(*       (IntSet.singleton (Graph.max_vertex g), Graph.neighbors g (Graph.max_vertex g)) *)
 ;;
 
 (*

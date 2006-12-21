@@ -15,7 +15,8 @@
    with this program; if not, write to the Free Software Foundation, Inc.,
    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.  *)
 
-module StringMap = Map.Make(struct type t = string let compare = String.compare end);;
+module StringMap = Map.Make(struct type t = string    let compare = String.compare end);;
+module GadgetMap = Map.Make(struct type t = int array let compare = compare end);;
 
 type sign = Equal | Unequal
 type edge = {
@@ -104,6 +105,8 @@ let solve_uncuttable g =
 ;;
 
 let solve_brute_force g =
+(*   Printf.eprintf "solve_brute_force\tn = %3d m = %4d\n" (ELGraph.num_vertices g) (ELGraph.num_edges g); *)
+(*   Printf.eprintf "g = %a\n" (fun c -> ELGraph.output c output_edge) g; *)
   let n = ELGraph.num_vertices g in
   let numbers, _ = ELGraph.fold_vertices
     (fun (numbers, n) i _ -> IntMap.add numbers i n, n + 1) g (IntMap.empty, 0) in
@@ -125,49 +128,66 @@ let solve_brute_force g =
   let best_del, best_colors = loop max_int 0 0 in
     ELGraph.iter_vertices
       (fun v _ ->
-	 Printf.printf "%2d %b\n" v (best_colors land (1 lsl (IntMap.get numbers v)) <> 0))
+	 ()(* Printf.printf "%2d %b\n" v (best_colors land (1 lsl (IntMap.get numbers v)) <> 0) *)
+      )
       g;
-    Printf.printf "deletions: %d\n" best_del;
+(*     Printf.printf "deletions: %d\n" best_del; *)
+    best_del;
 ;;
 
 let reduce_cut g s c =
+  let g' = ELGraph.subgraph g (IntSet.union s c) in
+(*   Printf.eprintf "reduce_cut c = %a g = %a\n" IntSet.output s (fun c -> ELGraph.output c output_edge) g'; *)
   let merge g v1 v2 =
-    ELGraph.fold_neighbors
-      (fun g j { equal = eq1; unequal = un1 } ->
-	 ELGraph.modify_label_default
-	   (fun { equal = eq2; unequal = un2 } -> { equal = eq1 + eq2; unequal = un1 + un2 })
-	   g v1 j { equal = 0; unequal = 0 })
-      g v2 g in
+(*     Printf.eprintf "merge %d %d\n" v1 v2; *)
+    let g = 
+      ELGraph.fold_neighbors
+	(fun g j { equal = eq1; unequal = un1 } ->
+	   ELGraph.modify_label_default
+	     (fun { equal = eq2; unequal = un2 } -> { equal = eq1 + eq2; unequal = un1 + un2 })
+	     g v1 j { equal = 0; unequal = 0 })
+	g v2 g in
+      ELGraph.delete_vertex g v2 in
   let c_n = IntSet.size c in
-  let g' = ELGraph.subgraph g s in
-  let g', b = ELGraph.new_vertex g in (*BUG*)
-
-    ELGraph.iter_vertices
-      (fun i n -> Printf.eprintf "%3d %3d %a\n" i (ELGraph.deg g' i) (fun c -> IntMap.output c output_edge) n) g';
-
+  let g' = ELGraph.subgraph g (IntSet.union s c) in
   let g', w = ELGraph.new_vertex g' in
-    prerr_newline();
-    for c_colors = 0 to (1 lsl (c_n - 1)) - 1 do
-      let g', _ = IntSet.fold
-	(fun (g', i) v ->
-	   (if c_colors land (1 lsl i) <> 0
-	   then merge g' b i
-	   else merge g' w i), (i + 1))
-	c
-	(g', 0)
-      in
-
-	ELGraph.iter_vertices
-	  (fun i n -> Printf.eprintf "%3d %3d %a\n" i (ELGraph.deg g' i) (fun c -> IntMap.output c output_edge) n) g';
-	
-	ELGraph.output stdout output_edge g';
-    done
+  let g', b = ELGraph.new_vertex g' in
+  let g' = ELGraph.connect g' b w { equal = 0; unequal = 1 lsl 24; } in
+  let rec loop c_colors results =
+      if c_colors >= (1 lsl (c_n - 1))
+      then List.rev results
+      else
+	let g', _ = IntSet.fold
+	  (fun (g', i) v ->
+	     (if c_colors land (1 lsl i) <> 0
+	      then merge g' b v
+	      else merge g' w v), (i + 1))
+	  c
+	  (g', 0)
+	in
+	  (* 	ELGraph.output stdout output_edge g'; *)
+	  loop (c_colors + 1) ((solve_brute_force g') :: results)
+    in
+      loop 0 []
 ;;
 
-let solve_2cut g =
-  Printf.eprintf "solve_2cut\tn = %3d m = %4d\n" (ELGraph.num_vertices g) (ELGraph.num_edges g);
+let rec solve_cut_corner g =
+  Printf.eprintf "solve_cut_corner\tn = %3d m = %4d\n" (ELGraph.num_vertices g) (ELGraph.num_edges g);
   let s, c = Cut.cut_corner (ELGraph.unlabeled g) in
-    Printf.eprintf "xx s = %a c = %a\n" IntSet.output s IntSet.output c;
+    Printf.eprintf "xx s = %a c = %a\n%!" IntSet.output s IntSet.output c;
+    (*
+(*     ELGraph.output stderr output_edge g; *)
+    let r = reduce_cut g s c in
+      Util.output_list stderr Util.output_int r; prerr_newline();
+    let m = List.fold_left min max_int r in
+    let r = List.map (fun i -> i - m) r in
+      Util.output_list stderr Util.output_int r; prerr_newline();
+    *)
+
+    let g = IntSet.fold ELGraph.delete_vertex s g in
+      solve_cut_corner g
+      
+    
 ;;
 
 let solve_deg2 g =
@@ -204,7 +224,7 @@ let solve_deg2 g =
     in
       loop g (ELGraph.vertex_set g)
   in
-    solve_2cut g
+    solve_cut_corner g
 ;;
 
 (* G is biconnected.  *)
@@ -213,8 +233,9 @@ let solve_component g =
      (ELGraph.num_vertices g) (ELGraph.num_edges g);
   if is_sign_consistent g
   then prerr_string " already sign consistent\n"
-  else
-    solve_deg2 g
+  else if ELGraph.num_vertices g <= 5
+  then ignore (solve_brute_force g)
+  else solve_deg2 g
 ;;
 
 let solve g =
@@ -229,11 +250,64 @@ let solve g =
 ;;
 
 let () =
+    (***
   let g, vertex_numbers, vertex_names = input_signed_graph stdin in
+    solve g;
+    exit 0;
+    ***)
+    (*
     ELGraph.output stderr output_edge g;
     let s = IntSet.of_list [3; 4] in
     let c = IntSet.of_list [0; 1; 2] in
       reduce_cut g s c
+    *)
+  let g = ELGraph.empty in
+  let g = ELGraph.add_vertex g 0 in
+  let g = ELGraph.add_vertex g 1 in
+  let g = ELGraph.add_vertex g 2 in
+  let g = ELGraph.add_vertex g 3 in
+(*   let g = ELGraph.add_vertex g 4 in *)
+  let edges = [(0, 1); (1, 2); (0, 2)] in
+  let edges = [(0, 1); (1, 2); (0, 2); (0, 3); (1, 3); (2, 3)] in
+  let s = IntSet.empty in
+  let s = IntSet.singleton 3 in
+(*   let edges = [(0, 1); (1, 2); (0, 2); (0, 3); (1, 3); (2, 3); (0, 4); (1, 4); (2, 4); (3, 4)] in *)
+  let m = List.length edges in
+  let l_min = -5 and l_max = 5 in
+  let l = Array.make m l_min in
+  let bump () =
+    let rec loop i =
+      if i >= Array.length l
+      then false
+      else if l.(i) >= l_max
+      then begin l.(i) <- l_min; loop (i + 1) end
+      else begin l.(i) <- l.(i) + 1; true end
+    in
+      loop 0
+  in
+    l.(0) <- l_min - 1;
+    while bump () do
+(*       print_string "**l = "; Array.iter (fun i -> Printf.printf "%d " i) l; print_newline(); *)
+      let g, _ = List.fold_left
+	(fun (g, i) (v, w) ->
+	   if l.(i) > 0
+	   then ELGraph.connect g v w { equal = l.(i); unequal = 0 }, i + 1
+	   else if l.(i) < 0
+	   then ELGraph.connect g v w { equal = 0; unequal = -l.(i) }, i + 1
+	   else g, i + 1)
+	(g, 0)
+	edges
+      in
+(* 	ELGraph.output stdout output_edge g; *)
+	let r = reduce_cut g s (IntSet.of_list [0; 1; 2]) in
+(* 	let r = reduce_cut g (IntSet.of_list [3]) (IntSet.of_list [0; 1; 2]) in *)
+ 	let m = List.fold_left min max_int r in
+(*  	let r = List.map (fun i -> i - m) r in *)
+(* 	  Util.output_list stdout Util.output_int r; *)
+(* 	  ELGraph.output stdout output_edge g; *)
+	  List.iter (fun i -> Printf.printf "%d " i) r;
+	  print_newline ();
+    done
 	
 (*     solve_brute_force g; *)
     
