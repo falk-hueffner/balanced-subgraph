@@ -38,6 +38,19 @@ let output_list channel p l =
   Printf.fprintf channel "]";
 ;;
 
+let output_array p channel l =
+  Printf.fprintf channel "(%d)[|" (Array.length l);
+  ignore (Array.fold_left
+    (fun first x ->
+       if not first then Printf.fprintf channel "; ";
+       Printf.fprintf channel "%a" p x;
+       false)
+    true
+    l);
+  Printf.fprintf channel "|]";
+;;
+
+
 let is_whitespace = function
     ' ' | '\t' | '\r' | '\n' -> true
   | _ -> false
