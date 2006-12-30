@@ -15,6 +15,15 @@
    with this program; if not, write to the Free Software Foundation, Inc.,
    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.  *)
 
+let fold_n f n accu =
+  let rec loop accu i =
+    if i >= n
+    then accu
+    else loop (f accu i) (succ i)
+  in
+    loop accu 0
+;;
+
 let output_int channel i = Printf.fprintf channel "%d" i;;
 
 let output_list channel p l =

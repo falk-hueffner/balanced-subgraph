@@ -17,6 +17,8 @@
 
 (** General helper functions.  *)
 
+val fold_n : ('a -> int -> 'a) -> int -> 'a -> 'a
+
 (** [output_int channel i] prints [i] on [channel].  *)
 val output_int : out_channel -> int -> unit
 
