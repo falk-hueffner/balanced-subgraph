@@ -249,7 +249,36 @@ let solve g =
 	components;
 ;;
 
+let find_gadgets c_size s_size max_mult =
+  let g = Util.fold_n ELGraph.add_vertex (c_size + s_size) ELGraph.empty in
+  ELGraph.output stdout output_edge g;
+  let l_min = -max_mult and l_max = max_mult in
+  let l = Array.make m l_min in
+  let bump () =
+    let rec loop i =
+      if i >= Array.length l
+      then false
+      else if l.(i) >= l_max
+      then begin l.(i) <- l_min; loop (i + 1) end
+      else begin l.(i) <- l.(i) + 1; true end
+    in
+      loop 0
+  in
+    l.(0) <- l_min - 1;
+    while bump () do
+    done
+
+;;
+
 let () =
+  (*
+  let g, vertex_numbers, vertex_names = input_signed_graph stdin in
+  let m = ELGraph.fold_edges (fun m i j { equal = eq; unequal = ne } -> if i > j then m else m + eq + ne) g 0 in
+    ELGraph.output stdout output_edge g;
+    Printf.printf "m = %d\n" m;
+  *)
+  find_gadgets 3 1 2
+    
     (***
   let g, vertex_numbers, vertex_names = input_signed_graph stdin in
     solve g;
@@ -261,6 +290,10 @@ let () =
     let c = IntSet.of_list [0; 1; 2] in
       reduce_cut g s c
     *)
+
+
+(*
+  
   let g = ELGraph.empty in
   let g = ELGraph.add_vertex g 0 in
   let g = ELGraph.add_vertex g 1 in
@@ -331,4 +364,8 @@ let () =
 	     (fun channel g -> ELGraph.output channel output_edge g) (ELGraph.subgraph g s))
       l
     *)
+
+*)
+
+  
 ;;
