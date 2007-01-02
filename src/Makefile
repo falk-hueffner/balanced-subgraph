@@ -18,6 +18,8 @@ OCAMLC    = ocamlc -g -warn-error A $(INCLUDES)
 OCAMLOPT  = ocamlopt -warn-error A $(INCLUDES)
 OCAMLDEP  = ocamldep $(INCLUDES)
 
+LIBS      = unix.cmxa
+
 #PROFILE  = -p
 
 all: depend $(EXECS) doc/index.html

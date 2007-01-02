@@ -15,6 +15,12 @@
    with this program; if not, write to the Free Software Foundation, Inc.,
    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.  *)
 
+let verbose = ref false;;
+
+let timer () =
+  let stamp = Unix.times () in
+    stamp.Unix.tms_utime;;
+
 let fold_n f n accu =
   let rec loop accu i =
     if i >= n

@@ -17,6 +17,10 @@
 
 (** General helper functions.  *)
 
+val verbose : bool ref
+
+val timer : unit -> float
+
 val fold_n : ('a -> int -> 'a) -> int -> 'a -> 'a
 
 (** [output_int channel i] prints [i] on [channel].  *)

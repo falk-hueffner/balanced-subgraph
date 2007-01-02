@@ -135,4 +135,3 @@ let solve_brute_force g =
 let solve g =
   solve_brute_force g
 ;;
-
