@@ -24,6 +24,7 @@ let num_vertices = IntMap.size;;
 let max_vertex = IntMap.max_key;;
 
 let add_vertex g i = IntMap.add g i IntMap.empty;;
+let set_vertex g i = IntMap.modify_default (fun n -> n) g i IntMap.empty;;
 let new_vertex g =
   let i = if IntMap.is_empty g then 0 else (IntMap.max_key g) + 1 in
     add_vertex g i, i
