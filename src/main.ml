@@ -15,21 +15,15 @@
    with this program; if not, write to the Free Software Foundation, Inc.,
    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.  *)
 
-(** General helper functions.  *)
-
-val fold_n : ('a -> int -> 'a) -> int -> 'a -> 'a
-
-(** [output_int channel i] prints [i] on [channel].  *)
-val output_int : out_channel -> int -> unit
-
-(** [output_list c p l] prints a debug representation of list [l] to
-    channel [c], using [p] to print values.  O(n) time.  *)
-val output_list : (out_channel -> 'a -> unit) -> out_channel -> 'a list -> unit
-
-(** [output_array p c a] prints a debug representation of array [a] to
-    channel [c], using [p] to print values.  O(n) time.  *)
-val output_array : (out_channel -> 'a -> unit) -> out_channel -> 'a array -> unit
-
-(** [split_string s] splits the string [s] into a list of strings
-    which are separated by whitespace.  *)
-val split_string : string -> string list
+let () =
+  let g = Ulp.input stdin in
+(*   Ulp.output stdout g; *)
+  let edges = Ulp.solve g in
+    List.iter
+      (fun (i, j, sign) ->
+	 let { Ulp.eq = eq; Ulp.ne = ne } = ELGraph.get_label g i j in
+	   for l = 1 to (if sign = Ulp.Eq then eq else ne) do
+	     Printf.printf "%d %d %d\n" i j (if sign = Ulp.Eq then 0 else 1)
+	   done)
+      edges
+;;

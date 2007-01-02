@@ -26,7 +26,7 @@ let fold_n f n accu =
 
 let output_int channel i = Printf.fprintf channel "%d" i;;
 
-let output_list channel p l =
+let output_list p channel l =
   Printf.fprintf channel "[(%d) " (List.length l);
   ignore (List.fold_left
     (fun first x ->

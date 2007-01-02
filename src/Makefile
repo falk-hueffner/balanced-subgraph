@@ -11,7 +11,8 @@ SOURCES   = \
 	ELGraph.ml	\
 	ELDigraph.ml	\
 	Diflow.ml	\
-	Cut.ml
+	Cut.ml		\
+	Ulp.ml
 
 OCAMLC    = ocamlc -g -warn-error A $(INCLUDES)
 OCAMLOPT  = ocamlopt -warn-error A $(INCLUDES)
@@ -26,10 +27,10 @@ DBG_OBJS = $(SOURCES:.ml=.cmo)
 MLIS := $(wildcard *.mli)
 DBG_LIBS = $(LIBS:.cmxa=.cma)
 
-ulp: $(OBJS) ulp.cmx
+ulp: $(OBJS) main.cmx
 	$(OCAMLOPT) $(PROFILE) -o $@ $(LIBS) $^
 
-ulp-dbg: $(DBG_OBJS) ulp.cmo
+ulp-dbg: $(DBG_OBJS) main.cmo
 	$(OCAMLC) $(PROFILE) -o $@ $(DBG_LIBS) $^
 
 doc/index.html: $(MLIS)
