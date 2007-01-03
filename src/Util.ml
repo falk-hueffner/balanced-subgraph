@@ -31,6 +31,7 @@ let fold_n f n accu =
 ;;
 
 let output_int channel i = Printf.fprintf channel "%d" i;;
+let output_bool channel b = output_char channel (if b then '1' else '0');;
 
 let output_list p channel l =
   Printf.fprintf channel "[(%d) " (List.length l);

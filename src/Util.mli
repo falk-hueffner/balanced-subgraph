@@ -26,6 +26,9 @@ val fold_n : ('a -> int -> 'a) -> int -> 'a -> 'a
 (** [output_int channel i] prints [i] on [channel].  *)
 val output_int : out_channel -> int -> unit
 
+(** [output_bool channel b] prints [b] as '0' or '1' on [channel].  *)
+val output_bool : out_channel -> bool -> unit
+
 (** [output_list c p l] prints a debug representation of list [l] to
     channel [c], using [p] to print values.  O(n) time.  *)
 val output_list : (out_channel -> 'a -> unit) -> out_channel -> 'a list -> unit
