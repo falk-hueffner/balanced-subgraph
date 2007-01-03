@@ -32,27 +32,24 @@ let () =
   let m = ELGraph.fold_edges (fun m _ _ { Ulp.eq = eq; Ulp.ne = ne } -> m + eq + ne) g 0 in
 (*   Ulp.output stdout g; *)
   let start = Util.timer () in
-  let edges = Ulp.solve g in
+  let colors = Ulp.solve g in
+(*   Printf.eprintf "result: %a\n%!" (IntMap.output Util.output_bool) colors; *)
   let stop = Util.timer () in
-  let k = List.fold_left
-    (fun k (i, j, sign) ->
-       let { Ulp.eq = eq; Ulp.ne = ne } = ELGraph.get_label g i j in
-	 if sign = Ulp.Eq then k + eq else k + ne)
-    0 edges
+  let k = Ulp.coloring_cost g colors
   in
     if !stats_only      
     then
       Printf.printf "%5d %6d %5d %10.2f\n"
 	(ELGraph.num_vertices g) m k (stop -. start)
     else
-      List.iter
-	(fun (i, j, sign) ->
-	   let { Ulp.eq = eq; Ulp.ne = ne } = ELGraph.get_label g i j in
-	     for l = 1 to (if sign = Ulp.Eq then eq else ne) do
-	       Printf.printf "%s %s %d\n"
-		 (IntMap.get vertex_names i)
-		 (IntMap.get vertex_names j)
-		 (if sign = Ulp.Eq then 0 else 1)
-	     done)
-	edges
+      ELGraph.iter_edges
+	(fun i j { Ulp.eq = eq; Ulp.ne = ne } ->
+	   if IntMap.get colors i = IntMap.get colors j
+	   then for l = 1 to ne do
+	     Printf.printf "%s %s 1\n" (IntMap.get vertex_names i) (IntMap.get vertex_names j)
+	   done
+	   else for l = 1 to eq do
+	     Printf.printf "%s %s 0\n" (IntMap.get vertex_names i) (IntMap.get vertex_names j)
+	   done)
+	g
 ;;

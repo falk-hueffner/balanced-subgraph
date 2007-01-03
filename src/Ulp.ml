@@ -155,6 +155,38 @@ let output_edge channel e =
 
 let output channel = ELGraph.output channel output_edge;;
 
+exception Not_sign_consistent;;
+
+let color g =
+  if ELGraph.is_empty g
+  then IntMap.empty
+  else
+    let rec dfs v color colors =
+      match IntMap.get_opt colors v with
+	  Some c -> if c = color then colors else raise Not_sign_consistent
+	| None ->
+	    let colors = IntMap.set colors v color in
+	      ELGraph.fold_neighbors
+		(fun colors w e ->
+		   if e.eq > 0 && e.ne > 0
+		   then raise Not_sign_consistent
+		   else if e.eq > 0
+		   then dfs w color colors
+		   else dfs w (not color) colors)
+		g v colors
+    in
+      dfs (ELGraph.max_vertex g) false IntMap.empty
+;;
+
+let coloring_cost g colors =
+  ELGraph.fold_edges
+    (fun k i j { eq = eq; ne = ne } ->
+       if IntMap.get colors i = IntMap.get colors j
+       then k + ne
+       else k + eq)
+    g 0
+;;
+
 let is_sign_consistent g =
   if ELGraph.is_empty g
   then true
@@ -178,38 +210,39 @@ let is_sign_consistent g =
 
 let solve_brute_force g =
   if !Util.verbose
-  then Printf.eprintf "bf\tn = %3d m = %4d\n%!" (ELGraph.num_vertices g) (ELGraph.num_edges g);
-  if is_sign_consistent g
-  then begin
-    if !Util.verbose
-    then Printf.eprintf "already sign-consistent\n%!";
-    []
-  end else
+  then( Printf.eprintf "bf\tn = %3d m = %4d\n%!" (ELGraph.num_vertices g) (ELGraph.num_edges g);
+	Printf.eprintf "V = %a\n" IntSet.output (ELGraph.vertex_set g);
+      );
+  try
+    color g
+  with Not_sign_consistent ->
     let n = ELGraph.num_vertices g in
       if n >= 30 then failwith "solve_brute_force: too large";
       let numbers, _ = ELGraph.fold_vertices
 	(fun (numbers, n) i _ -> IntMap.add numbers i n, n + 1) g (IntMap.empty, 0) in
-      let rec loop best_del best_edges colors =
+      let rec loop best_del best_colors colors =
 	if colors >= (1 lsl (n - 1))
-	then best_del, best_edges
+	then best_del, best_colors
 	else
 	  let color v = colors land (1 lsl (IntMap.get numbers v)) <> 0 in
-	  let del, edges =
+	  let del =
 	    ELGraph.fold_edges
-	      (fun (del, edges) v w { eq = eq; ne = ne } ->
-		 if color v = color w
-		 then (if ne = 0 then del, edges else del + ne, (v, w, Ne) :: edges)
-		 else (if eq = 0 then del, edges else del + eq, (v, w, Eq) :: edges))
-	      g
-	      (0, [])
+	      (fun del v w { eq = eq; ne = ne } ->
+		 if color v = color w then del + ne else del + eq)
+	      g 0
 	  in
-(* 	Printf.fprintf stdout "colors = %d del = %d edges = %a\n%!" colors del *)
-(* 	(Util.output_list (fun c (i, j, l) -> Printf.fprintf c "%d %d %b" i j (l = Ne))) edges; *)
+(* 	    Printf.eprintf "colors = %d del = %d\n%!" colors del; *)
 	    if del < best_del
-	    then loop del edges (colors + 1)
-	    else loop best_del best_edges (colors + 1) in
-      let best_del, best_edges = loop max_int [] 0 in
-	best_edges
+	    then loop del colors (colors + 1)
+	    else loop best_del best_colors (colors + 1) in
+      let best_del, best_colors = loop max_int 0 0 in
+      let colors, _ =
+	ELGraph.fold_vertices
+	  (fun (colors, n) i _ ->
+	     IntMap.add colors i (best_colors land (1 lsl n) <> 0), n + 1)
+	  g (IntMap.empty, 0)
+      in
+	colors
 ;;
 
 let solve_component g =
@@ -218,12 +251,41 @@ let solve_component g =
   solve_brute_force g
 ;;
 
+
 let solve g =
   if !Util.verbose
   then Printf.eprintf "solve\tn = %3d m = %4d\n%!" (ELGraph.num_vertices g) (ELGraph.num_edges g);
   let components = Cut.biconnected_components (ELGraph.unlabeled g) in
     List.fold_left
-      (fun edges component -> edges @ (solve_component (ELGraph.subgraph g component)))
-      []
+      (fun colors component ->
+	 let map_intersection m1 m2 =
+	   IntMap.fold
+	     (fun s k _ -> if IntMap.has_key m2 k then IntSet.add s k else s)
+	     m1
+	     IntSet.empty in
+	 let map_union m1 m2 =
+	   IntMap.fold
+	     (fun m k v ->
+		match IntMap.get_opt m k with
+		    Some v' when v' = v -> m
+		  | Some _ -> assert false
+		  | None -> IntMap.add m k v)     
+	     m1
+	     m2 in
+	 let map_invert m =
+	   IntMap.fold (fun m k v -> IntMap.add m k (not v)) m IntMap.empty in
+	 let colors' = solve_component (ELGraph.subgraph g component) in
+(* 	   Printf.eprintf "colors  = %a\n" (IntMap.output Util.output_bool) colors; *)
+(* 	   Printf.eprintf "colors' = %a\n" (IntMap.output Util.output_bool) colors'; *)
+	 let cut = map_intersection colors colors' in
+	   if IntSet.is_empty cut
+	   then map_union colors colors'
+	   else
+	     let v = IntSet.choose cut in
+(* 	       Printf.eprintf "v = %d c1 = %b c2 = %b\n" v (IntMap.get colors v) (IntMap.get colors' v); *)
+	       if IntMap.get colors v = IntMap.get colors' v
+	       then map_union colors colors'
+	       else map_union colors (map_invert colors'))
+      IntMap.empty
       components
 ;;
