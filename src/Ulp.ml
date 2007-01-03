@@ -57,45 +57,89 @@ let input channel =
     loop ELGraph.empty 0
 ;;
 
+let isdigit = function
+    '0' .. '9' -> true
+  | _ -> false
+;;
+
+(* try int_of_string... is not what we want, since it accepts e.g. "0x17"  *)
+let is_int s =
+  let rec loop p =
+    if p >= String.length s
+    then true
+    else isdigit s.[p] && loop (p + 1)
+  in
+    String.length s > 0 && loop 0
+;;
+
 let input_named channel =
-  let rec loop g vertex_numbers vertex_names lineno =
+  let rec loop lines lineno =
     try
       let line = strip_comment (input_line channel) in
       let line = Util.split_string line in
-	if line = [] then loop g vertex_numbers vertex_names (lineno + 1)
+	if line = [] then loop lines (lineno + 1)
 	else
 	  let v, w, s =
 	    match line with
 		[v; w; s] -> v, w, s
 	      | [v; w]    -> v, w, "1"
 	      | _ -> invalid_arg "bad edge syntax" in
-	  let vertex_number g vertex_numbers vertex_names v =
-	    if StringMap.mem v vertex_numbers
-	    then g, vertex_numbers, vertex_names, StringMap.find v vertex_numbers
-	    else
-	      let g, i = ELGraph.new_vertex g in
-		g, StringMap.add v i vertex_numbers, IntMap.add vertex_names i v, i in
-          let g, vertex_numbers, vertex_names, i =
-	    vertex_number g vertex_numbers vertex_names v in
-          let g, vertex_numbers, vertex_names, j =
-	    vertex_number g vertex_numbers vertex_names w in
-	  let label =
-	    if ELGraph.is_connected g i j
-	    then ELGraph.get_label g i j
-	    else { eq = 0; ne = 0 } in
-	  let label =
-	    if s = "0"
-	    then { label with eq = label.eq + 1}
-	    else if s = "1"
-	    then { label with ne = label.ne + 1}
-	    else invalid_arg "bad edge label" in
-	  let g = ELGraph.set_label g i j label in
-	    loop g vertex_numbers vertex_names (lineno + 1)
-    with End_of_file -> g, vertex_numbers, vertex_names
+	    if s <> "0" && s <> "1" then invalid_arg "bad edge label"
+	    else loop ((v, w, s) :: lines) (lineno + 1)
+    with End_of_file -> lines in
+  let lines = loop [] 0 in
+  let vertex_numbers, vertex_names, max_id =
+    List.fold_left
+      (fun (vertex_numbers, vertex_names, max_id) (v, w, _) ->
+	 let update vertex_numbers vertex_names max_id v =
+	   if is_int v && not (StringMap.mem v vertex_numbers)
+	   then
+	     let i = int_of_string v
+	     in
+	       StringMap.add v i vertex_numbers,
+	       IntMap.add vertex_names i v,
+	       max max_id i
+	   else vertex_numbers, vertex_names, max_id in
+	 let vertex_numbers, vertex_names, max_id = update vertex_numbers vertex_names max_id v in
+	 let vertex_numbers, vertex_names, max_id = update vertex_numbers vertex_names max_id w in
+	   vertex_numbers, vertex_names, max_id)
+      (StringMap.empty, IntMap.empty, 1)
+      lines in
+  let vertex_numbers, vertex_names, max_id =
+    List.fold_left
+      (fun (vertex_numbers, vertex_names, max_id) (v, w, _) ->
+	 let update vertex_numbers vertex_names max_id v =
+	   if not (is_int v)
+	   then
+	     let i = max_id + 1
+	     in
+	       StringMap.add v i vertex_numbers,
+	       IntMap.add vertex_names i v,
+	       i
+	   else vertex_numbers, vertex_names, max_id in
+	 let vertex_numbers, vertex_names, max_id = update vertex_numbers vertex_names max_id v in
+	 let vertex_numbers, vertex_names, max_id = update vertex_numbers vertex_names max_id w in
+	   vertex_numbers, vertex_names, max_id)
+      (vertex_numbers, vertex_names, max_id)
+      lines in
+  let g = IntMap.fold (fun g i _ -> ELGraph.add_vertex g i) vertex_names ELGraph.empty in
+  let g =
+    List.fold_left
+      (fun g (v, w, s) ->
+	 let i = StringMap.find v vertex_numbers in
+	 let j = StringMap.find w vertex_numbers in
+(* 	   Printf.eprintf "%s %s %d %d\n" v w i j; *)
+	   ELGraph.modify_label_default
+	     (fun label ->
+		if s = "0"
+		then { label with eq = label.eq + 1}
+		else { label with ne = label.ne + 1})
+	     g i j { eq = 0; ne = 0 })
+      g
+      lines
   in
-    loop ELGraph.empty StringMap.empty IntMap.empty 1
+     g, vertex_numbers, vertex_names
 ;;
-
 
 let output_edge channel e =
   if e.eq > 0 then begin
