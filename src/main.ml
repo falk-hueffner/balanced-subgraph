@@ -49,7 +49,7 @@ let () =
 	(fun (i, j, sign) ->
 	   let { Ulp.eq = eq; Ulp.ne = ne } = ELGraph.get_label g i j in
 	     for l = 1 to (if sign = Ulp.Eq then eq else ne) do
-	       Printf.printf "%3s %3s %d\n"
+	       Printf.printf "%s %s %d\n"
 		 (IntMap.get vertex_names i)
 		 (IntMap.get vertex_names j)
 		 (if sign = Ulp.Eq then 0 else 1)

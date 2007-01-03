@@ -113,6 +113,7 @@ let output channel = ELGraph.output channel output_edge;;
 
 let solve_brute_force g =
   let n = ELGraph.num_vertices g in
+  if n >= 30 then failwith "solve_brute_force: too large";
   let numbers, _ = ELGraph.fold_vertices
     (fun (numbers, n) i _ -> IntMap.add numbers i n, n + 1) g (IntMap.empty, 0) in
   let rec loop best_del best_edges colors =
