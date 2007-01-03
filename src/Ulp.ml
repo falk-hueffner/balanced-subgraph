@@ -61,30 +61,36 @@ let input_named channel =
   let rec loop g vertex_numbers vertex_names lineno =
     try
       let line = strip_comment (input_line channel) in
-	match Util.split_string line with
-	    [] -> loop g vertex_numbers vertex_names (lineno + 1)
-          | [v; w; s] ->
-	      let vertex_number g vertex_numbers vertex_names v =
-		if StringMap.mem v vertex_numbers
-		then g, vertex_numbers, vertex_names, StringMap.find v vertex_numbers
-		else
-		  let g, i = ELGraph.new_vertex g in
-		    g, StringMap.add v i vertex_numbers, IntMap.add vertex_names i v, i in
-              let g, vertex_numbers, vertex_names, i =
-		vertex_number g vertex_numbers vertex_names v in
-              let g, vertex_numbers, vertex_names, j =
-		vertex_number g vertex_numbers vertex_names w in
-	      let label =
-		if ELGraph.is_connected g i j
-		then ELGraph.get_label g i j
-		else { eq = 0; ne = 0 } in
-	      let label =
-		if s = "1" || s = "+"
-		then { label with eq = label.eq + 1}
-		else { label with ne = label.ne + 1} in
-	      let g = ELGraph.set_label g i j label in
-		loop g vertex_numbers vertex_names (lineno + 1)
-          | _ -> invalid_arg "bad edge syntax"
+      let line = Util.split_string line in
+	if line = [] then loop g vertex_numbers vertex_names (lineno + 1)
+	else
+	  let v, w, s =
+	    match line with
+		[v; w; s] -> v, w, s
+	      | [v; w]    -> v, w, "1"
+	      | _ -> invalid_arg "bad edge syntax" in
+	  let vertex_number g vertex_numbers vertex_names v =
+	    if StringMap.mem v vertex_numbers
+	    then g, vertex_numbers, vertex_names, StringMap.find v vertex_numbers
+	    else
+	      let g, i = ELGraph.new_vertex g in
+		g, StringMap.add v i vertex_numbers, IntMap.add vertex_names i v, i in
+          let g, vertex_numbers, vertex_names, i =
+	    vertex_number g vertex_numbers vertex_names v in
+          let g, vertex_numbers, vertex_names, j =
+	    vertex_number g vertex_numbers vertex_names w in
+	  let label =
+	    if ELGraph.is_connected g i j
+	    then ELGraph.get_label g i j
+	    else { eq = 0; ne = 0 } in
+	  let label =
+	    if s = "0"
+	    then { label with eq = label.eq + 1}
+	    else if s = "1"
+	    then { label with ne = label.ne + 1}
+	    else invalid_arg "bad edge label" in
+	  let g = ELGraph.set_label g i j label in
+	    loop g vertex_numbers vertex_names (lineno + 1)
     with End_of_file -> g, vertex_numbers, vertex_names
   in
     loop ELGraph.empty StringMap.empty IntMap.empty 1
