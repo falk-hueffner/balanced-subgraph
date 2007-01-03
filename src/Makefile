@@ -1,4 +1,4 @@
-EXECS	  = ulp
+EXECS	  = ulp gen-ulp
 
 SOURCES   = \
 	Util.ml		\
@@ -34,6 +34,9 @@ ulp: $(OBJS) main.cmx
 
 ulp-dbg: $(DBG_OBJS) main.cmo
 	$(OCAMLC) $(PROFILE) -o $@ $(DBG_LIBS) $^
+
+gen-ulp: $(OBJS) gen-ulp.cmx
+	$(OCAMLOPT) $(PROFILE) -o $@ $(LIBS) $^
 
 doc/index.html: $(MLIS)
 	mkdir -p doc
