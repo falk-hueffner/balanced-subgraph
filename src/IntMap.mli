@@ -44,6 +44,8 @@ val max_key : 'a t -> int
     [Not_found] if no such binding exists. O(log n) time.  *)
 val get : 'a t -> int -> 'a
 
+val get_opt : 'a t -> int -> 'a option
+
 (** [get_default m i x] returns the current binding of [i] in [m], or
     [x] if no such binding exists. Raises [Invalid_argument] when [i] is
     negative. O(log n) time.  *)
@@ -92,6 +94,6 @@ val fold : ('b -> int -> 'a -> 'b) -> 'a t -> 'b -> 'b
      are the associated data.  *)
 val iter : (int -> 'a -> unit) -> 'a t -> unit
 
-(** [output c p m] prints a debug representation of [s] to channel
+(** [output p c m] prints a debug representation of [s] to channel
     [c], using [p] to print values.  O(n) time.  *)
-val output : out_channel -> (out_channel -> 'a -> unit) -> 'a t -> unit
+val output : (out_channel -> 'a -> unit) -> out_channel -> 'a t -> unit

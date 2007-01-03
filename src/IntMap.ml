@@ -69,6 +69,17 @@ let rec get s i =
   | _  -> raise Not_found
 ;;
 
+let rec get_opt s i =
+  if i < 0 then invalid_arg "IntMap.get_opt: negative key";
+  match s with
+  | Leaf (j, x) when j = i -> Some x
+  | Branch (p, _, _, l, r) ->
+      if i <= p
+      then get_opt l i
+      else get_opt r i
+  | _  -> None
+;;
+
 let rec get_default s i x =
   if i < 0 then invalid_arg "IntMap.get_default: negative key";
   match s with
@@ -210,7 +221,7 @@ let rec fold f s accu = match s with
 
 let iter f s = fold (fun () k x -> f k x) s ();;
 
-let output channel p m =
+let output p channel m =
   Printf.fprintf channel "{[%d] " (size m);
   ignore (fold
     (fun first i x ->
