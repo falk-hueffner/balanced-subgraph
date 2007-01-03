@@ -29,6 +29,7 @@ let specs = [
 let () =
   Arg.parse specs (fun _ -> Arg.usage specs usage_msg) usage_msg;
   let g = Ulp.input stdin in
+  let m = ELGraph.fold_edges (fun m _ _ { Ulp.eq = eq; Ulp.ne = ne } -> m + eq + ne) g 0 in
 (*   Ulp.output stdout g; *)
   let start = Util.timer () in
   let edges = Ulp.solve g in
@@ -41,14 +42,14 @@ let () =
   in
     if !stats_only      
     then
-      Printf.printf "%4d %5d %4d %8.2f\n"
-	(ELGraph.num_vertices g) (ELGraph.num_edges g) k (stop -. start)
+      Printf.printf "%5d %6d %5d %10.2f\n"
+	(ELGraph.num_vertices g) m k (stop -. start)
     else
       List.iter
 	(fun (i, j, sign) ->
 	   let { Ulp.eq = eq; Ulp.ne = ne } = ELGraph.get_label g i j in
 	     for l = 1 to (if sign = Ulp.Eq then eq else ne) do
-	       Printf.printf "%d %d %d\n" i j (if sign = Ulp.Eq then 0 else 1)
+	       Printf.printf "%3d %3d %d\n" i j (if sign = Ulp.Eq then 0 else 1)
 	     done)
 	edges
 ;;
