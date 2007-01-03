@@ -188,9 +188,9 @@ let rec modify f s i =
 ;;
 
 let rec modify_default f s i x =
-  if i < 0 then invalid_arg "IntMap.set: negative key";
+  if i < 0 then invalid_arg "IntMap.modify_default: negative key";
   match s with
-      Empty -> Leaf (i, x)
+      Empty -> Leaf (i, f x)
     | Leaf (j, y) when j = i -> Leaf (i, f y)
     | Leaf (j, _) -> join 1 i (Leaf (i, f x)) j s 2
     | Branch (p, m, c, l, r) ->
