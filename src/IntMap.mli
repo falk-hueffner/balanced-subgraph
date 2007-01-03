@@ -44,6 +44,8 @@ val max_key : 'a t -> int
     [Not_found] if no such binding exists. O(log n) time.  *)
 val get : 'a t -> int -> 'a
 
+(** [get_opt m i] returns the current binding of [i] in [m], or [None]
+    if no such binding exists. O(log n) time.  *)
 val get_opt : 'a t -> int -> 'a option
 
 (** [get_default m i x] returns the current binding of [i] in [m], or
@@ -84,6 +86,12 @@ val modify_default : ('a -> 'a) -> 'a t -> int -> 'a -> 'a t
     [Not_found] when [i] has no binding.  *)
 val remove : 'a t -> int -> 'a t
 
+(** [map f m] returns a map with same domain as [m], where the
+    associated value [x] of all bindings of [m] has been replaced by the
+    result of the application of [f] to [a]. The bindings are passed to
+    [f] in increasing order of the keys.  *)
+val map : (int -> 'a -> 'b) -> 'a t -> 'b t
+  
 (** [fold f m a] computes [(f iN xN ... (f i1 x1 a)...)], where [i1
     ... iN] are the keys of all bindings in [m] (in increasing order),
     and [x1 ... xN] are the associated data.  *)

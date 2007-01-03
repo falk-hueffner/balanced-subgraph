@@ -221,6 +221,11 @@ let rec fold f s accu = match s with
 
 let iter f s = fold (fun () k x -> f k x) s ();;
 
+let rec map f = function
+    Empty -> Empty
+  | Leaf (i, x) -> Leaf (i, f i x)
+  | Branch (p, m, c, l, r) -> Branch (p, m, c, map f l, map f r)
+
 let output p channel m =
   Printf.fprintf channel "{[%d] " (size m);
   ignore (fold
