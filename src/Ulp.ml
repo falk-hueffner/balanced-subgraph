@@ -111,34 +111,75 @@ let output_edge channel e =
 
 let output channel = ELGraph.output channel output_edge;;
 
+let is_sign_consistent g =
+  if ELGraph.is_empty g
+  then true
+  else
+    let rec dfs v color colors =
+      if IntMap.has_key colors v
+      then IntMap.get colors v = color
+      else
+	let colors = IntMap.set colors v color in
+	  ELGraph.fold_neighbors
+	    (fun consistent w e ->
+	       consistent
+	       && (not (e.eq > 0 && e.ne > 0))
+	       && if e.eq > 0
+	       then dfs w color colors
+	       else dfs w (not color) colors)
+	    g v true
+    in
+      dfs (ELGraph.max_vertex g) false IntMap.empty
+;;
+
 let solve_brute_force g =
-  let n = ELGraph.num_vertices g in
-  if n >= 30 then failwith "solve_brute_force: too large";
-  let numbers, _ = ELGraph.fold_vertices
-    (fun (numbers, n) i _ -> IntMap.add numbers i n, n + 1) g (IntMap.empty, 0) in
-  let rec loop best_del best_edges colors =
-    if colors >= (1 lsl (n - 1))
-    then best_del, best_edges
-    else
-      let color v = colors land (1 lsl (IntMap.get numbers v)) <> 0 in
-      let del, edges =
-	ELGraph.fold_edges
-	  (fun (del, edges) v w { eq = eq; ne = ne } ->
-	     if color v = color w
-	     then (if ne = 0 then del, edges else del + ne, (v, w, Ne) :: edges)
-	     else (if eq = 0 then del, edges else del + eq, (v, w, Eq) :: edges))
-	  g
-	  (0, [])
-      in
+  if !Util.verbose
+  then Printf.eprintf "bf\tn = %3d m = %4d\n%!" (ELGraph.num_vertices g) (ELGraph.num_edges g);
+  if is_sign_consistent g
+  then begin
+    if !Util.verbose
+    then Printf.eprintf "already sign-consistent\n%!";
+    []
+  end else
+    let n = ELGraph.num_vertices g in
+      if n >= 30 then failwith "solve_brute_force: too large";
+      let numbers, _ = ELGraph.fold_vertices
+	(fun (numbers, n) i _ -> IntMap.add numbers i n, n + 1) g (IntMap.empty, 0) in
+      let rec loop best_del best_edges colors =
+	if colors >= (1 lsl (n - 1))
+	then best_del, best_edges
+	else
+	  let color v = colors land (1 lsl (IntMap.get numbers v)) <> 0 in
+	  let del, edges =
+	    ELGraph.fold_edges
+	      (fun (del, edges) v w { eq = eq; ne = ne } ->
+		 if color v = color w
+		 then (if ne = 0 then del, edges else del + ne, (v, w, Ne) :: edges)
+		 else (if eq = 0 then del, edges else del + eq, (v, w, Eq) :: edges))
+	      g
+	      (0, [])
+	  in
 (* 	Printf.fprintf stdout "colors = %d del = %d edges = %a\n%!" colors del *)
 (* 	(Util.output_list (fun c (i, j, l) -> Printf.fprintf c "%d %d %b" i j (l = Ne))) edges; *)
-	if del < best_del
-	then loop del edges (colors + 1)
-	else loop best_del best_edges (colors + 1) in
-  let best_del, best_edges = loop max_int [] 0 in
-    best_edges;
+	    if del < best_del
+	    then loop del edges (colors + 1)
+	    else loop best_del best_edges (colors + 1) in
+      let best_del, best_edges = loop max_int [] 0 in
+	best_edges
+;;
+
+let solve_component g =
+  if !Util.verbose
+  then Printf.eprintf "comp\tn = %3d m = %4d\n%!" (ELGraph.num_vertices g) (ELGraph.num_edges g);
+  solve_brute_force g
 ;;
 
 let solve g =
-  solve_brute_force g
+  if !Util.verbose
+  then Printf.eprintf "solve\tn = %3d m = %4d\n%!" (ELGraph.num_vertices g) (ELGraph.num_edges g);
+  let components = Cut.biconnected_components (ELGraph.unlabeled g) in
+    List.fold_left
+      (fun edges component -> edges @ (solve_component (ELGraph.subgraph g component)))
+      []
+      components
 ;;

@@ -18,6 +18,7 @@
 type 'a t = 'a IntMap.t IntMap.t;;
 
 let empty = IntMap.empty;;
+let is_empty = IntMap.is_empty;;
 
 let has_vertex = IntMap.has_key;;
 let num_vertices = IntMap.size;;

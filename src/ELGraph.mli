@@ -25,6 +25,9 @@ type 'a t
 (** The empty graph.  *)
 val empty : 'a t
 
+(** True if the graph contains no vertices.  *)
+val is_empty : 'a t -> bool
+  
 (** Number of vertices. O(1) time.  *)
 val num_vertices : 'a t -> int
 
