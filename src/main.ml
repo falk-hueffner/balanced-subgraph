@@ -25,7 +25,7 @@ let specs = [
   ("-v", Arg.Set(Util.verbose),
          "Print progress to stderr");
 ];;
-
+(*
 let find_gadgets c_size s_size max_mult =
   let g = Util.fold_n ELGraph.add_vertex (c_size + s_size) ELGraph.empty in
 (*   ELGraph.output stdout output_edge g;  *)
@@ -89,7 +89,7 @@ let () =
   find_gadgets 2 0 1;
   exit 0;
 ;;
-
+*)
 let () =
   Arg.parse specs (fun _ -> Arg.usage specs usage_msg) usage_msg;
   let g, vertex_numbers, vertex_names = Ulp.input stdin in
