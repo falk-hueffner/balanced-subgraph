@@ -30,33 +30,6 @@ let strip_comment s =
   if String.contains s '#' then String.sub s 0 (String.index s '#') else s
 ;;
 
-let input channel =
-  let rec loop g lineno =
-    try
-      let line = strip_comment (input_line channel) in
-	match Util.split_string line with
-	    [] -> loop g (lineno + 1)
-          | [v; w; s] ->
-	      let i = int_of_string v in
-	      let j = int_of_string w in
-	      let g = ELGraph.set_vertex g i in
-	      let g = ELGraph.set_vertex g j in
-	      let g = ELGraph.modify_label_default
-		(fun label ->
-		   if s = "0"
-		   then { label with eq = label.eq + 1}
-		   else if s = "1"
-		   then { label with ne = label.ne + 1}
-		   else invalid_arg "bad edge label")
-		g i j { eq = 0; ne = 0 }
-	      in
-		loop g (lineno + 1)
-          | _ -> invalid_arg "bad edge syntax"
-    with End_of_file -> g
-  in
-    loop ELGraph.empty 0
-;;
-
 let isdigit = function
     '0' .. '9' -> true
   | _ -> false
@@ -72,7 +45,7 @@ let is_int s =
     String.length s > 0 && loop 0
 ;;
 
-let input_named channel =
+let input channel =
   let rec loop lines lineno =
     try
       let line = strip_comment (input_line channel) in

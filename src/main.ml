@@ -28,7 +28,7 @@ let specs = [
 
 let () =
   Arg.parse specs (fun _ -> Arg.usage specs usage_msg) usage_msg;
-  let g, vertex_numbers, vertex_names = Ulp.input_named stdin in
+  let g, vertex_numbers, vertex_names = Ulp.input stdin in
   let m = ELGraph.fold_edges (fun m _ _ { Ulp.eq = eq; Ulp.ne = ne } -> m + eq + ne) g 0 in
 (*   Ulp.output stdout g; *)
   let start = Util.timer () in
