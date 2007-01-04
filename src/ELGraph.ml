@@ -44,6 +44,12 @@ let connect g i j label =
     g
 ;;
 
+let disconnect g i j =
+  let g = IntMap.modify (fun neighbors_i -> IntMap.remove neighbors_i j) g i in
+  let g = IntMap.modify (fun neighbors_j -> IntMap.remove neighbors_j i) g j in
+    g
+;;
+
 let set_label g i j label =
   let g = IntMap.modify (fun neighbors_i -> IntMap.set neighbors_i j label) g i in
   let g = IntMap.modify (fun neighbors_j -> IntMap.set neighbors_j i label) g j in
