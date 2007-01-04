@@ -131,24 +131,26 @@ let output channel = ELGraph.output channel output_edge;;
 exception Not_sign_consistent;;
 
 let color g =
-  if ELGraph.is_empty g
-  then IntMap.empty
-  else
-    let rec dfs v color colors =
-      match IntMap.get_opt colors v with
-	  Some c -> if c = color then colors else raise Not_sign_consistent
-	| None ->
-	    let colors = IntMap.set colors v color in
-	      ELGraph.fold_neighbors
-		(fun colors w e ->
-		   if e.eq > 0 && e.ne > 0
-		   then raise Not_sign_consistent
-		   else if e.eq > 0
-		   then dfs w color colors
-		   else dfs w (not color) colors)
-		g v colors
-    in
-      dfs (ELGraph.max_vertex g) false IntMap.empty
+  let rec dfs v color colors =
+    match IntMap.get_opt colors v with
+	Some c -> if c = color then colors else raise Not_sign_consistent
+      | None ->
+	  let colors = IntMap.set colors v color in
+	    ELGraph.fold_neighbors
+	      (fun colors w e ->
+		 if e.eq > 0 && e.ne > 0
+		 then raise Not_sign_consistent
+		 else if e.eq > 0
+		 then dfs w color colors
+		 else dfs w (not color) colors)
+	      g v colors
+  in
+    ELGraph.fold_vertices
+      (fun colors v _ ->
+	 if IntMap.has_key colors v then colors
+	 else dfs v false colors)
+      g
+      IntMap.empty
 ;;
 
 let coloring_cost g colors =
