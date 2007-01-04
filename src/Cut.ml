@@ -130,11 +130,18 @@ let biconnected_components g =
 
 let cut_corner g =
   let better s1 c1 s2 c2 =
-    if IntSet.size s1 >= IntSet.size c1 - 1
-      && (IntSet.size c1 < IntSet.size c2
-	  || (IntSet.size c1 = IntSet.size c2 && IntSet.size s1 < IntSet.size s2))
-    then s1, c1
-    else s2, c2 in
+    if IntSet.size s2 < IntSet.size c2 - 1
+    then
+      if not (IntSet.size s1 < IntSet.size s1 - 1)
+      then s1, c1
+      else if (IntSet.size c1 - IntSet.size s1 < IntSet.size c2 - IntSet.size s2)
+      then s1, c1
+      else s2, c2
+    else
+      if IntSet.size c1 < IntSet.size c2
+	|| (IntSet.size c1 = IntSet.size c2 && IntSet.size s1 < IntSet.size s2)
+      then s1, c1
+      else s2, c2 in
   let rec grow s c best_s best_c =
 (*     Printf.eprintf "s = %a c = %a\n" IntSet.output s IntSet.output c; *)
 (*     Printf.eprintf "bests = %a bestc = %a\n" IntSet.output best_s IntSet.output best_c; *)
