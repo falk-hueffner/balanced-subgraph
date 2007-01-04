@@ -26,6 +26,70 @@ let specs = [
          "Print progress to stderr");
 ];;
 
+let find_gadgets c_size s_size max_mult =
+  let g = Util.fold_n ELGraph.add_vertex (c_size + s_size) ELGraph.empty in
+(*   ELGraph.output stdout output_edge g;  *)
+  let fold_pairs f n a =
+    let rec loop a i j =
+      if i >= n then a
+      else if j >= i then loop a (i + 1) 0
+      else loop (f a i j) i (j + 1)
+    in
+      loop a 0 0 in
+  let n = ELGraph.num_vertices g in
+  let edges = fold_pairs (fun l i j -> (i, j) :: l) n [] in
+  let m = List.length edges in
+  let l_min = -max_mult and l_max = max_mult in
+  let l = Array.make m l_min in
+  let bump () =
+    let rec loop i =
+      if i >= Array.length l
+      then false
+      else if l.(i) >= l_max
+      then begin l.(i) <- l_min; loop (i + 1) end
+      else begin l.(i) <- l.(i) + 1; true end
+    in
+      loop 0 in
+  let c_set = Util.fold_n IntSet.add c_size IntSet.empty in
+  let s_set = Util.fold_n (fun s i -> IntSet.add s (i + c_size)) s_size IntSet.empty
+  in
+(*     Printf.printf "c = %a s = %a\n" IntSet.output c_set IntSet.output s_set; *)
+    l.(0) <- l_min - 1;
+    while bump () do
+(*       Printf.printf "l = %a\n" (Util.output_array Util.output_int) l; *)
+      let g, _ = List.fold_left
+	(fun (g, i) (v, w) ->
+	   if l.(i) > 0
+	   then ELGraph.connect g v w { Ulp.eq = l.(i); Ulp.ne = 0 }, i + 1
+	   else if l.(i) < 0
+	   then ELGraph.connect g v w { Ulp.eq = 0; Ulp.ne = -l.(i) }, i + 1
+	   else g, i + 1)
+	(g, 0)
+	edges in
+(*  	ELGraph.output stdout output_edge g; *)
+      let colorings = Ulp.solve_all_colorings g c_set in
+      let costs = IntMap.map (fun _ coloring -> Ulp.coloring_cost g coloring) colorings
+      in
+(* 	  Util.output_list stdout Util.output_int r; *)
+(*  	let m = List.fold_left min max_int r in *)
+(*  	let r = List.map (fun i -> i - m) r in *)
+(* 	  Util.output_list stdout Util.output_int r; *)
+(* 	  ELGraph.output stdout output_edge g; *)
+ 	  IntMap.iter (fun _ cost -> Printf.printf "%d " cost) costs;
+	  print_newline ();
+	  (*
+	  if GadgetMap.has_key r !gadgets
+	  then 
+	  gadgets := GadgetMap.add r (Array.copy l) !gadgets;
+	  *)	
+    done;
+;;
+
+let () =
+  find_gadgets 2 0 1;
+  exit 0;
+;;
+
 let () =
   Arg.parse specs (fun _ -> Arg.usage specs usage_msg) usage_msg;
   let g, vertex_numbers, vertex_names = Ulp.input stdin in
