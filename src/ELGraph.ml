@@ -40,13 +40,15 @@ let get_label_default g i j l = IntMap.get_default (IntMap.get g i) j l;;
 
 let connect g i j label =
   let g = IntMap.modify (fun neighbors_i -> IntMap.add neighbors_i j label) g i in
-  let g = IntMap.modify (fun neighbors_j -> IntMap.add neighbors_j i label) g j in
+  let g = if i = j then g else
+          IntMap.modify (fun neighbors_j -> IntMap.add neighbors_j i label) g j in
     g
 ;;
 
 let disconnect g i j =
   let g = IntMap.modify (fun neighbors_i -> IntMap.delete neighbors_i j) g i in
-  let g = IntMap.modify (fun neighbors_j -> IntMap.delete neighbors_j i) g j in
+  let g = if i = j then g else
+          IntMap.modify (fun neighbors_j -> IntMap.delete neighbors_j i) g j in
     g
 ;;
 
