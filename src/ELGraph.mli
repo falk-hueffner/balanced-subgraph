@@ -76,7 +76,8 @@ val get_label_default : 'a t -> int -> int -> 'a -> 'a
 val connect : 'a t -> int -> int -> 'a -> 'a t
 
 val disconnect : 'a t -> int -> int -> 'a t
-  
+val unconnect : 'a t -> int -> int -> 'a t
+
 (** [set_label g i j l] sets the label of the edge [(i, j)] to l. If
     [(i, j)] is not already an edge, it will be created. O(log n) time. *)
 val set_label : 'a t -> int -> int -> 'a -> 'a t
