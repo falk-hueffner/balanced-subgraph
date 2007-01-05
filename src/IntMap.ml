@@ -57,6 +57,11 @@ let rec max_key s = match s with
   | Leaf (i, _) -> i
   | Branch (_, _, _, _, r) -> max_key r
 ;;
+let rec min_key s = match s with
+    Empty -> raise Not_found
+  | Leaf (i, _) -> i
+  | Branch (_, _, _, l, _) -> max_key l
+;;
 
 let rec get s i =
   if i < 0 then invalid_arg "IntMap.get: negative key";

@@ -39,6 +39,7 @@ val has_key : 'a t -> int -> bool
 (** [max_key m] returns the maximum key in [m]. Raises [Not_found]
     when [m] is empty. O(log n) time.  *)
 val max_key : 'a t -> int
+val min_key : 'a t -> int
   
 (** [get m i] returns the current binding of [i] in [m], or raises
     [Not_found] if no such binding exists. O(log n) time.  *)
