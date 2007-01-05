@@ -264,8 +264,8 @@ let solve_all_colorings g c =
       let coloring = solve_brute_force g' in
 (*  	Printf.eprintf "coloring = %a\n" (IntMap.output Util.output_bool) coloring; *)
       let coloring = if IntMap.get coloring w then coloring else invert_coloring coloring in
-      let coloring = IntMap.remove coloring w in
-      let coloring = IntMap.remove coloring b in
+      let coloring = IntMap.delete coloring w in
+      let coloring = IntMap.delete coloring b in
       let coloring, _ =
 	IntSet.fold
 	  (fun (coloring, i) v -> IntMap.add coloring v (colors land (1 lsl i) <> 0), i + 1)

@@ -45,8 +45,8 @@ let connect g i j label =
 ;;
 
 let disconnect g i j =
-  let g = IntMap.modify (fun neighbors_i -> IntMap.remove neighbors_i j) g i in
-  let g = IntMap.modify (fun neighbors_j -> IntMap.remove neighbors_j i) g j in
+  let g = IntMap.modify (fun neighbors_i -> IntMap.delete neighbors_i j) g i in
+  let g = IntMap.modify (fun neighbors_j -> IntMap.delete neighbors_j i) g j in
     g
 ;;
 
@@ -98,10 +98,10 @@ let unlabeled g =
 
 let delete_vertex g i =
   let n = neighbors g i in
-  let g = IntMap.remove g i in
+  let g = IntMap.delete g i in
     IntMap.fold
       (fun g j _ ->
-	 IntMap.modify (fun n -> IntMap.remove n i) g j)
+	 IntMap.modify (fun n -> IntMap.delete n i) g j)
       n
       g      
 ;;

@@ -163,7 +163,7 @@ let rec add s i x =
           join (m lsl 1) i (Leaf (i, x)) p s (c + 1)
 ;;
 
-let rec remove s i =
+let rec delete s i =
   let branch = function
     | (_, _, Empty, s) -> s
     | (_, _, s, Empty) -> s
@@ -174,8 +174,8 @@ let rec remove s i =
       | Branch (p, m, c, l, r) ->
           if prefix_matches i p m then
             if i <= p
-            then branch (p, m, remove l i, r)
-            else branch (p, m, l, remove r i)
+            then branch (p, m, delete l i, r)
+            else branch (p, m, l, delete r i)
           else
             s
       | _ -> raise Not_found
