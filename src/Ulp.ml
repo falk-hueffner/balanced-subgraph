@@ -220,6 +220,20 @@ let solve_brute_force g =
 	colors
 ;;
 
+let merge_colorings m1 m2 =
+  IntMap.fold
+    (fun m k v ->
+       match IntMap.get_opt m k with
+	   Some v' when v' = v -> m
+	 | Some _ -> assert false
+	 | None -> IntMap.add m k v)
+    m1
+    m2
+;;
+let invert_coloring m =
+  IntMap.fold (fun m k v -> IntMap.add m k (not v)) m IntMap.empty
+;;
+
 let solve_all_colorings g c =
 (*   Printf.eprintf "g = %a\n" output g; *)
   let merge g v1 v2 =
@@ -249,6 +263,7 @@ let solve_all_colorings g c =
 (*  	Printf.eprintf "sacg' = %a\n" output g'; *)
       let coloring = solve_brute_force g' in
 (*  	Printf.eprintf "coloring = %a\n" (IntMap.output Util.output_bool) coloring; *)
+      let coloring = if IntMap.get coloring w then coloring else invert_coloring coloring in
       let coloring = IntMap.remove coloring w in
       let coloring = IntMap.remove coloring b in
       let coloring, _ =
@@ -260,20 +275,6 @@ let solve_all_colorings g c =
 	loop colorings (colors + 1)
   in
     loop IntMap.empty 0
-;;
-
-let merge_colorings m1 m2 =
-  IntMap.fold
-    (fun m k v ->
-       match IntMap.get_opt m k with
-	   Some v' when v' = v -> m
-	 | Some _ -> assert false
-	 | None -> IntMap.add m k v)
-    m1
-    m2
-;;
-let invert_coloring m =
-  IntMap.fold (fun m k v -> IntMap.add m k (not v)) m IntMap.empty
 ;;
 
 let rec solve_cut_corner g =
