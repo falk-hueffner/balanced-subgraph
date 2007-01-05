@@ -183,6 +183,68 @@ let is_sign_consistent g =
       dfs (ELGraph.max_vertex g) false IntMap.empty
 ;;
 
+let solve_occ g =
+  if !Util.verbose
+  then Printf.eprintf "occ\tn = %3d m = %4d\n%!" (ELGraph.num_vertices g) (ELGraph.num_edges g);
+(*   output stderr g; *)
+  let occ_out, occ_in = Unix.open_process "occ -e" in
+  let gadget_edges, _ =
+    ELGraph.fold_edges
+      (fun (gadget_edges, v) i j { eq = eq; ne = ne } ->
+	 if i = j then gadget_edges, v else
+	 let ne =
+	   if ne > 0
+	   then (Printf.fprintf occ_in "%d %d\n" i j;
+(*   		 Printf.eprintf        "%d %d\n" i j; *)
+		 ne - 1)
+	   else ne in
+	 let gadget_edges, v =
+	   Util.fold_n
+	     (fun (gadget_edges, v) _ ->
+		Printf.fprintf occ_in "%d %d\n%d %d\n%d %d\n" i v  v (v+1)  (v+1) j;
+(*   		Printf.eprintf        "%d %d\n%d %d\n%d %d\n" i v  v (v+1)  (v+1) j; *)
+		let gadget_edges = IntMap.add gadget_edges v     (i, j) in
+		let gadget_edges = IntMap.add gadget_edges (v+1) (i, j) in
+		  gadget_edges, v+2)
+	     ne
+	     (gadget_edges, v) in
+	 let gadget_edges, v =
+	   Util.fold_n
+	     (fun (gadget_edges, v) _ ->
+		Printf.fprintf occ_in "%d %d\n%d %d\n" i v  v j;
+(*   		Printf.eprintf        "%d %d\n%d %d\n" i v  v j; *)
+		let gadget_edges = IntMap.add gadget_edges v     (i, j) in
+		  gadget_edges, v+1)
+	     eq
+	     (gadget_edges, v)
+	 in
+	   gadget_edges, v)
+      g
+      (IntMap.empty, (ELGraph.max_vertex g) + 1)
+  in
+    close_out occ_in;
+    let rec loop edges =
+      try
+	let line = input_line occ_out in
+(*   	  Printf.eprintf "line = '%s'\n%!" line; *)
+	match Util.split_string line with
+	    [ v; w ] ->
+	      let i = int_of_string v and j = int_of_string w in
+	      let i, j =
+		if not (ELGraph.has_vertex g i) then IntMap.get gadget_edges i
+		else if not (ELGraph.has_vertex g j) then IntMap.get gadget_edges j
+		else i, j
+	      in
+(*  		Printf.eprintf "is = %d %d\n%!" i j; *)
+		loop ((i, j) :: edges)
+	  | _ -> assert false
+      with End_of_file -> edges in
+    let edges = loop [] in
+    let g' = List.fold_left (fun g' (i, j) -> ELGraph.unconnect g' i j) g edges in
+    let g' = ELGraph.fold_vertices (fun g' i _ -> ELGraph.unconnect g' i i) g' g' in
+      color g'
+;;
+
 let solve_brute_force g =
   if !Util.verbose
   then( Printf.eprintf "bf\tn = %3d m = %4d\n%!" (ELGraph.num_vertices g) (ELGraph.num_edges g);
@@ -192,7 +254,7 @@ let solve_brute_force g =
     color g
   with Not_sign_consistent ->
     let n = ELGraph.num_vertices g in
-      if n >= 30 then failwith "solve_brute_force: too large";
+      if n >= 8 then solve_occ g else
       let numbers, _ = ELGraph.fold_vertices
 	(fun (numbers, n) i _ -> IntMap.add numbers i n, n + 1) g (IntMap.empty, 0) in
       let rec loop best_del best_colors colors =
@@ -248,7 +310,7 @@ let solve_all_colorings g c =
   let c_n = IntSet.size c in
   let g', w = ELGraph.new_vertex g in
   let g', b = ELGraph.new_vertex g' in
-  let g' = ELGraph.connect g' b w { eq = 0; ne = 1 lsl 24; } in
+  let g' = ELGraph.connect g' b w { eq = 0; ne = 1 lsl 6; } in (* FIXME *)
   let rec loop colorings colors  =
     if colors >= (1 lsl (c_n - 1))
     then colorings

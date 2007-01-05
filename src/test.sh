@@ -1,6 +1,6 @@
 #! /bin/sh
 
-ulimit -t 10
+ulimit -t 60
 
 for i in test/*graph; do
   printf "%20s " ${i#test/}
