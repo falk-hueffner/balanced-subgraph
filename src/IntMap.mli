@@ -87,6 +87,11 @@ val modify_default : ('a -> 'a) -> 'a t -> int -> 'a -> 'a t
     [Not_found] when [i] has no binding.  *)
 val delete : 'a t -> int -> 'a t
 
+(** [remove m i] returns a map containing the same bindings as [m],
+    except for [i] which is unbound in the returned map. Returns [m]
+    unchanged when [i] has no binding.  *)
+val remove : 'a t -> int -> 'a t
+
 (** [map f m] returns a map with same domain as [m], where the
     associated value [x] of all bindings of [m] has been replaced by the
     result of the application of [f] to [a]. The bindings are passed to

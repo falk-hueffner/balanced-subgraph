@@ -181,6 +181,8 @@ let rec delete s i =
       | _ -> raise Not_found
 ;;
 
+let remove m i = try delete m i with Not_found -> m;;
+
 let rec update s i x =
   if i < 0 then invalid_arg "IntMap.set: negative key";
   match s with
