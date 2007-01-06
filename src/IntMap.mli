@@ -58,6 +58,11 @@ val get_default : 'a t -> int -> 'a -> 'a
     [Not_found] when [m] is empty. O(log n) time.  *)
 val choose : 'a t -> int * 'a
 
+(** [pop m] returns [i, x, m'], where [i, x] is an arbitrary key/value
+    pair of [m], and [m'] is [m] with [i] removed. Raises [Not_found] when
+    [m] is empty. O(log n) time.  *)
+val pop : 'a t -> int * 'a * 'a t
+
 (** [set m i x] returns a map containing the same bindings as [m],
     plus a binding of [i] to [x]. If [x] was already bound in [m], its
     previous binding disappears. Raises [Invalid_argument] when [i] is

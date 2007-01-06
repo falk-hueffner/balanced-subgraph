@@ -182,6 +182,7 @@ let rec delete s i =
 ;;
 
 let remove m i = try delete m i with Not_found -> m;;
+let pop m = let i, x = choose m in i, x, remove m i;;
 
 let rec update s i x =
   if i < 0 then invalid_arg "IntMap.set: negative key";
