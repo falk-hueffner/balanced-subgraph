@@ -64,6 +64,11 @@ let set_label g i j label =
     g
 ;;
 
+let modify_label f g i j =
+  let label = f (get_label g i j) in
+    set_label g i j label
+;;
+
 let modify_label_default f g i j label =
   let label = f (get_label_default g i j label) in
     set_label g i j label

@@ -82,6 +82,11 @@ val unconnect : 'a t -> int -> int -> 'a t
     [(i, j)] is not already an edge, it will be created. O(log n) time. *)
 val set_label : 'a t -> int -> int -> 'a -> 'a t
 
+(** [modify_label g f i j] sets the label [l] of the edge [(i, j)] to
+    [f l]. Raises [IntMap.Not_found] when [(i, j)] is not an edge. O(log
+    n) time. *)
+val modify_label : ('a -> 'a) -> 'a t -> int -> int -> 'a t
+
 (** [modify_label_default g f i j l] sets the label [l0] of the edge
     [(i, j)] to [f l0]. If [(i, j)] is not already an edge, it will be
     created and the label set to [f l]. O(log n) time. *)
