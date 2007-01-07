@@ -163,24 +163,11 @@ let coloring_cost g colors =
 ;;
 
 let is_sign_consistent g =
-  if ELGraph.is_empty g
-  then true
-  else
-    let rec dfs v color colors =
-      if IntMap.has_key colors v
-      then IntMap.get colors v = color
-      else
-	let colors = IntMap.set colors v color in
-	  ELGraph.fold_neighbors
-	    (fun consistent w e ->
-	       consistent
-	       && (not (e.eq > 0 && e.ne > 0))
-	       && if e.eq > 0
-	       then dfs w color colors
-	       else dfs w (not color) colors)
-	    g v true
-    in
-      dfs (ELGraph.max_vertex g) false IntMap.empty
+  try
+    color g;
+    true
+  with
+      Not_sign_consistent -> false
 ;;
 
 let solve_occ g =
