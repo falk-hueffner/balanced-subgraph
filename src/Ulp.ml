@@ -164,7 +164,7 @@ let coloring_cost g colors =
 
 let is_sign_consistent g =
   try
-    color g;
+    ignore (color g);
     true
   with
       Not_sign_consistent -> false
