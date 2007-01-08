@@ -30,6 +30,13 @@ let fold_n f n accu =
     loop accu 0
 ;;
 
+let rec list_contains l x =
+  match l with
+      [] -> false
+    | y :: r when x = y -> true
+    | y :: r -> list_contains r x
+;;
+
 let output_int channel i = Printf.fprintf channel "%d" i;;
 let output_bool channel b = output_char channel (if b then '1' else '0');;
 

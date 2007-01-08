@@ -23,6 +23,8 @@ val timer : unit -> float
 
 val fold_n : ('a -> int -> 'a) -> int -> 'a -> 'a
 
+val list_contains : 'a list -> 'a -> bool
+ 
 (** [output_int channel i] prints [i] on [channel].  *)
 val output_int : out_channel -> int -> unit
 
