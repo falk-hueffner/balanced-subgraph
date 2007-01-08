@@ -242,8 +242,8 @@ let solve_iterative_compression g =
     let k =
       List.fold_left
 	(fun k (i, j) -> let l = ELGraph.get_label g i j in k + l.eq + l.ne) 0 cover in
-      if !Util.verbose then Printf.eprintf " k = %d, star_cover = %d, cover = %a\n%!"
-	k (IntSet.size s) (Util.output_list (fun c (i, j) -> Printf.fprintf c "(%d, %d)" i j)) cover;
+      if !Util.verbose then Printf.eprintf "m = %d k = %d, star_cover = %d, cover = %a\n%!"
+	(ELGraph.num_edges g) k (IntSet.size s) (Util.output_list (fun c (i, j) -> Printf.fprintf c "(%d, %d)" i j)) cover;
     if d then Printf.eprintf "\ncompress g = %a cover = %a k = %d" output g (Util.output_list (fun c (i, j) -> Printf.fprintf c "(%d, %d)" i j)) cover k;
     if d then Printf.eprintf " flow = %a\n" Flow.output flow;
     let rec loop iter s t pairs =
