@@ -170,6 +170,30 @@ let is_sign_consistent g =
       Not_sign_consistent -> false
 ;;
 
+let star_cover g =
+  let rec deg1 g =
+    ELGraph.fold_vertices
+      (fun r i neigh ->
+	 if ELGraph.deg g i = 1
+	 then Some (let j, _ = IntMap.choose neigh in j)
+	 else r) g None in
+  let rec maxdeg g =
+    let r, _ =
+      ELGraph.fold_vertices
+	(fun (r, d) i _ ->
+	   let d' = ELGraph.deg g i in if d' > d then Some i, d'  else r, d) g (None, 0)
+    in
+      r in
+  let rec loop g vs =
+    match
+      let r = deg1 g in if r = None then maxdeg g else r
+    with
+	Some i -> loop (ELGraph.delete_vertex g i) (IntSet.add vs i)
+      | None -> vs
+  in
+    loop g IntSet.empty
+;;
+
 let gray_code x = x lxor (x lsr 1);;
 let rec ctz x = if x land 1 = 1 then 0 else 1 + (ctz (x lsr 1));;
 let gray_change x = ctz ((gray_code x) lxor (gray_code (x + 1)));;
@@ -192,6 +216,11 @@ let solve_iterative_compression g =
     let flow = ELGraph.fold_edges
       (fun flow i j {eq = eq; ne = ne} ->
 	 Flow.connect flow i j (eq + ne)) g Flow.empty in
+    let cover_g =
+      List.fold_left
+	(fun g (i, j) -> ELGraph.set_connect g i j {eq = 1; ne = 0})
+	ELGraph.empty cover in
+    let star_centers = star_cover cover_g in
     let flow, s, t, pairs, orig, _ =
       List.fold_left
 	(fun (flow, s, t, pairs, orig, k) (i, j) ->
@@ -213,6 +242,8 @@ let solve_iterative_compression g =
     let k =
       List.fold_left
 	(fun k (i, j) -> let l = ELGraph.get_label g i j in k + l.eq + l.ne) 0 cover in
+      if !Util.verbose then Printf.eprintf " k = %d, star_cover = %d, cover = %a\n%!"
+	k (IntSet.size star_centers) (Util.output_list (fun c (i, j) -> Printf.fprintf c "(%d, %d)" i j)) cover;
     if d then Printf.eprintf "\ncompress g = %a cover = %a k = %d" output g (Util.output_list (fun c (i, j) -> Printf.fprintf c "(%d, %d)" i j)) cover k;
     if d then Printf.eprintf " flow = %a\n" Flow.output flow;
     let rec loop iter s t pairs =
