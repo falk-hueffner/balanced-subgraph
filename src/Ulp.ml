@@ -220,30 +220,30 @@ let solve_iterative_compression g =
       List.fold_left
 	(fun g (i, j) -> ELGraph.set_connect g i j {eq = 1; ne = 0})
 	ELGraph.empty cover in
-    let star_centers = star_cover cover_g in
-    let flow, s, t, pairs, orig, _ =
+    let s = star_cover cover_g in
+    let flow, t, s_of_t, t_of_s, pairs, _ = IntSet.fold
+      (fun (flow, t, s_of_t, t_of_s, pairs, k) i ->
+	 let flow, j = Flow.new_vertex flow in
+	 let t = IntSet.add t j in
+	 let s_of_t = IntMap.add s_of_t j i in
+	 let t_of_s = IntMap.add t_of_s i j in
+	 let pairs = IntMap.add pairs k (i, j) in
+	   flow, t, s_of_t, t_of_s, pairs, k + 1)
+      s (flow, IntSet.empty, IntMap.empty, IntMap.empty, IntMap.empty, 0) in
+    let flow =
       List.fold_left
-	(fun (flow, s, t, pairs, orig, k) (i, j) ->
-	   let cap = (Flow.capacity flow i j) in
+	(fun flow (i, j) ->
+	   let i, j = if IntSet.contains s i then i, j else j, i in
+	   let cap = Flow.capacity flow i j in
 	   let flow = Flow.disconnect flow i j in
-	   let flow, v = Flow.new_vertex flow in
-	   let flow, w = Flow.new_vertex flow in
-	   let flow = Flow.connect flow i v cap in
-	   let flow = Flow.connect flow j w cap in
-	   let orig = IntMap.add orig v (i, j) in
-	   let orig = IntMap.add orig w (i, j) in
-	   let s = IntSet.add s v in
-	   let t = IntSet.add t w in
-	   let pairs = IntMap.add pairs k (v, w) in
-	     flow, s, t, pairs, orig, k + 1)
-	(flow, IntSet.empty, IntSet.empty, IntMap.empty, IntMap.empty, 0)
-	cover in
+	   let j' = IntMap.get t_of_s i in
+	     Flow.connect flow j j' cap) flow cover in
     let num_pairs = IntSet.size s in
     let k =
       List.fold_left
 	(fun k (i, j) -> let l = ELGraph.get_label g i j in k + l.eq + l.ne) 0 cover in
       if !Util.verbose then Printf.eprintf " k = %d, star_cover = %d, cover = %a\n%!"
-	k (IntSet.size star_centers) (Util.output_list (fun c (i, j) -> Printf.fprintf c "(%d, %d)" i j)) cover;
+	k (IntSet.size s) (Util.output_list (fun c (i, j) -> Printf.fprintf c "(%d, %d)" i j)) cover;
     if d then Printf.eprintf "\ncompress g = %a cover = %a k = %d" output g (Util.output_list (fun c (i, j) -> Printf.fprintf c "(%d, %d)" i j)) cover k;
     if d then Printf.eprintf " flow = %a\n" Flow.output flow;
     let rec loop iter s t pairs =
@@ -272,9 +272,9 @@ let solve_iterative_compression g =
 	  let cut =
 	    List.map
 	      (fun (i, j) ->
-		 if IntMap.has_key orig i then IntMap.get orig i
-		 else if IntMap.has_key orig j then IntMap.get orig j
-		 else i, j)
+		 let i = IntMap.get_default s_of_t i i in
+		 let j = IntMap.get_default s_of_t j j in
+	           i, j)
 	      cut 
 	  in
 	    if d then Printf.eprintf "compressed to %a\n" (Util.output_list (fun c (i, j) -> Printf.fprintf c "(%d, %d)" i j)) cut;
