@@ -45,6 +45,12 @@ let connect g i j label =
     g
 ;;
 
+let set_connect g i j label =
+  let g = set_vertex g i in
+  let g = set_vertex g j in
+    connect g i j label
+;;
+
 let disconnect g i j =
   let g = IntMap.modify (fun neighbors_i -> IntMap.delete neighbors_i j) g i in
   let g = if i = j then g else

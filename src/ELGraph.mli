@@ -74,6 +74,7 @@ val get_label_default : 'a t -> int -> int -> 'a -> 'a
     in [g]. Raises [IntMap.Already_present] when [v] and [w] are already
     connected.  O(log n) time.  *)
 val connect : 'a t -> int -> int -> 'a -> 'a t
+val set_connect : 'a t -> int -> int -> 'a -> 'a t
 
 val disconnect : 'a t -> int -> int -> 'a t
 val unconnect : 'a t -> int -> int -> 'a t
