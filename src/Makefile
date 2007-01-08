@@ -12,6 +12,7 @@ SOURCES   = \
 	ELDigraph.ml	\
 	Diflow.ml	\
 	Cut.ml		\
+	Flow.ml		\
 	Ulp.ml
 
 OCAMLC    = ocamlc -g -warn-error A $(INCLUDES)

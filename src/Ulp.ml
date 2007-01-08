@@ -170,6 +170,118 @@ let is_sign_consistent g =
       Not_sign_consistent -> false
 ;;
 
+let gray_code x = x lxor (x lsr 1);;
+let rec ctz x = if x land 1 = 1 then 0 else 1 + (ctz (x lsr 1));;
+let gray_change x = ctz ((gray_code x) lxor (gray_code (x + 1)));;
+
+let solve_iterative_compression g =
+  let d = false in
+  if !Util.verbose
+  then Printf.eprintf "itco\tn = %3d m = %4d\n%!" (ELGraph.num_vertices g) (ELGraph.num_edges g);
+  let g = ELGraph.fold_vertices (fun g i _ -> ELGraph.unconnect g i i) g g in
+  let g = ELGraph.fold_edges
+    (fun g i j l ->
+       if l.ne > 0 && l.eq > 0 then
+	 if l.ne > l.eq
+	 then ELGraph.set_label g i j {ne = l.ne - l.eq; eq = 0}
+	 else if l.eq > l.ne
+	 then ELGraph.set_label g i j {ne = 0; eq = l.eq - l.ne}
+	 else ELGraph.disconnect g i j
+       else g) g g in
+  let compress g cover =
+    let flow = ELGraph.fold_edges
+      (fun flow i j {eq = eq; ne = ne} ->
+	 Flow.connect flow i j (eq + ne)) g Flow.empty in
+    let flow, s, t, pairs, orig, _ =
+      List.fold_left
+	(fun (flow, s, t, pairs, orig, k) (i, j) ->
+	   let cap = (Flow.capacity flow i j) in
+	   let flow = Flow.disconnect flow i j in
+	   let flow, v = Flow.new_vertex flow in
+	   let flow, w = Flow.new_vertex flow in
+	   let flow = Flow.connect flow i v cap in
+	   let flow = Flow.connect flow j w cap in
+	   let orig = IntMap.add orig v (i, j) in
+	   let orig = IntMap.add orig w (i, j) in
+	   let s = IntSet.add s v in
+	   let t = IntSet.add t w in
+	   let pairs = IntMap.add pairs k (v, w) in
+	     flow, s, t, pairs, orig, k + 1)
+	(flow, IntSet.empty, IntSet.empty, IntMap.empty, IntMap.empty, 0)
+	cover in
+    let num_pairs = IntSet.size s in
+    let k =
+      List.fold_left
+	(fun k (i, j) -> let l = ELGraph.get_label g i j in k + l.eq + l.ne) 0 cover in
+    if d then Printf.eprintf "\ncompress g = %a cover = %a k = %d" output g (Util.output_list (fun c (i, j) -> Printf.fprintf c "(%d, %d)" i j)) cover k;
+    if d then Printf.eprintf " flow = %a\n" Flow.output flow;
+    let rec loop iter s t pairs =
+      if d then Printf.eprintf "iter = %d s = %a t = %a\n" iter IntSet.output s IntSet.output t;      
+      let flow, augmented =
+	Util.fold_n (fun (flow, _) _ ->
+		       let flow, augmented =
+			 Flow.augment flow s t
+		       in
+			 if d then Printf.eprintf "flow = %a\n" Flow.output flow; flow, augmented
+		    ) k (flow, false)
+      in
+	if augmented then
+	  if (iter + 1) >= (1 lsl num_pairs) then (if d then Printf.eprintf "not compressed\n"; g, cover) else
+	    let a = gray_change iter in
+	    let i, j = IntMap.get pairs a in
+	      if d then Printf.eprintf "i = %d j = %d\n" i j;
+	      let s = IntSet.delete s i in
+	      let t = IntSet.delete t j in
+	      let s = IntSet.add s j in
+	      let t = IntSet.add t i in
+	      let pairs = IntMap.update pairs a (j, i) in
+		loop (iter + 1) s t pairs
+	else
+	  let cut = Flow.cut flow s in
+	  let cut =
+	    List.map
+	      (fun (i, j) ->
+		 if IntMap.has_key orig i then IntMap.get orig i
+		 else if IntMap.has_key orig j then IntMap.get orig j
+		 else i, j)
+	      cut 
+	  in
+	    if d then Printf.eprintf "compressed to %a\n" (Util.output_list (fun c (i, j) -> Printf.fprintf c "(%d, %d)" i j)) cut;
+	    g, cut
+    in
+      loop 0 s t pairs in
+  let _, cover =    
+    ELGraph.fold_edges
+      (fun (g, cover) i j l ->
+	 let g = ELGraph.set_vertex g i in
+	 let g = ELGraph.set_vertex g j in
+	 let deq = if l.eq > 0 then 1 else 0 in
+	 let dne = if l.ne > 0 then 1 else 0 in
+	   Util.fold_n
+	     (fun (g, cover) _ ->
+		let g = ELGraph.modify_label_default
+		  (fun {eq = eq; ne = ne} -> {eq = eq + deq; ne = ne + dne})
+		  g i j {eq = 0; ne = 0}
+		in
+		  if not (Util.list_contains cover (i, j))
+		    && (is_sign_consistent
+			  (List.fold_left (fun g (i, j) -> ELGraph.disconnect g i j) g cover))
+		  then g, cover
+		  else
+		    let cover =
+		      if  not (Util.list_contains cover (i, j))
+		      then (i, j) :: cover
+		      else cover
+		    in
+		      compress g cover)
+	     (max l.eq l.ne)
+	     (g, cover))
+      g
+      (ELGraph.empty, []) in
+  let g' = List.fold_left (fun g' (i, j) -> ELGraph.unconnect g' i j) g cover in
+    color g'
+;;
+
 let solve_occ g =
   if !Util.verbose
   then Printf.eprintf "occ\tn = %3d m = %4d\n%!" (ELGraph.num_vertices g) (ELGraph.num_edges g);
@@ -241,7 +353,7 @@ let solve_brute_force g =
     color g
   with Not_sign_consistent ->
     let n = ELGraph.num_vertices g in
-      if n >= 8 then solve_occ g else
+      if n >= 8 then solve_iterative_compression g else
       let numbers, _ = ELGraph.fold_vertices
 	(fun (numbers, n) i _ -> IntMap.add numbers i n, n + 1) g (IntMap.empty, 0) in
       let rec loop best_del best_colors colors =
