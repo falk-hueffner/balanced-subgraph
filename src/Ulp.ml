@@ -82,7 +82,7 @@ let input channel =
     List.fold_left
       (fun (vertex_numbers, vertex_names, max_id) (v, w, _) ->
 	 let update vertex_numbers vertex_names max_id v =
-	   if not (is_int v)
+	   if not (is_int v) && not (StringMap.mem v vertex_numbers)
 	   then
 	     let i = max_id + 1
 	     in
