@@ -25,6 +25,7 @@ let specs = [
   ("-v", Arg.Set(Util.verbose),
          "Print progress to stderr");
 ];;
+
 (*
 let find_gadgets c_size s_size max_mult =
   let g = Util.fold_n ELGraph.add_vertex (c_size + s_size) ELGraph.empty in
@@ -75,8 +76,14 @@ let find_gadgets c_size s_size max_mult =
 (*  	let r = List.map (fun i -> i - m) r in *)
 (* 	  Util.output_list stdout Util.output_int r; *)
 (* 	  ELGraph.output stdout output_edge g; *)
- 	  IntMap.iter (fun _ cost -> Printf.printf "%d " cost) costs;
-	  print_newline ();
+	print_char '[';
+ 	IntMap.iter (fun i cost ->
+		       if i > 0 then print_string ", ";
+		       Printf.printf "%d" cost) costs;
+	print_string "], [";	 
+	ELGraph.iter_edges (fun i j l -> Printf.printf "(%d, %d, %d)"
+			      i j (if l.Ulp.eq > 0 then 0 else 1)) g;
+	print_string "]\n";	 
 	  (*
 	  if GadgetMap.has_key r !gadgets
 	  then 
@@ -86,10 +93,11 @@ let find_gadgets c_size s_size max_mult =
 ;;
 
 let () =
-  find_gadgets 2 0 1;
+  find_gadgets 3 1 1;
   exit 0;
 ;;
 *)
+
 let () =
   Arg.parse specs (fun _ -> Arg.usage specs usage_msg) usage_msg;
   let g, vertex_numbers, vertex_names = Ulp.input stdin in
