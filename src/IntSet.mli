@@ -43,6 +43,9 @@ val size : t -> int
     [Invalid_argument] when [i] is negative. O(log n) time.  *)
 val contains : t -> int -> bool
 
+val min : t -> int
+val max : t -> int
+  
 (** [choose s] returns an arbitrary element of [s], or raises
     [Not_found] when [s] is empty. O(log n) time.  *)
 val choose : t -> int

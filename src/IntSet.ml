@@ -51,11 +51,19 @@ let rec contains s i = match s with
       else contains r i
 ;;
 
-let rec choose = function
+let rec min = function
   | Empty -> raise Not_found
   | Leaf i -> i
-  | Branch (_, _, _, l,_) -> choose l
+  | Branch (_, _, _, l,_) -> min l
 ;;
+
+let rec max = function
+  | Empty -> raise Not_found
+  | Leaf i -> i
+  | Branch (_, _, _, _, r) -> max r
+;;
+
+let choose = min;;
 
 (* Return an integer where only the highest bit that was set in [x] is
    still set.  *)
