@@ -102,6 +102,8 @@ val delete_vertex : 'a t -> int -> 'a t
     label of [(iN, jN)]. O(log n + deg i) time.  *)
 val fold_neighbors : ('b -> int -> 'a -> 'b) -> 'a t -> int -> 'b -> 'b
 
+val iter_neighbors : (int -> 'a -> unit) -> 'a t -> int -> unit
+  
 (** [fold_vertices f g a] computes [(f iN nN ... (f i1 n1 a)...)],
     where [i1, ... iN] are the vertices of [g] and [nN] is the map of
     neighbors of [iN]. O(n) time.  *)
