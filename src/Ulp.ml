@@ -427,6 +427,7 @@ let invert_coloring m =
 ;;
 
 let solve_all_colorings g c =
+  let d = false in
 (*   Printf.eprintf "g = %a\n" output g; *)
   let merge g v1 v2 =
     let g = 
@@ -452,9 +453,9 @@ let solve_all_colorings g c =
 	    else merge g' b v), (i + 1))
 	c
 	(g', 0) in
-(*  	Printf.eprintf "sacg' = %a\n" output g'; *)
+      if d then Printf.eprintf "sacg' = %a\n" output g';
       let coloring = solve_brute_force g' in
-(*  	Printf.eprintf "coloring = %a\n" (IntMap.output Util.output_bool) coloring; *)
+      if d then Printf.eprintf "coloring = %a\n" (IntMap.output Util.output_bool) coloring;
       let coloring = if IntMap.get coloring w then coloring else invert_coloring coloring in
       let coloring = IntMap.delete coloring w in
       let coloring = IntMap.delete coloring b in
@@ -469,13 +470,131 @@ let solve_all_colorings g c =
     loop IntMap.empty 0
 ;;
 
+let make_c3_gadget g c costs =  
+  let d = false in
+  if d then Printf.eprintf "make_c3_gadget g = %a costs = %a\n" output g  (IntMap.output Util.output_int) costs;
+  let all_equal costs = let _, c = IntMap.choose costs in
+    IntMap.fold (fun r _ cost -> r && cost = c) costs true in
+  let sum costs = IntMap.fold (fun sum _ cost -> sum + cost) costs 0 in
+  let zeroes costs =
+    IntMap.fold (fun zeroes _ cost -> if cost = 0 then zeroes + 1 else zeroes) costs 0 in
+  let bump costs = IntMap.map (fun i cost -> cost + 1) costs in
+  let can_apply costs costvec =
+    IntMap.fold (fun r i cost -> r && cost - costvec.(i) >= 0) costs true in
+  let reduce costs costvec =
+    IntMap.map (fun i cost -> cost - costvec.(i)) costs in
+  let apply_gadget g costs costvec edges =
+    if d then Printf.eprintf "apply %a\n" (Util.output_array Util.output_int) costvec;
+    let costs = reduce costs costvec in
+    let vs, _ = IntSet.fold (fun (vs, n) ci -> IntMap.add vs n ci, n + 1) c (IntMap.empty, 0) in
+    let g, _ = 
+      List.fold_left
+	(fun (g, vs) (i, j, l) ->
+	   let add g vs v =
+	     if IntMap.has_key vs v
+	     then g, vs
+	     else
+	       let g, v' = ELGraph.new_vertex g in
+		 g, (IntMap.add vs v v') in
+	   let g, vs = add g vs i in
+	   let g, vs = add g vs j in
+	   let i = IntMap.get vs i in
+	   let j = IntMap.get vs j in
+	   let g = ELGraph.modify_label_default
+	     (fun {eq = eq; ne = ne} -> {eq = eq + l.eq; ne = ne + l.ne})
+	     g i j {eq = 0; ne = 0}		   
+	   in		   
+	     g, vs)
+	(g, vs)
+	edges
+    in
+      g, costs in
+  let rec find_gadget g costs = function
+      [] -> assert false
+    | (costvec, edges) :: rest ->
+	if can_apply costs costvec
+	then apply_gadget g costs costvec edges
+	else find_gadget g costs rest in
+  let g, costs = 
+    if (sum costs) mod 2 <> 0
+    then
+      let costs = if zeroes costs > 1 then bump costs else costs in
+      let gadgets =
+	[[|0; 1; 1; 1|], [(0, 3, {eq=1; ne=0}); (1, 3, {eq=1; ne=0}); (2, 3, {eq=1; ne=0})];
+	 [|1; 0; 1; 1|], [(0, 3, {eq=1; ne=0}); (1, 3, {eq=0; ne=1}); (2, 3, {eq=0; ne=1})];
+	 [|1; 1; 0; 1|], [(0, 3, {eq=1; ne=0}); (1, 3, {eq=0; ne=1}); (2, 3, {eq=1; ne=0})];
+	 [|1; 1; 1; 0|], [(0, 3, {eq=1; ne=0}); (1, 3, {eq=1; ne=0}); (2, 3, {eq=0; ne=1})]] in
+	find_gadget g  costs gadgets
+    else g, costs in
+  let rec add_gadget g costs =
+    if d then Printf.eprintf "add_gadget g = %a costs = %a\n"
+      output g (IntMap.output Util.output_int) costs;
+    if all_equal costs
+    then g
+    else if zeroes costs > 2
+    then add_gadget g (bump costs)
+    else
+      let gadgets =
+	[[|0; 0; 1; 1|], [(1, 2, {eq=1; ne=0})];
+	 [|0; 1; 0; 1|], [(0, 2, {eq=1; ne=0})];
+	 [|0; 1; 1; 0|], [(0, 1, {eq=1; ne=0})];
+	 [|1; 0; 0; 1|], [(0, 1, {eq=0; ne=1})];
+	 [|1; 0; 1; 0|], [(0, 2, {eq=0; ne=1})];
+	 [|1; 1; 0; 0|], [(1, 2, {eq=0; ne=1})]] in
+      let max = IntMap.fold
+	(fun max i cost -> if cost > IntMap.get costs max then i else max) costs 0 in
+      let rec loop g costs = function
+	  [] -> assert false
+	| (costvec, edges) :: rest ->
+	    if d then Printf.eprintf
+	      "costs = %a costvec = %a can_apply = %b costvec.(%d) = %d\n%!"
+	      (IntMap.output Util.output_int) costs
+	      (Util.output_array Util.output_int) costvec
+	      (can_apply costs costvec) max costvec.(max);
+	    if can_apply costs costvec && costvec.(max) > 0
+	    then apply_gadget g costs costvec edges
+	    else loop g costs rest in
+      let g, costs = loop g costs gadgets in
+	add_gadget g costs in
+    add_gadget g costs
+;;
+
 let rec solve_cut_corner g =
+  let d = false in
   if !Util.verbose
   then Printf.eprintf "corn\tn = %3d m = %4d\n%!" (ELGraph.num_vertices g) (ELGraph.num_edges g);
   let s, c = Cut.cut_corner (ELGraph.unlabeled g) in
-(*     Printf.eprintf "s = %a c = %a\n%!" IntSet.output s IntSet.output c; *)
-    if IntSet.size c > 2
+    if d then Printf.eprintf "s = %a c = %a\n%!" IntSet.output s IntSet.output c;
+    if IntSet.size c > 3
     then solve_brute_force g
+    else if IntSet.size c = 3
+    then
+      let sc = ELGraph.subgraph g (IntSet.union s c) in
+      if d then Printf.eprintf "g = %a" output g;
+      if d then Printf.eprintf " sc = %a" output sc;
+      let colorings = solve_all_colorings sc c in
+      let costs = IntMap.map (fun _ coloring -> coloring_cost sc coloring) colorings in
+      if d then Printf.eprintf " costs: %a\n%!" (IntMap.output Util.output_int) costs;
+      let rc = IntSet.fold ELGraph.delete_vertex s g in
+      let rc =
+	ELGraph.fold_edges
+	  (fun rc i j _ ->
+	     if IntSet.contains c i && IntSet.contains c j
+	     then ELGraph.disconnect rc i j else rc) g rc in
+      let rc' = make_c3_gadget rc c costs in
+      if d then Printf.eprintf " c3_gadge: %a\n%!" output rc';
+      let coloring = solve rc' in
+      let coloring = 
+ 	if IntMap.get coloring (IntSet.max c) = false
+	then coloring else invert_coloring coloring in
+      let coloring = IntMap.filter (fun i _ -> ELGraph.has_vertex rc i) coloring in
+      if d then Printf.eprintf "coloring: %a\n%!" (IntMap.output Util.output_bool) coloring;
+      let code, _ =
+	IntSet.fold
+	  (fun (code, n) v ->
+	     if IntMap.get coloring v then code lor (1 lsl n), n+1 else code, n+1) c (0, 0) in
+      let coloring_sc = IntMap.get colorings code in
+	merge_colorings coloring coloring_sc	
     else
       let g' = ELGraph.subgraph g (IntSet.union s c) in
       let colorings = solve_all_colorings g' c in
@@ -488,7 +607,7 @@ let rec solve_cut_corner g =
         (* FIXME remove edge if 0/0 *)
 	let g' = ELGraph.set_label g' v w { eq = IntMap.get costs 1; ne = IntMap.get costs 0; } in
 (*  	  Printf.eprintf "g' = %a\n" output g'; *)
-	let coloring_g = solve_component g' in
+	let coloring_g = solve g' in
  	let coloring_g = 
  	  if IntMap.get coloring_g w = false then coloring_g else invert_coloring coloring_g in
 	let coloring_sc =
@@ -504,9 +623,8 @@ and solve_component g =
   if ELGraph.num_vertices g <= 5
   then solve_brute_force g
   else solve_cut_corner g
-;;
 
-let solve g =
+and solve g =
   if !Util.verbose
   then Printf.eprintf "solve\tn = %3d m = %4d\n%!" (ELGraph.num_vertices g) (ELGraph.num_edges g);
   let components = Cut.biconnected_components (ELGraph.unlabeled g) in
