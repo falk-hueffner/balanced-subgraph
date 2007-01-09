@@ -234,6 +234,9 @@ let rec map f = function
   | Leaf (i, x) -> Leaf (i, f i x)
   | Branch (p, m, c, l, r) -> Branch (p, m, c, map f l, map f r)
 
+let filter p m =
+  fold (fun m' k x -> if p k x then add m' k x else m') m empty;;
+
 let output p channel m =
   Printf.fprintf channel "{[%d] " (size m);
   ignore (fold

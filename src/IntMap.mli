@@ -113,6 +113,8 @@ val fold : ('b -> int -> 'a -> 'b) -> 'a t -> 'b -> 'b
      are the associated data.  *)
 val iter : (int -> 'a -> unit) -> 'a t -> unit
 
+val filter : (int -> 'a -> bool) -> 'a t -> 'a t
+
 (** [output p c m] prints a debug representation of [s] to channel
     [c], using [p] to print values.  O(n) time.  *)
 val output : (out_channel -> 'a -> unit) -> out_channel -> 'a t -> unit
