@@ -198,6 +198,25 @@ let gray_code x = x lxor (x lsr 1);;
 let rec ctz x = if x land 1 = 1 then 0 else 1 + (ctz (x lsr 1));;
 let gray_change x = ctz ((gray_code x) lxor (gray_code (x + 1)));;
 
+external c_find_cut_partition :
+  (int * int) array array -> int array -> int array -> int -> (int * int) list
+  = "c_find_cut_partition";;
+
+let flow_to_array g =
+  let n = ELGraph.max_vertex g in
+  let a = Array.make (n + 1) [| |] in
+    for i = 0 to n do
+      if not (ELGraph.has_vertex g i)
+      then a.(i) <- [| |]
+      else begin
+	a.(i) <- Array.make (ELGraph.deg g i) (0, 0);
+	ignore (ELGraph.fold_neighbors
+		  (fun j w l -> a.(i).(j) <- (w, l.Flow.cap); j + 1) g i 0);
+      end
+    done;
+    a
+;;
+
 let solve_iterative_compression g =
   let d = false in
   if !Util.verbose
@@ -244,16 +263,16 @@ let solve_iterative_compression g =
 	(fun k (i, j) -> let l = ELGraph.get_label g i j in k + l.eq + l.ne) 0 cover in
       if !Util.verbose then Printf.eprintf "m = %d k = %d, star_cover = %d, cover = %a\n%!"
 	(ELGraph.num_edges g) k (IntSet.size s) (Util.output_list (fun c (i, j) -> Printf.fprintf c "(%d, %d)" i j)) cover;
-    if d then Printf.eprintf "\ncompress g = %a cover = %a k = %d" output g (Util.output_list (fun c (i, j) -> Printf.fprintf c "(%d, %d)" i j)) cover k;
-    if d then Printf.eprintf " flow = %a\n" Flow.output flow;
+    if d then Printf.eprintf "\ncompress g = %a cover = %a k = %d%!" output g (Util.output_list (fun c (i, j) -> Printf.fprintf c "(%d, %d)%!" i j)) cover k;
+    if d then Printf.eprintf " flow = %a\n%!" Flow.output flow;
     let rec loop iter s t pairs =
-      if d then Printf.eprintf "iter = %d s = %a t = %a\n" iter IntSet.output s IntSet.output t;      
+      if d then Printf.eprintf "iter = %d s = %a t = %a\n%!" iter IntSet.output s IntSet.output t;      
       let flow, augmented =
 	Util.fold_n (fun (flow, _) _ ->
 		       let flow, augmented =
 			 Flow.augment flow s t
 		       in
-			 if d then Printf.eprintf "flow = %a\n" Flow.output flow; flow, augmented
+			 if d then Printf.eprintf "flow = %a\n%!" Flow.output flow; flow, augmented
 		    ) k (flow, false)
       in
 	if augmented then
@@ -280,7 +299,18 @@ let solve_iterative_compression g =
 	    if d then Printf.eprintf "compressed to %a\n" (Util.output_list (fun c (i, j) -> Printf.fprintf c "(%d, %d)" i j)) cut;
 	    g, cut
     in
-      loop 0 s t pairs in
+(*       loop 0 s t pairs in *)
+    let cover' =
+      c_find_cut_partition (flow_to_array flow) (IntSet.to_array s) (IntSet.to_array t) k in
+    let cover = if cover' = [] then cover else cover' in
+    let cover =
+      List.map
+	(fun (i, j) ->
+	   let i = IntMap.get_default s_of_t i i in
+	   let j = IntMap.get_default s_of_t j j in
+	     i, j)
+	cover in
+      g, cover in
   let _, cover =    
     ELGraph.fold_edges
       (fun (g, cover) i j l ->
@@ -309,7 +339,8 @@ let solve_iterative_compression g =
 	     (g, cover))
       g
       (ELGraph.empty, []) in
-  let g' = List.fold_left (fun g' (i, j) -> ELGraph.unconnect g' i j) g cover in
+    if d then Printf.eprintf "coloring...\n%!";
+  let g' = List.fold_left (fun g' (i, j) -> if d then Printf.eprintf "unc %d %d\n%!" i j; ELGraph.unconnect g' i j) g cover in
     color g'
 ;;
 

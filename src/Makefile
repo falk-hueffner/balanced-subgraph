@@ -15,28 +15,38 @@ SOURCES   = \
 	Flow.ml		\
 	Ulp.ml
 
-OCAMLC    = ocamlc -g -warn-error A $(INCLUDES)
-OCAMLOPT  = ocamlopt -warn-error A $(INCLUDES)
-OCAMLDEP  = ocamldep $(INCLUDES)
+C_SOURCES = \
+	flow.c
 
 LIBS      = unix.cmxa
 
 #PROFILE  = -p
 
+OCAMLC    = ocamlc -g -warn-error A $(INCLUDES)
+OCAMLOPT  = ocamlopt -warn-error A $(INCLUDES)
+OCAMLDEP  = ocamldep $(INCLUDES)
+
+CFLAGS    = -std=c99 -g -I $(HOME)/include
+CFLAGS   += -O3 $(shell gcc-arch) $(PROFILE) -funroll-all-loops -ffast-math
+CFLAGS   += -W -Wall -Wno-unused -Werror
+#CFLAGS  += -DNDEBUG
+
 all: depend $(EXECS) doc/index.html
 
 OBJS = $(SOURCES:.ml=.cmx)
+C_OBJS = $(C_SOURCES:.c=.o)
 DBG_OBJS = $(SOURCES:.ml=.cmo)
 MLIS := $(wildcard *.mli)
 DBG_LIBS = $(LIBS:.cmxa=.cma)
 
-ulp: $(OBJS) main.cmx
+ulp: $(OBJS) $(C_OBJS) main.cmx
 	$(OCAMLOPT) $(PROFILE) -o $@ $(LIBS) $^
 
-ulp-dbg: $(DBG_OBJS) main.cmo
+#ulp-dbg: $(C_OBJS) $(DBG_OBJS) main.cmo
+ulp-dbg: $(C_OBJS) $(DBG_OBJS) main.cmo
 	$(OCAMLC) $(PROFILE) -o $@ $(DBG_LIBS) $^
 
-gen-ulp: $(OBJS) gen-ulp.cmx
+gen-ulp: $(OBJS) $(C_OBJS) gen-ulp.cmx
 	$(OCAMLOPT) $(PROFILE) -o $@ $(LIBS) $^
 
 doc/index.html: $(MLIS)
@@ -66,5 +76,6 @@ realclean: clean
 
 depend: $(SOURCES)
 	$(OCAMLDEP) *.mli *.ml > .depend
+	$(CC) $(CFLAGS) -MM *.c >> .depend
 
 include .depend
