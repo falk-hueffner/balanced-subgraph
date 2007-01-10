@@ -87,6 +87,8 @@ val intersection : t -> t -> t
 (** Set difference.  *)
 val minus : t -> t -> t
 
+val to_array : t -> int array
+
 (** [output c s] prints a debug representation of [s] to channel [c].
     O(n) time.  *)
 val output : out_channel -> t -> unit

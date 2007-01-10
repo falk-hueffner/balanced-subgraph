@@ -204,6 +204,12 @@ let rec intersection s1 s2 = match s1, s2 with
         Empty
 ;;
 
+let to_array s =
+  let a = Array.make (size s) 0 in
+    ignore (fold (fun i x -> a.(i) <- x; i + 1) s 0);
+    a
+;;
+
 let output channel s =
   Printf.fprintf channel "{[%d] " (size s);
   ignore (fold
