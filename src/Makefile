@@ -14,6 +14,7 @@ SOURCES   = \
 	Cut.ml		\
 	Flow.ml		\
 	Ulp.ml		\
+	Gadgets.ml	\
 	Solve.ml
 
 C_SOURCES = \

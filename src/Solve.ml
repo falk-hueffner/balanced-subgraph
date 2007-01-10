@@ -348,22 +348,69 @@ let solve_all_colorings g c =
     loop IntMap.empty 0
 ;;
 
-let make_c3_gadget g c costs =  
+let find_lincomb v vs =
+  let normalize v =
+    let m = Array.fold_left min max_int v in
+      Array.map (fun i -> i - m) v in
+  let is_zero v =
+    let rec loop i =
+      if i >= Array.length v
+      then true
+      else v.(i) = 0 && loop (i + 1)
+    in
+      loop 0 in
+  let can_apply v d =
+    let rec loop i =
+      if i >= Array.length v
+      then true
+      else v.(i) - d.(i) >= 0 && loop (i + 1)
+    in
+      loop 0 in
+  let apply v d =
+    Array.mapi (fun i x -> x - d.(i)) v in
+    
+  let rec loop v vs' max_cost =
+    if is_zero v
+    then Some (0, [], [])
+    else
+      match vs' with
+	  [] -> None
+	| (cost, d, edges) :: vs' ->
+	    if cost <= max_cost && can_apply v d
+	    then let v' = apply v d in
+	      match loop v' vs (max_cost - cost) with
+		  None -> loop v vs' max_cost
+		| Some (cost', ds, gadgets) -> Some (cost + cost', d :: ds, edges :: gadgets)
+	    else
+	      loop v vs' max_cost in
+  let v = normalize v in
+  let rec trial v max_cost max_max_cost =
+(*     Printf.eprintf "trial max_cost = %d max_max_cost = %d\n%!" max_cost max_max_cost; *)
+    if max_cost > max_max_cost
+    then None
+      else
+	match loop v vs max_cost with
+	    None -> trial v (max_cost + 1) max_max_cost
+	  | something -> something in
+  let rec shift d =
+    if d >= 2 then None
+    else begin
+(*       Printf.eprintf "shift %d: %a\n%!" d (Util.output_array Util.output_int) v; *)
+      let v = Array.map ((+) d) v in
+      let max_max_cost = ((Array.fold_left (+) 0 v) + 1) / 2 in (* every vec. has at least 2 1s *)
+	match trial v 0 max_max_cost with
+	    None -> shift (d + 1)
+	  | Some (cost, ds, gadgets) -> Some (cost + d, ds, gadgets)
+    end
+  in
+    shift 0
+;;
+
+let make_c3_gadget g c costs =
   let d = false in
-  if d then Printf.eprintf "make_c3_gadget g = %a costs = %a\n" output g  (IntMap.output Util.output_int) costs;
-  let all_equal costs = let _, c = IntMap.choose costs in
-    IntMap.fold (fun r _ cost -> r && cost = c) costs true in
-  let sum costs = IntMap.fold (fun sum _ cost -> sum + cost) costs 0 in
-  let zeroes costs =
-    IntMap.fold (fun zeroes _ cost -> if cost = 0 then zeroes + 1 else zeroes) costs 0 in
-  let bump costs = IntMap.map (fun i cost -> cost + 1) costs in
-  let can_apply costs costvec =
-    IntMap.fold (fun r i cost -> r && cost - costvec.(i) >= 0) costs true in
-  let reduce costs costvec =
-    IntMap.map (fun i cost -> cost - costvec.(i)) costs in
-  let apply_gadget g costs costvec edges =
-    if d then Printf.eprintf "apply %a\n" (Util.output_array Util.output_int) costvec;
-    let costs = reduce costs costvec in
+  if d then Printf.eprintf "make_c3_gadget costs = %a\n" (IntMap.output Util.output_int) costs;
+  let costs = Array.init (IntMap.size costs) (fun i -> IntMap.get costs i) in
+  let apply_gadget g edges =
     let vs, _ = IntSet.fold (fun (vs, n) ci -> IntMap.add vs n ci, n + 1) c (IntMap.empty, 0) in
     let g, _ = 
       List.fold_left
@@ -386,55 +433,13 @@ let make_c3_gadget g c costs =
 	(g, vs)
 	edges
     in
-      g, costs in
-  let rec find_gadget g costs = function
-      [] -> assert false
-    | (costvec, edges) :: rest ->
-	if can_apply costs costvec
-	then apply_gadget g costs costvec edges
-	else find_gadget g costs rest in
-  let g, costs = 
-    if (sum costs) mod 2 <> 0
-    then
-      let costs = if zeroes costs > 1 then bump costs else costs in
-      let gadgets =
-	[[|0; 1; 1; 1|], [(0, 3, {eq=1; ne=0}); (1, 3, {eq=1; ne=0}); (2, 3, {eq=1; ne=0})];
-	 [|1; 0; 1; 1|], [(0, 3, {eq=1; ne=0}); (1, 3, {eq=0; ne=1}); (2, 3, {eq=0; ne=1})];
-	 [|1; 1; 0; 1|], [(0, 3, {eq=1; ne=0}); (1, 3, {eq=0; ne=1}); (2, 3, {eq=1; ne=0})];
-	 [|1; 1; 1; 0|], [(0, 3, {eq=1; ne=0}); (1, 3, {eq=1; ne=0}); (2, 3, {eq=0; ne=1})]] in
-	find_gadget g  costs gadgets
-    else g, costs in
-  let rec add_gadget g costs =
-    if d then Printf.eprintf "add_gadget g = %a costs = %a\n"
-      output g (IntMap.output Util.output_int) costs;
-    if all_equal costs
-    then g
-    else if zeroes costs > 2
-    then add_gadget g (bump costs)
-    else
-      let gadgets =
-	[[|0; 0; 1; 1|], [(1, 2, {eq=1; ne=0})];
-	 [|0; 1; 0; 1|], [(0, 2, {eq=1; ne=0})];
-	 [|0; 1; 1; 0|], [(0, 1, {eq=1; ne=0})];
-	 [|1; 0; 0; 1|], [(0, 1, {eq=0; ne=1})];
-	 [|1; 0; 1; 0|], [(0, 2, {eq=0; ne=1})];
-	 [|1; 1; 0; 0|], [(1, 2, {eq=0; ne=1})]] in
-      let max = IntMap.fold
-	(fun max i cost -> if cost > IntMap.get costs max then i else max) costs 0 in
-      let rec loop g costs = function
-	  [] -> assert false
-	| (costvec, edges) :: rest ->
-	    if d then Printf.eprintf
-	      "costs = %a costvec = %a can_apply = %b costvec.(%d) = %d\n%!"
-	      (IntMap.output Util.output_int) costs
-	      (Util.output_array Util.output_int) costvec
-	      (can_apply costs costvec) max costvec.(max);
-	    if can_apply costs costvec && costvec.(max) > 0
-	    then apply_gadget g costs costvec edges
-	    else loop g costs rest in
-      let g, costs = loop g costs gadgets in
-	add_gadget g costs in
-    add_gadget g costs
+      g
+  in
+    match find_lincomb costs Gadgets.gadgets_3 with
+	None -> assert false
+      | Some (cost, costvecs, gadgets) ->
+	  if d then Printf.eprintf " cost = %d\n" cost;
+	  List.fold_left apply_gadget g gadgets
 ;;
 
 let rec solve_cut_corner g =
