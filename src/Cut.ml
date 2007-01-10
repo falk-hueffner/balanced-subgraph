@@ -128,25 +128,13 @@ let biconnected_components g =
       IntMap.fold (fun components _ component -> component :: components) components []
 ;;
 
+
+
 let cut_corner g =
-  let better s1 c1 s2 c2 =
-    if IntSet.size s2 < IntSet.size c2 - 1
-    then
-      if not (IntSet.size s1 < IntSet.size s1 - 1)
-      then s1, c1
-      else if (IntSet.size c1 - IntSet.size s1 < IntSet.size c2 - IntSet.size s2)
-      then s1, c1
-      else s2, c2
-    else
-      if IntSet.size c1 < IntSet.size c2
-	|| (IntSet.size c1 = IntSet.size c2 && IntSet.size s1 < IntSet.size s2)
-      then s1, c1
-      else s2, c2 in
-  let rec grow s c best_s best_c =
+  let rec grow sc s c =
 (*     Printf.eprintf "s = %a c = %a\n" IntSet.output s IntSet.output c; *)
-(*     Printf.eprintf "bests = %a bestc = %a\n" IntSet.output best_s IntSet.output best_c; *)
     if IntSet.size s > Graph.num_vertices g / 2
-    then best_s, best_c
+    then sc
     else
       let best_v, best_c_size =
 	IntSet.fold
@@ -158,20 +146,19 @@ let cut_corner g =
       let c = IntSet.delete c best_v in
       let new_c = IntSet.minus (Graph.neighbors g best_v) s in
       let c = IntSet.union c new_c in
-(* 	Printf.eprintf "s' = %a c' = %a\n" IntSet.output s IntSet.output c; *)
-      let best_s, best_c = better s c best_s best_c in
-	grow s c best_s best_c
+(*  	Printf.eprintf "s' = %a c' = %a\n" IntSet.output s IntSet.output c; *)
+      let sc = if IntSet.size c <= 4 then (s, c) :: sc else sc in
+	grow sc s c
   in
     Graph.fold_vertices
-      (fun (best_s, best_c) v neighbors_v ->
-	 let s, c =
-	   grow (IntSet.singleton v) neighbors_v (IntSet.singleton v) neighbors_v
+      (fun sc v neighbors_v ->
+	 let sc =
+	   if IntSet.size neighbors_v <= 4
+	   then (IntSet.singleton v, neighbors_v) :: sc else sc
 	 in
-(* 	   if IntSet.size c <= 3 then *)
-(* 	     Printf.eprintf "s = %a c = %a\n" IntSet.output s IntSet.output c; *)
-	   better s c best_s best_c)
+	   grow sc (IntSet.singleton v) neighbors_v)
       g
-      (IntSet.singleton (Graph.max_vertex g), Graph.neighbors g (Graph.max_vertex g))
+      []
 ;;
 
 (*

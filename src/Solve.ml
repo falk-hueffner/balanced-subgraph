@@ -397,7 +397,7 @@ let find_lincomb v vs =
 	    None -> trial v (max_cost + 1) max_max_cost
 	  | something -> something in
   let rec shift d =
-    if d >= 2 then None
+    if d >= 3 then None
     else begin
       if db then Printf.eprintf "shift %d: %a\n%!" d (Util.output_array Util.output_int) v;
       let v = Array.map ((+) d) v in
@@ -450,6 +450,7 @@ let rec solve_cut_corner g =
   let d = false in
   if !Util.verbose
   then Printf.eprintf "corn\tn = %3d m = %4d\n%!" (ELGraph.num_vertices g) (ELGraph.num_edges g);
+    if d then Printf.eprintf " g = %a\n%!" output g;
   let deg2 =
     ELGraph.fold_vertices
       (fun deg2 i n ->
@@ -457,39 +458,56 @@ let rec solve_cut_corner g =
 	 then Some (IntSet.singleton i, IntMap.fold (fun n i _ -> IntSet.add n i) n IntSet.empty)
 	 else deg2)
       g None in
-  let s, c = match deg2 with Some (s, c) -> s, c | None -> Cut.cut_corner (ELGraph.unlabeled g) in
-    if d then Printf.eprintf "s = %a c = %a\n%!" IntSet.output s IntSet.output c;
-    if IntSet.size c > 4
-    then
-      solve_brute_force g
-    else
-      let sc = ELGraph.subgraph g (IntSet.union s c) in
-      if d then Printf.eprintf "g = %a" output g;
-      if d then Printf.eprintf " sc = %a" output sc;
-      let colorings = solve_all_colorings sc c in
-      let costs = IntMap.map (fun _ coloring -> coloring_cost sc coloring) colorings in
-      if d then Printf.eprintf " costs: %a\n%!" (IntMap.output Util.output_int) costs;
-      let rc = IntSet.fold ELGraph.delete_vertex s g in
-      let rc =
-	ELGraph.fold_edges
-	  (fun rc i j _ ->
-	     if IntSet.contains c i && IntSet.contains c j
-	     then ELGraph.disconnect rc i j else rc) g rc in
-      let rc' =
-	make_cut_gadget rc c costs Gadgets.gadgets.(IntSet.size c) in
-      if d then Printf.eprintf " cut_gadget: %a\n%!" output rc';
-      let coloring = solve rc' in
-      let coloring = 
- 	if IntMap.get coloring (IntSet.max c) = false
-	then coloring else invert_coloring coloring in
-      let coloring = IntMap.filter (fun i _ -> ELGraph.has_vertex rc i) coloring in
-      if d then Printf.eprintf "coloring: %a\n%!" (IntMap.output Util.output_bool) coloring;
-      let code, _ =
-	IntSet.fold
-	  (fun (code, n) v ->
-	     if IntMap.get coloring v then code lor (1 lsl n), n+1 else code, n+1) c (0, 0) in
-      let coloring_sc = IntMap.get colorings code in
-	merge_colorings coloring coloring_sc	
+  let scs =
+    match deg2 with
+	Some (s, c) -> [s, c]
+      | None -> Cut.cut_corner (ELGraph.unlabeled g) in
+  let scs = List.sort
+    (fun (s1, c1) (s2, c2) ->
+       if IntSet.size c1 <> IntSet.size c2
+       then compare (IntSet.size c1) (IntSet.size c2)
+       else compare (IntSet.size s2) (IntSet.size s1)) scs in
+  let rec loop = function
+      [] -> solve_brute_force g
+    | (s, c) :: rest ->
+	if !Util.verbose then Printf.eprintf " s = %a c = %a\n%!" IntSet.output s IntSet.output c;
+	let sc = ELGraph.subgraph g (IntSet.union s c) in
+(* 	if d then Printf.eprintf "g = %a" output g; *)
+(* 	if d then Printf.eprintf " sc = %a" output sc; *)
+	let colorings = solve_all_colorings sc c in
+	let costs = IntMap.map (fun _ coloring -> coloring_cost sc coloring) colorings in
+	if d then Printf.eprintf " costs: %a\n%!" (IntMap.output Util.output_int) costs;
+	let rc = IntSet.fold ELGraph.delete_vertex s g in
+	let rc =
+	  ELGraph.fold_edges
+	    (fun rc i j _ ->
+	       if IntSet.contains c i && IntSet.contains c j
+	       then ELGraph.disconnect rc i j else rc) g rc in
+	let rc' =
+	  make_cut_gadget rc c costs Gadgets.gadgets.(IntSet.size c) in
+	if not (ELGraph.num_vertices rc' < ELGraph.num_vertices g
+	        || (ELGraph.num_vertices rc' = ELGraph.num_vertices g
+	            && Ulp.num_edges rc' < Ulp.num_edges g))
+	then ( Printf.eprintf "gadget failed\n";
+(* 	       Printf.eprintf "rc  = %a\n" output rc; *)
+(* 	       Printf.eprintf "rc' = %a\n" output rc'; *)
+	       loop rest )
+	else
+	  let coloring = solve rc' in
+	  let coloring = 
+ 	    if IntMap.get coloring (IntSet.max c) = false
+	    then coloring else invert_coloring coloring in
+	  let coloring = IntMap.filter (fun i _ -> ELGraph.has_vertex rc i) coloring in
+	  if d then Printf.eprintf "coloring: %a\n%!" (IntMap.output Util.output_bool) coloring;
+	  let code, _ =
+	    IntSet.fold
+	      (fun (code, n) v ->
+	         if IntMap.get coloring v
+	         then code lor (1 lsl n), n+1 else code, n+1) c (0, 0) in
+	  let coloring_sc = IntMap.get colorings code in
+	    merge_colorings coloring coloring_sc
+  in
+    loop scs
 
 and solve_component g =
   if !Util.verbose

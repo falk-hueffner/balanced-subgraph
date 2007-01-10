@@ -257,7 +257,6 @@ let () =
 let () =
   Arg.parse specs (fun _ -> Arg.usage specs usage_msg) usage_msg;
   let g, vertex_numbers, vertex_names = Ulp.input stdin in
-  let m = ELGraph.fold_edges (fun m _ _ { Ulp.eq = eq; Ulp.ne = ne } -> m + eq + ne) g 0 in
 (*   Ulp.output stdout g; *)
   let start = Util.timer () in
   let colors = Solve.solve g in
@@ -268,7 +267,7 @@ let () =
     if !stats_only      
     then
       Printf.printf "%5d %6d %5d %10.2f\n"
-	(ELGraph.num_vertices g) m k (stop -. start)
+	(ELGraph.num_vertices g) (Ulp.num_edges g) k (stop -. start)
     else
       ELGraph.iter_edges
 	(fun i j { Ulp.eq = eq; Ulp.ne = ne } ->
