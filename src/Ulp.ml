@@ -200,7 +200,7 @@ let gray_change x = ctz ((gray_code x) lxor (gray_code (x + 1)));;
 
 external c_find_cut_partition :
   (int * int) array array -> int array -> int array -> int -> (int * int) list
-  = "c_find_cut_partition";;
+  = "c_find_cut_partition" "c_find_cut_partition";;
 
 let flow_to_array g =
   let n = ELGraph.max_vertex g in
@@ -594,7 +594,14 @@ let rec solve_cut_corner g =
   let d = false in
   if !Util.verbose
   then Printf.eprintf "corn\tn = %3d m = %4d\n%!" (ELGraph.num_vertices g) (ELGraph.num_edges g);
-  let s, c = Cut.cut_corner (ELGraph.unlabeled g) in
+  let deg2 =
+    ELGraph.fold_vertices
+      (fun deg2 i n ->
+	 if IntMap.size n = 2
+	 then Some (IntSet.singleton i, IntMap.fold (fun n i _ -> IntSet.add n i) n IntSet.empty)
+	 else deg2)
+      g None in
+  let s, c = match deg2 with Some (s, c) -> s, c | None -> Cut.cut_corner (ELGraph.unlabeled g) in
     if d then Printf.eprintf "s = %a c = %a\n%!" IntSet.output s IntSet.output c;
     if IntSet.size c > 3
     then solve_brute_force g
