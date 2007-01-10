@@ -123,6 +123,7 @@ val fold_edges : ('b -> int -> int -> 'a -> 'b) -> 'a t -> 'b -> 'b
 val iter_edges : (int -> int -> 'a -> unit) -> 'a t -> unit
 
 val unlabeled : 'a t -> Graph.t
+val is_connected_graph : 'a t -> bool
 
 (** [subgraph g s] returns the subgraph of [g] induced by [s].  O(n^2 log n) time.  *)
 val subgraph : 'a t -> IntSet.t -> 'a t

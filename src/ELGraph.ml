@@ -125,6 +125,18 @@ let delete_vertex g i =
       g      
 ;;
 
+let is_connected_graph g =
+  let rec dfs s v =
+    let s = IntSet.add s v in
+      fold_neighbors
+	(fun s w _ -> if not (IntSet.contains s w) then dfs s w else s)
+	g v s
+  in
+    if is_empty g then true else
+      let s = dfs IntSet.empty (max_vertex g) in
+	s = vertex_set g
+;;
+
 let subgraph g s =
   let g' = IntSet.fold add_vertex s empty in
   fold_edges
