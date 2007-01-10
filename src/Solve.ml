@@ -349,6 +349,8 @@ let solve_all_colorings g c =
 ;;
 
 let find_lincomb v vs =
+  let d = true in
+    Printf.eprintf "find_lincomb\n%!";
   let normalize v =
     let m = Array.fold_left min max_int v in
       Array.map (fun i -> i - m) v in
@@ -385,7 +387,7 @@ let find_lincomb v vs =
 	      loop v vs' max_cost in
   let v = normalize v in
   let rec trial v max_cost max_max_cost =
-(*     Printf.eprintf "trial max_cost = %d max_max_cost = %d\n%!" max_cost max_max_cost; *)
+    Printf.eprintf "trial max_cost = %d max_max_cost = %d\n%!" max_cost max_max_cost;
     if max_cost > max_max_cost
     then None
       else
@@ -395,7 +397,7 @@ let find_lincomb v vs =
   let rec shift d =
     if d >= 2 then None
     else begin
-(*       Printf.eprintf "shift %d: %a\n%!" d (Util.output_array Util.output_int) v; *)
+      Printf.eprintf "shift %d: %a\n%!" d (Util.output_array Util.output_int) v;
       let v = Array.map ((+) d) v in
       let max_max_cost = ((Array.fold_left (+) 0 v) + 1) / 2 in (* every vec. has at least 2 1s *)
 	match trial v 0 max_max_cost with
@@ -406,9 +408,9 @@ let find_lincomb v vs =
     shift 0
 ;;
 
-let make_c3_gadget g c costs =
+let make_cut_gadget g c costs gadgets =
   let d = false in
-  if d then Printf.eprintf "make_c3_gadget costs = %a\n" (IntMap.output Util.output_int) costs;
+  if d then Printf.eprintf "make_cut_gadget costs = %a\n" (IntMap.output Util.output_int) costs;
   let costs = Array.init (IntMap.size costs) (fun i -> IntMap.get costs i) in
   let apply_gadget g edges =
     let vs, _ = IntSet.fold (fun (vs, n) ci -> IntMap.add vs n ci, n + 1) c (IntMap.empty, 0) in
@@ -435,7 +437,7 @@ let make_c3_gadget g c costs =
     in
       g
   in
-    match find_lincomb costs Gadgets.gadgets_3 with
+    match find_lincomb costs gadgets with
 	None -> assert false
       | Some (cost, costvecs, gadgets) ->
 	  if d then Printf.eprintf " cost = %d\n" cost;
@@ -455,7 +457,7 @@ let rec solve_cut_corner g =
       g None in
   let s, c = match deg2 with Some (s, c) -> s, c | None -> Cut.cut_corner (ELGraph.unlabeled g) in
     if d then Printf.eprintf "s = %a c = %a\n%!" IntSet.output s IntSet.output c;
-    if IntSet.size c > 3
+    if IntSet.size c > 4
     then (
       if d then Printf.eprintf "punting on corn\tn = %3d m = %4d\n%!" (ELGraph.num_vertices g) (ELGraph.num_edges g);
       if d then Printf.eprintf "s = %a c = %a\n%!" IntSet.output s IntSet.output c;
@@ -484,7 +486,7 @@ let rec solve_cut_corner g =
       let coloring_sc = IntMap.get colorings code in
 	merge_colorings coloring coloring_sc
       *)
-    else if IntSet.size c = 3
+    else if IntSet.size c = 3 || IntSet.size c = 4
     then
       let sc = ELGraph.subgraph g (IntSet.union s c) in
       if d then Printf.eprintf "g = %a" output g;
@@ -498,7 +500,9 @@ let rec solve_cut_corner g =
 	  (fun rc i j _ ->
 	     if IntSet.contains c i && IntSet.contains c j
 	     then ELGraph.disconnect rc i j else rc) g rc in
-      let rc' = make_c3_gadget rc c costs in
+      let rc' =
+	make_cut_gadget rc c costs
+	  (if IntSet.size c = 3 then Gadgets.gadgets_3 else Gadgets.gadgets_4) in
       if d then Printf.eprintf " c3_gadge: %a\n%!" output rc';
       let coloring = solve rc' in
       let coloring = 
