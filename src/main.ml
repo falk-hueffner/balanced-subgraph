@@ -98,10 +98,20 @@ let add_gadget gadgets g c_set cost =
     (fun i ->  Ulp.coloring_cost g (IntMap.get colorings i))
   in
 (*     Printf.printf "%d %a\n%!" cost (Util.output_array Util.output_int) costs; *)
+    (*
     if (* true ||  *)
       match find_lincomb costs gadgets with
 	  None -> ((* Printf.printf "fresh\n%!"; *) true)
 	| Some (cost', _, _) ->  ((* Printf.printf "old: %d new: %d\n%!" cost' cost; *) cost < cost')
+    *)
+  let rec test = function
+      [] -> true
+    | (cost', costs', edges') :: gadgets ->
+	if costs = costs' &&
+	  (cost > cost' || (cost = cost' && List.length edges > List.length edges'))
+	then false
+	else test gadgets in
+    if test gadgets    
     then (cost, costs, edges) :: gadgets
     else gadgets
 ;;
@@ -159,6 +169,7 @@ let extra_vertices_gadgets gadgets c_size s_size =
       loop 0
   in
     l.(0) <- l_min - 1;
+    let count = ref 0 in
     let rec loop gadgets =
       if not (bump ()) then gadgets
       else
@@ -171,6 +182,8 @@ let extra_vertices_gadgets gadgets c_size s_size =
 	     else g, i + 1)
 	  (g, 0)
 	  edges in
+	Printf.eprintf "s_size = %d gadget %d%!\n" s_size !count;
+        incr count;
 	let s_c_edges =
 	  fold_pairs
 	    (fun s_c_edges i j -> s_c_edges + if ELGraph.is_connected g i j then 1 else 0)
@@ -188,8 +201,10 @@ let extra_vertices_gadgets gadgets c_size s_size =
 (*
 let () =
   let gadgets = [] in
-  let gadgets = single_edge_gadgets gadgets 3 in
-  let gadgets = extra_vertices_gadgets gadgets 3 1 in
+  let gadgets = single_edge_gadgets gadgets 5 in
+  let gadgets = extra_vertices_gadgets gadgets 5 1 in
+  let gadgets = extra_vertices_gadgets gadgets 5 2 in
+  let gadgets = extra_vertices_gadgets gadgets 5 3 in
     (*
     prerr_string "--------------\n";
   let gadgets = extra_vertices_gadgets gadgets 5 2 in
@@ -241,7 +256,7 @@ let () =
     exit 0;
 ;;
 *)
-  
+
 let () =
   Arg.parse specs (fun _ -> Arg.usage specs usage_msg) usage_msg;
   let g, vertex_numbers, vertex_names = Ulp.input stdin in
