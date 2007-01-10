@@ -460,36 +460,9 @@ let rec solve_cut_corner g =
   let s, c = match deg2 with Some (s, c) -> s, c | None -> Cut.cut_corner (ELGraph.unlabeled g) in
     if d then Printf.eprintf "s = %a c = %a\n%!" IntSet.output s IntSet.output c;
     if IntSet.size c > 4
-    then (
-      if d then Printf.eprintf "punting on corn\tn = %3d m = %4d\n%!" (ELGraph.num_vertices g) (ELGraph.num_edges g);
-      if d then Printf.eprintf "s = %a c = %a\n%!" IntSet.output s IntSet.output c;
+    then
       solve_brute_force g
-    )
-      (*
-    else if IntSet.size c > 3
-    then
-      let sc = ELGraph.subgraph g (IntSet.union s c) in
-      let rc = IntSet.fold ELGraph.delete_vertex s g in
-      let colorings = solve_all_colorings sc c in
-      let costs = IntMap.map (fun _ coloring -> coloring_cost sc coloring) colorings in
-      Printf.eprintf "costs |S| = %d: [" (IntSet.size s);
-	IntMap.iter (fun i cost ->
-		       if i > 0 then prerr_string " ";
-		       Printf.eprintf "%d" cost) costs;
-	prerr_string "]\n";
-      let coloring = solve rc in
-      let coloring = 
- 	if IntMap.get coloring (IntSet.max c) = false
-	then coloring else invert_coloring coloring in
-      let code, _ =
-	IntSet.fold
-	  (fun (code, n) v ->
-	     if IntMap.get coloring v then code lor (1 lsl n), n+1 else code, n+1) c (0, 0) in
-      let coloring_sc = IntMap.get colorings code in
-	merge_colorings coloring coloring_sc
-      *)
-    else if IntSet.size c = 3 || IntSet.size c = 4
-    then
+    else
       let sc = ELGraph.subgraph g (IntSet.union s c) in
       if d then Printf.eprintf "g = %a" output g;
       if d then Printf.eprintf " sc = %a" output sc;
@@ -503,9 +476,8 @@ let rec solve_cut_corner g =
 	     if IntSet.contains c i && IntSet.contains c j
 	     then ELGraph.disconnect rc i j else rc) g rc in
       let rc' =
-	make_cut_gadget rc c costs
-	  (if IntSet.size c = 3 then Gadgets.gadgets_3 else Gadgets.gadgets_4) in
-      if d then Printf.eprintf " c3_gadge: %a\n%!" output rc';
+	make_cut_gadget rc c costs Gadgets.gadgets.(IntSet.size c) in
+      if d then Printf.eprintf " cut_gadget: %a\n%!" output rc';
       let coloring = solve rc' in
       let coloring = 
  	if IntMap.get coloring (IntSet.max c) = false
@@ -518,27 +490,6 @@ let rec solve_cut_corner g =
 	     if IntMap.get coloring v then code lor (1 lsl n), n+1 else code, n+1) c (0, 0) in
       let coloring_sc = IntMap.get colorings code in
 	merge_colorings coloring coloring_sc	
-    else
-      let g' = ELGraph.subgraph g (IntSet.union s c) in
-      let colorings = solve_all_colorings g' c in
-(*  	Printf.eprintf "colorings = %a\n%!" (IntMap.output (IntMap.output Util.output_bool)) colorings; *)
-      let costs = IntMap.map (fun _ coloring -> coloring_cost g' coloring) colorings in
-(*  	Printf.eprintf "costs: %a\n%!" (IntMap.output Util.output_int) costs; *)
-	let g' = IntSet.fold ELGraph.delete_vertex s g in
-	let v, c' = IntSet.pop c in
-	let w, _  = IntSet.pop c' in
-        (* FIXME remove edge if 0/0 *)
-	let g' = ELGraph.set_label g' v w { eq = IntMap.get costs 1; ne = IntMap.get costs 0; } in
-(*  	  Printf.eprintf "g' = %a\n" output g'; *)
-	let coloring_g = solve g' in
- 	let coloring_g = 
- 	  if IntMap.get coloring_g w = false then coloring_g else invert_coloring coloring_g in
-	let coloring_sc =
-	  IntMap.get
-	    colorings (if IntMap.get coloring_g v = IntMap.get coloring_g w then 0 else 1) in
-(*  	  Printf.eprintf "coloring_g = %a\n" (IntMap.output Util.output_bool) coloring_g; *)
-(*  	  Printf.eprintf "coloring_sc = %a\n%!" (IntMap.output Util.output_bool) coloring_sc; *)
-	  merge_colorings coloring_g coloring_sc
 
 and solve_component g =
   if !Util.verbose

@@ -201,10 +201,7 @@ let extra_vertices_gadgets gadgets c_size s_size =
 (*
 let () =
   let gadgets = [] in
-  let gadgets = single_edge_gadgets gadgets 5 in
-  let gadgets = extra_vertices_gadgets gadgets 5 1 in
-  let gadgets = extra_vertices_gadgets gadgets 5 2 in
-  let gadgets = extra_vertices_gadgets gadgets 5 3 in
+  let gadgets = single_edge_gadgets gadgets 2 in
     (*
     prerr_string "--------------\n";
   let gadgets = extra_vertices_gadgets gadgets 5 2 in
