@@ -90,7 +90,7 @@ let fold_pairs f s1 s2 accu =
 ;;
 
 let add_gadget gadgets g c_set cost =
-  let colorings = Ulp.solve_all_colorings g c_set in
+  let colorings = Solve.solve_all_colorings g c_set in
 (*   let costs = IntMap.map (fun _ coloring -> Ulp.coloring_cost g coloring) colorings in *)
   let edges = ELGraph.fold_edges (fun r i j l -> (i, j, l) :: r) g [] in
   let costs = Array.init

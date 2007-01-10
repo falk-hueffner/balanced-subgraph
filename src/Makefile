@@ -13,7 +13,8 @@ SOURCES   = \
 	Diflow.ml	\
 	Cut.ml		\
 	Flow.ml		\
-	Ulp.ml
+	Ulp.ml		\
+	Solve.ml
 
 C_SOURCES = \
 	flow.c
