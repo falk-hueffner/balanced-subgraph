@@ -25,7 +25,7 @@ LIBS      = unix.cmxa
 #PROFILE  = -p
 
 OCAMLC    = ocamlc -g -warn-error A $(INCLUDES)
-OCAMLOPT  = ocamlopt -warn-error A $(INCLUDES)
+OCAMLOPT  = ocamlopt.opt -warn-error A $(INCLUDES)
 OCAMLDEP  = ocamldep $(INCLUDES)
 
 CFLAGS    = -std=c99 -g -I $(HOME)/include
