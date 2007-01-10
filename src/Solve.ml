@@ -488,7 +488,7 @@ let rec solve_cut_corner g =
 	if not (ELGraph.num_vertices rc' < ELGraph.num_vertices g
 	        || (ELGraph.num_vertices rc' = ELGraph.num_vertices g
 	            && Ulp.num_edges rc' < Ulp.num_edges g))
-	then ( Printf.eprintf "gadget failed\n";
+	then ( if d then Printf.eprintf "gadget failed\n";
 (* 	       Printf.eprintf "rc  = %a\n" output rc; *)
 (* 	       Printf.eprintf "rc' = %a\n" output rc'; *)
 	       loop rest )
@@ -510,6 +510,15 @@ let rec solve_cut_corner g =
     loop scs
 
 and solve_component g =
+  let g = ELGraph.fold_edges
+    (fun g i j {eq = eq; ne = ne} ->
+       if eq > 0 && ne > 0
+       then
+	 if eq = ne
+	 then ELGraph.disconnect g i j
+	 else
+	   let m = min eq ne in ELGraph.set_label g i j {eq = eq - m; ne = ne - m}
+       else g) g g in
   if !Util.verbose
   then Printf.eprintf "comp\tn = %3d m = %4d\n%!" (ELGraph.num_vertices g) (ELGraph.num_edges g);
   if ELGraph.num_vertices g <= 5
