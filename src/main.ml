@@ -185,6 +185,7 @@ let extra_vertices_gadgets gadgets c_size s_size =
       loop gadgets
 ;;
 
+(*
 let () =
   let gadgets = [] in
   let gadgets = single_edge_gadgets gadgets 3 in
@@ -239,15 +240,15 @@ let () =
     *)
     exit 0;
 ;;
-
-(*
+*)
+  
 let () =
   Arg.parse specs (fun _ -> Arg.usage specs usage_msg) usage_msg;
   let g, vertex_numbers, vertex_names = Ulp.input stdin in
   let m = ELGraph.fold_edges (fun m _ _ { Ulp.eq = eq; Ulp.ne = ne } -> m + eq + ne) g 0 in
 (*   Ulp.output stdout g; *)
   let start = Util.timer () in
-  let colors = Ulp.solve g in
+  let colors = Solve.solve g in
 (*   Printf.eprintf "result: %a\n%!" (IntMap.output Util.output_bool) colors; *)
   let stop = Util.timer () in
   let k = Ulp.coloring_cost g colors
@@ -268,4 +269,3 @@ let () =
 	   done)
 	g
 ;;
-*)

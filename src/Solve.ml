@@ -449,13 +449,14 @@ let rec solve_cut_corner g =
 	 else deg2)
       g None in
   let s, c = match deg2 with Some (s, c) -> s, c | None -> Cut.cut_corner (ELGraph.unlabeled g) in
-    if d||true then Printf.eprintf "s = %a c = %a\n%!" IntSet.output s IntSet.output c;
-    if IntSet.size c > 6
+    if d then Printf.eprintf "s = %a c = %a\n%!" IntSet.output s IntSet.output c;
+    if IntSet.size c > 3
     then (
-      Printf.eprintf "punting on corn\tn = %3d m = %4d\n%!" (ELGraph.num_vertices g) (ELGraph.num_edges g);
-      Printf.eprintf "s = %a c = %a\n%!" IntSet.output s IntSet.output c;
+      if d then Printf.eprintf "punting on corn\tn = %3d m = %4d\n%!" (ELGraph.num_vertices g) (ELGraph.num_edges g);
+      if d then Printf.eprintf "s = %a c = %a\n%!" IntSet.output s IntSet.output c;
       solve_brute_force g
     )
+      (*
     else if IntSet.size c > 3
     then
       let sc = ELGraph.subgraph g (IntSet.union s c) in
@@ -477,6 +478,7 @@ let rec solve_cut_corner g =
 	     if IntMap.get coloring v then code lor (1 lsl n), n+1 else code, n+1) c (0, 0) in
       let coloring_sc = IntMap.get colorings code in
 	merge_colorings coloring coloring_sc
+      *)
     else if IntSet.size c = 3
     then
       let sc = ELGraph.subgraph g (IntSet.union s c) in
