@@ -26,20 +26,118 @@ let specs = [
          "Print progress to stderr");
 ];;
 
-(*
-let find_gadgets c_size s_size max_mult =
-  let g = Util.fold_n ELGraph.add_vertex (c_size + s_size) ELGraph.empty in
-(*   ELGraph.output stdout output_edge g;  *)
-  let fold_pairs f n a =
-    let rec loop a i j =
-      if i >= n then a
-      else if j >= i then loop a (i + 1) 0
-      else loop (f a i j) i (j + 1)
+let find_lincomb v vs =
+  let normalize v =
+    let m = Array.fold_left min max_int v in
+      Array.map (fun i -> i - m) v in
+  let is_zero v =
+    let rec loop i =
+      if i >= Array.length v
+      then true
+      else v.(i) = 0 && loop (i + 1)
     in
-      loop a 0 0 in
+      loop 0 in
+  let can_apply v d =
+    let rec loop i =
+      if i >= Array.length v
+      then true
+      else v.(i) - d.(i) >= 0 && loop (i + 1)
+    in
+      loop 0 in
+  let apply v d =
+    Array.mapi (fun i x -> x - d.(i)) v in
+    
+  let rec loop v vs' max_cost =
+    if is_zero v
+    then Some (0, [], [])
+    else
+      match vs' with
+	  [] -> None
+	| (cost, d, edges) :: vs' ->
+	    if cost <= max_cost && can_apply v d
+	    then let v' = apply v d in
+	      match loop v' vs (max_cost - cost) with
+		  None -> loop v vs' max_cost
+		| Some (cost', ds, gadgets) -> Some (cost + cost', d :: ds, edges :: gadgets)
+	    else
+	      loop v vs' max_cost in
+  let v = normalize v in
+  let rec trial v max_cost max_max_cost =
+(*     Printf.eprintf "trial max_cost = %d max_max_cost = %d\n" max_cost max_max_cost; *)
+    if max_cost > max_max_cost
+    then None
+      else
+	match loop v vs max_cost with
+	    None -> trial v (max_cost + 1) max_max_cost
+	  | something -> something in
+  let rec shift v d =
+(*     Printf.eprintf "shift %d\n" d; *)
+    let v = Array.map ((+) d) v in
+    let max_max_cost = Array.fold_left (+) 0 v in
+      match trial v 0 max_max_cost with
+	  None -> shift v (d + 1)
+	| something -> something
+  in
+    match shift v 0 with
+	None -> assert false
+      | Some thing -> thing
+;;
+
+let fold_pairs f s1 s2 accu =
+  IntSet.fold
+    (fun accu x1 -> IntSet.fold (fun accu x2 -> f accu x1 x2) s2 accu) s1 accu
+;;
+
+let add_gadget gadgets g c_set cost =
+  let colorings = Ulp.solve_all_colorings g c_set in
+(*   let costs = IntMap.map (fun _ coloring -> Ulp.coloring_cost g coloring) colorings in *)
+  let costs = Array.init
+    (IntMap.size colorings)
+    (fun i ->  Ulp.coloring_cost g (IntMap.get colorings i)) in
+  let do_replace =
+    if not (Hashtbl.mem gadgets costs) then true else
+      let oldcost, edges = Hashtbl.find gadgets costs in
+	oldcost > cost || (oldcost = cost && List.length edges > ELGraph.num_vertices g)
+  in
+    if do_replace then
+      Hashtbl.replace
+	gadgets costs (cost, (ELGraph.fold_edges (fun r i j l -> (i, j, l) :: r) g []))
+;;
+
+let print_gadget costs cost edges =
+  Printf.printf "(%d,[|" cost;
+  for i = 0 to Array.length costs - 1 do
+    if i > 0 then print_string ";";
+    Printf.printf "%d" costs.(i);
+  done;
+  print_string "|],[";
+  List.iter
+    (fun (i, j, {Ulp.eq = eq; Ulp.ne = ne}) ->
+       Printf.printf "(%d,%d,{eq=%d;ne=%d});" i j eq ne)
+    edges
+;;
+
+let single_edge_gadgets gadgets c_size =
+  let c_set = Util.fold_n IntSet.add c_size IntSet.empty in
+  let g = Util.fold_n ELGraph.add_vertex c_size ELGraph.empty in
   let n = ELGraph.num_vertices g in
-  let edges = fold_pairs (fun l i j -> (i, j) :: l) n [] in
+  let edges = fold_pairs (fun l i j -> if i < j then (i, j) :: l else l) c_set c_set [] in
   let m = List.length edges in
+    List.iter
+      (fun (i, j) ->
+	 add_gadget gadgets (ELGraph.connect g i j {Ulp.eq = 1; Ulp.ne = 0} ) c_set 0;
+	 add_gadget gadgets (ELGraph.connect g i j {Ulp.eq = 0; Ulp.ne = 1} ) c_set 0;) edges;
+;;
+
+let extra_vertices_gadgets gadgets c_size s_size =
+  let c_set = Util.fold_n IntSet.add c_size IntSet.empty in
+  let s_set = Util.fold_n (fun s i -> IntSet.add s (i + c_size)) s_size IntSet.empty in
+  let g = Util.fold_n ELGraph.add_vertex (c_size + s_size) ELGraph.empty in
+  let edges = fold_pairs (fun l i j -> (i, j) :: l) s_set c_set [] in
+  let edges = fold_pairs (fun l i j -> if i < j then (i, j) :: l else l) s_set s_set edges in
+(*     Util.output_list (fun c (i, j) -> Printf.fprintf c "(%d, %d)" i j) stdout edges; *)
+  let m = List.length edges in
+  let max_mult = 1 in
   let l_min = -max_mult and l_max = max_mult in
   let l = Array.make m l_min in
   let bump () =
@@ -50,14 +148,10 @@ let find_gadgets c_size s_size max_mult =
       then begin l.(i) <- l_min; loop (i + 1) end
       else begin l.(i) <- l.(i) + 1; true end
     in
-      loop 0 in
-  let c_set = Util.fold_n IntSet.add c_size IntSet.empty in
-  let s_set = Util.fold_n (fun s i -> IntSet.add s (i + c_size)) s_size IntSet.empty
+      loop 0
   in
-(*     Printf.printf "c = %a s = %a\n" IntSet.output c_set IntSet.output s_set; *)
     l.(0) <- l_min - 1;
     while bump () do
-(*       Printf.printf "l = %a\n" (Util.output_array Util.output_int) l; *)
       let g, _ = List.fold_left
 	(fun (g, i) (v, w) ->
 	   if l.(i) > 0
@@ -67,37 +161,62 @@ let find_gadgets c_size s_size max_mult =
 	   else g, i + 1)
 	(g, 0)
 	edges in
-(*  	ELGraph.output stdout output_edge g; *)
-      let colorings = Ulp.solve_all_colorings g c_set in
-      let costs = IntMap.map (fun _ coloring -> Ulp.coloring_cost g coloring) colorings
-      in
-(* 	  Util.output_list stdout Util.output_int r; *)
-(*  	let m = List.fold_left min max_int r in *)
-(*  	let r = List.map (fun i -> i - m) r in *)
-(* 	  Util.output_list stdout Util.output_int r; *)
-(* 	  ELGraph.output stdout output_edge g; *)
-	print_char '[';
- 	IntMap.iter (fun i cost ->
-		       if i > 0 then print_string ", ";
-		       Printf.printf "%d" cost) costs;
-	print_string "], [";	 
-	ELGraph.iter_edges (fun i j l -> Printf.printf "(%d, %d, %d)"
-			      i j (if l.Ulp.eq > 0 then 0 else 1)) g;
-	print_string "]\n";	 
-	  (*
-	  if GadgetMap.has_key r !gadgets
-	  then 
-	  gadgets := GadgetMap.add r (Array.copy l) !gadgets;
-	  *)	
-    done;
+      let s_c_edges =
+	fold_pairs
+	  (fun s_c_edges i j -> s_c_edges + if ELGraph.is_connected g i j then 1 else 0)
+	  s_set c_set 0 in
+	if s_c_edges >= 3 && ELGraph.is_connected_graph (ELGraph.subgraph g s_set)
+	then
+	  add_gadget gadgets g c_set s_size;
+    done
 ;;
+
 
 let () =
-  find_gadgets 3 1 1;
-  exit 0;
+  let gadgets = Hashtbl.create 100 in
+    single_edge_gadgets gadgets 4;
+    extra_vertices_gadgets gadgets 4 1;
+    extra_vertices_gadgets gadgets 4 2;
+    Hashtbl.iter
+      (fun costs (cost, edges) -> print_gadget costs cost edges; print_newline ())
+      gadgets;
+    let gadget_list =
+      Hashtbl.fold (fun costs (cost, edges) l -> (cost, costs, edges) :: l) gadgets [] in
+    let vv = [
+      [| 3; 3; 2; 4; 4; 3; 3; 4 |];
+      [| 5; 7; 5; 7; 7; 6; 7; 6 |];
+      [| 5; 5; 7; 7; 7; 7; 7; 7 |];
+      [| 3; 5; 5; 5; 4; 5; 6; 4 |];
+      [| 2; 4; 4; 5; 3; 5; 5; 4 |];
+      [| 5; 5; 4; 4; 4; 5; 5; 5 |];
+      [| 4; 7; 6; 7; 8; 9; 8; 7 |];
+      [| 6; 5; 5; 6; 6; 5; 5; 6 |];
+      [| 6; 5; 5; 4; 5; 4; 4; 3 |];
+      [| 5; 4; 5; 4; 4; 5; 4; 5 |];
+      [| 7; 7; 5; 7; 9; 7; 7; 7 |];
+      [| 2; 3; 3; 2; 3; 3; 4; 2 |];
+      [| 8; 7; 8; 7; 7; 8; 7; 8 |];
+      [| 4; 4; 4; 4; 4; 4; 4; 4 |];
+      [| 6; 6; 5; 5; 7; 5; 7; 6 |];
+      [| 1; 2; 4; 1; 2; 3; 3; 0 |]
+    ]
+    in
+    List.iter
+      (fun v ->
+	 Util.output_array Util.output_int stdout v; print_newline ();
+	 let cost, costvecs, gadgets = find_lincomb v gadget_list in
+	   Printf.printf "costs: %d\n" cost;
+	   List.iter
+	     (fun costvec ->
+		Printf.printf "%a\n" (Util.output_array Util.output_int) costvec)
+	     costvecs;
+	   print_newline ();
+      ) vv;
+    exit 0;
+    
 ;;
-*)
 
+(*
 let () =
   Arg.parse specs (fun _ -> Arg.usage specs usage_msg) usage_msg;
   let g, vertex_numbers, vertex_names = Ulp.input stdin in
@@ -125,3 +244,4 @@ let () =
 	   done)
 	g
 ;;
+*)
