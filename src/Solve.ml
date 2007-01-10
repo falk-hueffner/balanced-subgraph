@@ -349,8 +349,10 @@ let solve_all_colorings g c =
 ;;
 
 let find_lincomb v vs =
-  let d = true in
-    Printf.eprintf "find_lincomb\n%!";
+  if !Util.verbose
+  then Printf.eprintf "linco\tv = %a\n%!" (Util.output_array Util.output_int) v;
+  let db = false in
+  if db then Printf.eprintf "find_lincomb\n%!";
   let normalize v =
     let m = Array.fold_left min max_int v in
       Array.map (fun i -> i - m) v in
@@ -387,7 +389,7 @@ let find_lincomb v vs =
 	      loop v vs' max_cost in
   let v = normalize v in
   let rec trial v max_cost max_max_cost =
-    Printf.eprintf "trial max_cost = %d max_max_cost = %d\n%!" max_cost max_max_cost;
+    if db then Printf.eprintf "trial max_cost = %d max_max_cost = %d\n%!" max_cost max_max_cost;
     if max_cost > max_max_cost
     then None
       else
@@ -397,7 +399,7 @@ let find_lincomb v vs =
   let rec shift d =
     if d >= 2 then None
     else begin
-      Printf.eprintf "shift %d: %a\n%!" d (Util.output_array Util.output_int) v;
+      if db then Printf.eprintf "shift %d: %a\n%!" d (Util.output_array Util.output_int) v;
       let v = Array.map ((+) d) v in
       let max_max_cost = ((Array.fold_left (+) 0 v) + 1) / 2 in (* every vec. has at least 2 1s *)
 	match trial v 0 max_max_cost with
