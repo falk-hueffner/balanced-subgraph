@@ -116,7 +116,8 @@ let print_gadget costs cost edges =
   List.iter
     (fun (i, j, {Ulp.eq = eq; Ulp.ne = ne}) ->
        Printf.printf "(%d,%d,{eq=%d;ne=%d});" i j eq ne)
-    edges
+    edges;
+  print_string "]);\n";
 ;;
 
 let single_edge_gadgets gadgets c_size =
@@ -194,7 +195,7 @@ let () =
   let gadgets = extra_vertices_gadgets gadgets 5 3 in
     *)
     List.iter
-      (fun (cost, costs, edges) -> print_gadget costs cost edges; print_newline ())
+      (fun (cost, costs, edges) -> print_gadget costs cost edges)
       (List.sort compare gadgets);
     (*
     let vv = [
