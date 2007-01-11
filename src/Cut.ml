@@ -15,65 +15,6 @@
    with this program; if not, write to the Free Software Foundation, Inc.,
    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.  *)
 
-let vertex_cut_transform g =
-  let d = (Graph.max_vertex g) + 1 in
-  let entry i = i in
-  let outlet i = i + d in
-  let g' = Graph.fold_vertices
-    (fun g' i _ ->
-       let g' = Digraph.add_vertex g' (entry i) in
-       let g' = Digraph.add_vertex g' (outlet i) in
-       let g' = Digraph.connect g' (entry i) (outlet i) in
-	 g')
-    g
-    Digraph.empty in
-  Graph.fold_edges
-    (fun g' i j ->
-       let g' = Digraph.connect g' (outlet i) (entry j) in
-       let g' = Digraph.connect g' (outlet j) (entry i) in
-	 g')
-    g
-    g'
-;;
-
-let is_n_connected g n v w =
-  let g' = vertex_cut_transform g in
-  let d = (Graph.max_vertex g) + 1 in
-  let outlet_v = v + d in
-  let entry_w = w in
-  let flow = Diflow.make g' (fun _ _ -> 1) in
-  let rec loop i flow =
-    if i >= n || Diflow.influx flow outlet_v < i
-    then flow
-    else loop (i + 1) (Diflow.augment flow outlet_v entry_w) in
-  let flow = loop 0 flow in
-    Diflow.influx flow outlet_v >= n
-;;
-
-let n_connected_components g n =
-  UnionFind.equivalence_classes (Graph.vertex_set g) (is_n_connected g n)
-;;
-
-(*
-let connected_components g =
-  let rec dfs v seen =
-    let seen = IntSet.add seen v in
-      IntSet.fold
-	(fun seen w -> if not (IntSet.contains seen w) then dfs w seen else seen)
-	(Graph.neighbors g v)
-	seen in
-  let rec loop components fresh =
-    if IntSet.is_empty fresh
-    then components
-    else
-      let v = IntSet.choose fresh in
-      let component = dfs v IntSet.empty in
-	loop (component :: components) (IntSet.minus fresh component)
-  in
-    loop [] (Graph.vertex_set g)
-;;
-*)
-
 (* Closely following H. Gabow: "Path-based depth-first search for
    strong and biconnected components", Inf. Proc. Lett. 2000 *)
 let biconnected_components g =
@@ -128,8 +69,6 @@ let biconnected_components g =
       IntMap.fold (fun components _ component -> component :: components) components []
 ;;
 
-
-
 let cut_corner g =
   let rec grow sc s c =
 (*     Printf.eprintf "s = %a c = %a\n" IntSet.output s IntSet.output c; *)
@@ -160,45 +99,3 @@ let cut_corner g =
       g
       []
 ;;
-
-(*
-
-let cut_corner g =
-  let rec grow s neighbors best_s best_neighbors =
-(*     Printf.eprintf "s = %a neighbors = %a\n%!" IntSet.output s IntSet.output neighbors; *)
-    if IntSet.size s >= 64 || IntSet.size s > Graph.num_vertices g / 2
-    then best_s, best_neighbors
-    else
-      let best, best_new =
-	IntSet.fold
-	  (fun (best, best_size) v ->
-	     let v_size = IntSet.size (IntSet.minus (Graph.neighbors g v) neighbors) in
-	       if v_size < best_size then v, v_size else best, best_size)
-	  neighbors
-	  (0, max_int)
-      in
-	let s = IntSet.add s best in
-(* 	Printf.eprintf "about to delete %d from %a\n%!" best IntSet.output neighbors; *)
-	let neighbors = IntSet.delete neighbors best in
-(* 	Printf.eprintf "Graph.neighbors g best = %a s = %a\n" *)
-(* 	  IntSet.output (Graph.neighbors g best) IntSet.output s; *)
-	let new_neighbors = IntSet.minus (Graph.neighbors g best) s in
-	let neighbors = IntSet.union neighbors new_neighbors in
-	  if (*IntSet.size s > IntSet.size neighbors &&*)
-(* 	    IntSet.size neighbors <= IntSet.size best_neighbors *)
-	    IntSet.size neighbors < IntSet.size best_neighbors
-	  then grow s neighbors s neighbors
-	  else grow s neighbors best_s best_neighbors
-  in
-    Graph.fold_vertices
-      (fun l v neighbors_v ->
-	 let s, neighbors =
-	   grow (IntSet.singleton v) neighbors_v (IntSet.singleton v) neighbors_v
-	 in
-	   if IntSet.is_empty s
-	   then l
-	   else (IntSet.union s neighbors, neighbors) :: l)
-      g
-      []
-;;
-*)

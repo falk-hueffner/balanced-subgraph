@@ -100,45 +100,9 @@ let solve_iterative_compression g =
     let k =
       List.fold_left
 	(fun k (i, j) -> let l = ELGraph.get_label g i j in k + l.eq + l.ne) 0 cover in
-      if !Util.verbose then Printf.eprintf "m = %d k = %d, star_cover = %d, cover = %a\n%!"
-	(ELGraph.num_edges g) k (IntSet.size s) (Util.output_list (fun c (i, j) -> Printf.fprintf c "(%d, %d)" i j)) cover;
-    if d then Printf.eprintf "\ncompress g = %a cover = %a k = %d%!" output g (Util.output_list (fun c (i, j) -> Printf.fprintf c "(%d, %d)%!" i j)) cover k;
-    if d then Printf.eprintf " flow = %a\n%!" Flow.output flow;
-    let rec loop iter s t pairs =
-      if d then Printf.eprintf "iter = %d s = %a t = %a\n%!" iter IntSet.output s IntSet.output t;      
-      let flow, augmented =
-	Util.fold_n (fun (flow, _) _ ->
-		       let flow, augmented =
-			 Flow.augment flow s t
-		       in
-			 if d then Printf.eprintf "flow = %a\n%!" Flow.output flow; flow, augmented
-		    ) k (flow, false)
-      in
-	if augmented then
-	  if (iter + 1) >= (1 lsl num_pairs) then (if d then Printf.eprintf "not compressed\n"; g, cover) else
-	    let a = gray_change iter in
-	    let i, j = IntMap.get pairs a in
-	      if d then Printf.eprintf "i = %d j = %d\n" i j;
-	      let s = IntSet.delete s i in
-	      let t = IntSet.delete t j in
-	      let s = IntSet.add s j in
-	      let t = IntSet.add t i in
-	      let pairs = IntMap.update pairs a (j, i) in
-		loop (iter + 1) s t pairs
-	else
-	  let cut = Flow.cut flow s in
-	  let cut =
-	    List.map
-	      (fun (i, j) ->
-		 let i = IntMap.get_default s_of_t i i in
-		 let j = IntMap.get_default s_of_t j j in
-	           i, j)
-	      cut 
-	  in
-	    if d then Printf.eprintf "compressed to %a\n" (Util.output_list (fun c (i, j) -> Printf.fprintf c "(%d, %d)" i j)) cut;
-	    g, cut
-    in
-(*       loop 0 s t pairs in *)
+    if !Util.verbose then Printf.eprintf " m = %d k = %d vc = %d cover = %a\n%!"
+      (ELGraph.num_edges g) k (IntSet.size s)
+      (Util.output_list (fun c (i, j) -> Printf.fprintf c "(%d, %d)" i j)) cover;
     let cover' =
       c_find_cut_partition (flow_to_array flow) (IntSet.to_array s) (IntSet.to_array t) k in
     let cover = if cover' = [] then cover else cover' in

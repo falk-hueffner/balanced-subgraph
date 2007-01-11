@@ -7,10 +7,7 @@ SOURCES   = \
 	IntSet.ml	\
 	UnionFind.ml	\
 	Graph.ml	\
-	Digraph.ml	\
 	ELGraph.ml	\
-	ELDigraph.ml	\
-	Diflow.ml	\
 	Cut.ml		\
 	Flow.ml		\
 	Ulp.ml		\

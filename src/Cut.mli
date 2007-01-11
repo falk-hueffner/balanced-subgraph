@@ -17,12 +17,6 @@
 
 (** Cut related functions.  *)
 
-val vertex_cut_transform : Graph.t -> Digraph.t
-
-val is_n_connected : Graph.t -> int -> int -> int -> bool
-
-val n_connected_components : Graph.t -> int -> IntSet.t list
-
 val biconnected_components : Graph.t -> IntSet.t list
 
 val cut_corner : Graph.t -> (IntSet.t * IntSet.t) list
