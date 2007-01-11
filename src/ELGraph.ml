@@ -101,6 +101,14 @@ let iter_edges f g = fold_edges (fun () i j l -> f i j l) g ();;
 
 let vertex_set g = fold_vertices (fun s i _ -> IntSet.add s i) g IntSet.empty;;
 
+let choose_edge g =
+  match
+    fold_edges (fun _ i j l -> Some (i, j, l)) g None
+  with
+      None -> raise Not_found
+    | Some (i, j, l) -> (i, j, l)
+;;
+
 let num_edges g =
   let num =
     fold_vertices

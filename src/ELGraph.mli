@@ -69,6 +69,8 @@ val get_label : 'a t -> int -> int -> 'a
 
 val get_label_default : 'a t -> int -> int -> 'a -> 'a
 
+val choose_edge : 'a t -> (int * int * 'a)
+
 (** [connect g v w l] returns [g] with vertices [v] and [w] connected
     and labeled by [l].  Raises [Not_found] when [v] or [w] do not exist
     in [g]. Raises [IntMap.Already_present] when [v] and [w] are already
