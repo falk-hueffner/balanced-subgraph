@@ -1,0 +1,83 @@
+This package contains the source and the test data for a solver for
+the Sign Consistent Subgraph poblem, based on data reduction rules and
+iterative compression. It is described in the paper:
+
+  Optimal Solutions for the Sign-Consistent Subgraph Problem
+  Manuscript, January 2007.
+
+
+Graph Bipartization solver
+==========================
+
+The purpose is to solve the [...]
+
+The current version can be obtained at
+http://theinf1.informatik.uni-jena.de/scs/. It is distributed under
+the terms of the GNU General Public License (GPL, see COPYING).
+
+The solver is written in Objective Caml and ISO C99. To build the
+program, you need Objective Caml (version 3.08 or newer), the GNU gcc
+compiler (version 3.2 or newer) and GNU make. Using other compilers or
+makes, or building on a non-Unix system, will probably require changes
+to the Makefile and the source.
+
+It has been tested on:
+
+* Debian GNU/Linux (i386) 3.1 with Objective Caml 3.08.3 and gcc 3.3.5
+  (Debian 1:3.3.5-13)
+
+The program is called "ulp". By default, it reads a graph from
+standard input and writes it to standard output. The graph format is a
+simple text format, where each line describes one edge, given by its
+two endpoints separated by whitespace, plus an optional edge label (0
+or 1):
+
+v0 v1 1
+v1 v2
+v2 v0 0
+
+Vertex names can be any combination of letters, digits, and _. Note
+that this graph format cannot describe degree-0 vertices; however,
+they are irrelevant for the Sign Consistent Subgraph poblem
+anyway. Label "0" indicates an edge that demands that the coloring of
+its endpoints are equal, and "1" demands that the coloring of its
+endpoints are unequal. Default is "1".
+
+The output is a minimum set of edges C to delete to make the graph
+sign consistent. Example:
+
+$ ./ulp < test/rand02.graph
+0 10 1
+1 8 0
+4 6 0
+7 17 0
+9 10 0
+11 17 1
+13 14 0
+
+Option "-c" controls the size of cuts sought for in the data reduction
+rules. Default is 4.
+
+With -s, one gets only a single line of output containing some
+statistics:
+
+   n      m    |C|    run time [s]
+  193    493    12       0.26
+
+
+ILP based solver
+================
+
+The Python script "ulp-lp" solves SCS by calling the ILP solver
+"glpsol" from the glpk package
+(http://www.gnu.org/software/glpk/glpk.html). It has been tested with
+glpk 4.8.
+
+
+Test data
+=========
+
+The directory "test" contains some random test instances.
+
+-- Falk Hüffner (http://theinf1.informatik.uni-jena.de/~hueffner/)
+   11 January 2007
