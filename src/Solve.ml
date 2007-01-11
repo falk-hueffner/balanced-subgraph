@@ -17,28 +17,20 @@
 
 open Ulp;;				(* for the record field labels *)
 
-let star_cover g =
-  let rec deg1 g =
-    ELGraph.fold_vertices
-      (fun r i neigh ->
-	 if ELGraph.deg g i = 1
-	 then Some (let j, _ = IntMap.choose neigh in j)
-	 else r) g None in
-  let rec maxdeg g =
-    let r, _ =
-      ELGraph.fold_vertices
-	(fun (r, d) i _ ->
-	   let d' = ELGraph.deg g i in if d' > d then Some i, d'  else r, d) g (None, 0)
-    in
-      r in
-  let rec loop g vs =
-    match
-      let r = deg1 g in if r = None then maxdeg g else r
-    with
-	Some i -> loop (ELGraph.delete_vertex g i) (IntSet.add vs i)
-      | None -> vs
+let vertex_cover g =
+  let rec loop s g =
+    if ELGraph.num_edges g = 0
+    then s
+    else
+      let i, j, _ = ELGraph.choose_edge g in
+	if      ELGraph.deg g i = 1 then loop (IntSet.add s j) (ELGraph.delete_vertex g j)
+	else if ELGraph.deg g j = 1 then loop (IntSet.add s i) (ELGraph.delete_vertex g i)
+	else
+	  let si = loop (IntSet.add s i) (ELGraph.delete_vertex g i) in
+	  let sj = loop (IntSet.add s j) (ELGraph.delete_vertex g j) in
+	    if IntSet.size si < IntSet.size sj then si else sj
   in
-    loop g IntSet.empty
+    loop IntSet.empty g
 ;;
 
 let gray_code x = x lxor (x lsr 1);;
@@ -86,7 +78,7 @@ let solve_iterative_compression g =
       List.fold_left
 	(fun g (i, j) -> ELGraph.set_connect g i j {eq = 1; ne = 0})
 	ELGraph.empty cover in
-    let s = star_cover cover_g in
+    let s = vertex_cover cover_g in
     let flow, t, s_of_t, t_of_s, pairs, _ = IntSet.fold
       (fun (flow, t, s_of_t, t_of_s, pairs, k) i ->
 	 let flow, j = Flow.new_vertex flow in
