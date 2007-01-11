@@ -37,11 +37,6 @@ struct vertex {
     struct neighbor neighbors[];
 };
 
-//struct graph {
-//    unsigned n;
-//    struct vertex *v;
-//};
-
 static inline unsigned *res(struct vertex **g, unsigned v, unsigned w) {
     // FIXME use binary search
     for (unsigned j = 0; ; j++)
@@ -51,13 +46,8 @@ static inline unsigned *res(struct vertex **g, unsigned v, unsigned w) {
 
 static inline int vertex_flow(struct vertex **g, unsigned v) {
     unsigned flow = 0;
-    for (unsigned i = 0; i < g[v]->deg; i++) {
-	//unsigned w = g[v]->neighbors[i].neighbor;
-	//unsigned r = g[v]->neighbors[i].residual;
-	//unsigned cap = (r + *res(g, w, v)) / 2;
-	//flow += cap - r;
+    for (unsigned i = 0; i < g[v]->deg; i++)
 	flow += g[v]->neighbors[i].flow;
-    }
     return flow;
 }
 
@@ -119,43 +109,6 @@ static unsigned augment_many_many(struct vertex **g, unsigned n,
 			push(g, v, w);
 			w = v;
 		    }
-		    return target;
-		}
-		*qtail++ = w;
-	    }
-	}
-    }
-
-    //fprintf(stderr, "fail\n");
-    return -1;
-}
-
-static unsigned augment_one_many(struct vertex **g, unsigned n,
-				 const unsigned s, const bool *is_t) {
-    //fprintf(stderr, "n =  %d\n", n);
-    unsigned q[n];
-    unsigned *qhead = q, *qtail = q;
-    *qtail++ = s;
-    int pred[n];
-    memset(pred, -1, sizeof pred);
-    pred[s] = s;
-    while (qhead != qtail) {
-	unsigned v = *qhead++;
-	//fprintf(stderr, "popped %d\n", v);
-	for (unsigned i = 0; i < g[v]->deg; i++) {
-	    unsigned w = g[v]->neighbors[i].neighbor;	    
-	    //fprintf(stderr, "found %d pred[%d] = %d\n", w, w, pred[w]);
-	    if (pred[w] == -1 && g[v]->neighbors[i].residual > 0) {
-		//fprintf(stderr, "push %d\n", w);
-		pred[w] = v;
-		if (is_t[w]) {
-		    unsigned target = w;
-		    while ((unsigned) pred[w] != w) {
-			unsigned v = pred[w];
-			push(g, v, w);
-			w = v;
-		    }
-		    //fprintf(stderr, "success\n");
 		    return target;
 		}
 		*qtail++ = w;
@@ -470,60 +423,3 @@ CAMLprim value c_find_cut_partition(value vg, value vs, value vt, value vk) {
     //dump_graph(g, n); putchar('\n');
     return find_cut_partition(g, n, s, n_s, t, is_s, is_t, k);
 }
-
-#if 0
-CAMLprim value c_flow_test(value array) {
-    assert(Is_block(array));
-    unsigned n = Wosize_val(array);
-    struct vertex *g[n];
-    for (unsigned v = 0; v < n; v++) {
-	value vertex = Field(array, v);
-	assert(Is_block(vertex));
-	unsigned deg = Wosize_val(vertex);
-	g[v] = alloca(sizeof (struct vertex) + deg * sizeof (struct neighbor));
-	g[v]->deg = deg;
-	for (unsigned j = 0; j < g[v]->deg; j++) {
-	    value vneigh = Field(vertex, j);
-	    assert(Is_block(vneigh));
-	    assert(Wosize_val(vneigh) == 2);
-	    assert(Is_long(Field(vneigh, 0)));
-	    assert(Is_long(Field(vneigh, 1)));
-	    unsigned neighbor = Long_val(Field(vneigh, 0));
-	    unsigned residual = Long_val(Field(vneigh, 1));
-	    g[v]->neighbors[j].neighbor = neighbor;
-	    g[v]->neighbors[j].residual = residual;
-	}
-    }
-    dump_graph(g, n); putchar('\n');
-
-    unsigned s[] = { 0 };
-    bool is_t[n];
-    memset(is_t, 0, sizeof is_t);
-
-    is_t[6] = true;
-    augment_many_many(g, n, s, 1, is_t);
-    dump_graph(g, n); putchar('\n');
-
-    augment_one_many(g, n, s, 1, is_t);
-    dump_graph(g, n); putchar('\n');
-
-    augment_one_many(g, n, s, 1, is_t);
-    dump_graph(g, n); putchar('\n');
-
-    printf("----------------------------\n");
-    s[0] = 6;
-    is_t[6] = false;
-    is_t[0] = true;
-
-    augment_one_many(g, n, s, 1, is_t);
-    dump_graph(g, n); putchar('\n');
-
-    augment_one_many(g, n, s, 1, is_t);
-    dump_graph(g, n); putchar('\n');
-
-    augment_one_many(g, n, s, 1, is_t);
-    dump_graph(g, n); putchar('\n');
-
-    return Val_unit;
-}
-#endif
