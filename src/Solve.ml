@@ -41,7 +41,7 @@ external c_find_cut_partition :
   (int * int) array array -> int array -> int array -> int -> (int * int) list
   = "c_find_cut_partition" "c_find_cut_partition";;
 
-let flow_to_array g =
+let graph_to_array g =
   let n = ELGraph.max_vertex g in
   let a = Array.make (n + 1) [| |] in
     for i = 0 to n do
@@ -50,7 +50,7 @@ let flow_to_array g =
       else begin
 	a.(i) <- Array.make (ELGraph.deg g i) (0, 0);
 	ignore (ELGraph.fold_neighbors
-		  (fun j w l -> a.(i).(j) <- (w, l.Flow.cap); j + 1) g i 0);
+		  (fun j w l -> a.(i).(j) <- (w, l.eq + l.ne); j + 1) g i 0);
       end
     done;
     a
@@ -71,31 +71,28 @@ let solve_iterative_compression g =
 	 else ELGraph.disconnect g i j
        else g) g g in
   let compress g cover =
-    let flow = ELGraph.fold_edges
-      (fun flow i j {eq = eq; ne = ne} ->
-	 Flow.connect flow i j (eq + ne)) g Flow.empty in
     let cover_g =
       List.fold_left
 	(fun g (i, j) -> ELGraph.set_connect g i j {eq = 1; ne = 0})
 	ELGraph.empty cover in
     let s = vertex_cover cover_g in
-    let flow, t, s_of_t, t_of_s, pairs, _ = IntSet.fold
-      (fun (flow, t, s_of_t, t_of_s, pairs, k) i ->
-	 let flow, j = Flow.new_vertex flow in
+    let g', t, s_of_t, t_of_s, pairs, _ = IntSet.fold
+      (fun (g', t, s_of_t, t_of_s, pairs, k) i ->
+	 let g', j = ELGraph.new_vertex g' in
 	 let t = IntSet.add t j in
 	 let s_of_t = IntMap.add s_of_t j i in
 	 let t_of_s = IntMap.add t_of_s i j in
 	 let pairs = IntMap.add pairs k (i, j) in
-	   flow, t, s_of_t, t_of_s, pairs, k + 1)
-      s (flow, IntSet.empty, IntMap.empty, IntMap.empty, IntMap.empty, 0) in
-    let flow =
+	   g', t, s_of_t, t_of_s, pairs, k + 1)
+      s (g, IntSet.empty, IntMap.empty, IntMap.empty, IntMap.empty, 0) in
+    let g' =
       List.fold_left
-	(fun flow (i, j) ->
+	(fun g' (i, j) ->
 	   let i, j = if IntSet.contains s i then i, j else j, i in
-	   let cap = Flow.capacity flow i j in
-	   let flow = Flow.disconnect flow i j in
+	   let l = ELGraph.get_label g i j in
+	   let g' = ELGraph.disconnect g' i j in
 	   let j' = IntMap.get t_of_s i in
-	     Flow.connect flow j j' cap) flow cover in
+	     ELGraph.connect g' j j' l) g' cover in
     let num_pairs = IntSet.size s in
     let k =
       List.fold_left
@@ -104,7 +101,7 @@ let solve_iterative_compression g =
       (ELGraph.num_edges g) k (IntSet.size s)
       (Util.output_list (fun c (i, j) -> Printf.fprintf c "(%d, %d)" i j)) cover;
     let cover' =
-      c_find_cut_partition (flow_to_array flow) (IntSet.to_array s) (IntSet.to_array t) k in
+      c_find_cut_partition (graph_to_array g') (IntSet.to_array s) (IntSet.to_array t) k in
     let cover = if cover' = [] then cover else cover' in
     let cover =
       List.map
