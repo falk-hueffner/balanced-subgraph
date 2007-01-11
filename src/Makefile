@@ -2,7 +2,6 @@ EXECS	  = ulp gen-ulp find-gadgets
 
 SOURCES   = \
 	Util.ml		\
-	Queue.ml	\
 	IntMap.ml	\
 	IntSet.ml	\
 	Graph.ml	\
