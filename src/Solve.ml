@@ -59,7 +59,9 @@ let graph_to_array g =
 let solve_iterative_compression g =
   let d = false in
   if !Util.verbose
-  then Printf.eprintf "itco\tn = %3d m = %4d\n%!" (ELGraph.num_vertices g) (ELGraph.num_edges g);
+  then Printf.eprintf "iterative compression\tn = %3d m = %4d\n%!"
+    (ELGraph.num_vertices g) (ELGraph.num_edges g);
+  let m0 = Ulp.num_edges g in
   let g = ELGraph.fold_vertices (fun g i _ -> ELGraph.unconnect g i i) g g in
   let g = ELGraph.fold_edges
     (fun g i j l ->
@@ -97,9 +99,9 @@ let solve_iterative_compression g =
     let k =
       List.fold_left
 	(fun k (i, j) -> let l = ELGraph.get_label g i j in k + l.eq + l.ne) 0 cover in
-    if !Util.verbose then Printf.eprintf " m = %d k = %d vc = %d cover = %a\n%!"
-      (ELGraph.num_edges g) k (IntSet.size s)
-      (Util.output_list (fun c (i, j) -> Printf.fprintf c "(%d, %d)" i j)) cover;
+    if !Util.verbose then Printf.eprintf " m = %d/%d k = %d vc = %d cover = %d\n%!"
+      (Ulp.num_edges g) m0 k (IntSet.size s) (List.length cover);
+(*       (Util.output_list (fun c (i, j) -> Printf.fprintf c "(%d, %d)" i j)) cover; *)
     let cover' =
       c_find_cut_partition (graph_to_array g') (IntSet.to_array s) (IntSet.to_array t) k in
     let cover = if cover' = [] then cover else cover' in
@@ -208,7 +210,8 @@ let solve_occ g =
 
 let solve_brute_force g =
   if !Util.verbose
-  then( Printf.eprintf "bf\tn = %3d m = %4d\n%!" (ELGraph.num_vertices g) (ELGraph.num_edges g);
+  then( Printf.eprintf "brute force\tn = %3d m = %4d\n%!"
+	  (ELGraph.num_vertices g) (ELGraph.num_edges g);
 (* 	Printf.eprintf "V = %a\n" IntSet.output (ELGraph.vertex_set g); *)
       );
   try
@@ -303,7 +306,7 @@ let solve_all_colorings g c =
 
 let find_lincomb v vs =
   if !Util.verbose
-  then Printf.eprintf "linco\tv = %a\n%!" (Util.output_array Util.output_int) v;
+  then Printf.eprintf "linear combination\tv = %a\n%!" (Util.output_array Util.output_int) v;
   let db = false in
   if db then Printf.eprintf "find_lincomb\n%!";
   let normalize v =
@@ -352,8 +355,9 @@ let find_lincomb v vs =
   let rec shift d =
     if d >= 3 then None
     else begin
-      if db then Printf.eprintf "shift %d: %a\n%!" d (Util.output_array Util.output_int) v;
       let v = Array.map ((+) d) v in
+      if !Util.verbose
+      then Printf.eprintf " shift %d: %a\n%!" d (Util.output_array Util.output_int) v;
       let max_max_cost = ((Array.fold_left (+) 0 v) + 1) / 2 in (* every vec. has at least 2 1s *)
 	match trial v 0 max_max_cost with
 	    None -> shift (d + 1)
@@ -395,6 +399,18 @@ let make_cut_gadget g c costs gadgets =
     match find_lincomb costs gadgets with
 	None -> assert false
       | Some (cost, costvecs, gadgets) ->
+	  let arrayplus = fun a1 a2 ->
+	    let a = Array.copy a1 in
+	      for i = 0 to Array.length a - 1 do
+		a.(i) <- a.(i) + a2.(i)
+	      done; a in
+	  let costs' =
+	    List.fold_left arrayplus (Array.make (Array.length costs) 0) costvecs in
+	  if d then Printf.eprintf " old: %a new: %a\n"
+	    (Util.output_array Util.output_int) costs
+	    (Util.output_array Util.output_int) costs';
+	  if !Util.verbose && costs'.(0) < costs.(0)
+	  then Printf.eprintf " k reduced by %d\n" (costs.(0) - costs'.(0));
 	  if d then Printf.eprintf " cost = %d\n" cost;
 	  List.fold_left apply_gadget g gadgets
 ;;
@@ -402,7 +418,8 @@ let make_cut_gadget g c costs gadgets =
 let rec solve_cut_corner g =
   let d = false in
   if !Util.verbose
-  then Printf.eprintf "corn\tn = %3d m = %4d\n%!" (ELGraph.num_vertices g) (ELGraph.num_edges g);
+  then Printf.eprintf "cut corner\tn = %3d m = %4d\n%!"
+    (ELGraph.num_vertices g) (ELGraph.num_edges g);
     if d then Printf.eprintf " g = %a\n%!" output g;
   let deg2 =
     ELGraph.fold_vertices
@@ -423,7 +440,8 @@ let rec solve_cut_corner g =
   let rec loop = function
       [] -> solve_brute_force g
     | (s, c) :: rest ->
-	if !Util.verbose then Printf.eprintf " s = %a c = %a\n%!" IntSet.output s IntSet.output c;
+	if !Util.verbose then Printf.eprintf " |C| = %d |S| = %d\n%!"
+	  (IntSet.size c) (IntSet.size s);
 	let sc = ELGraph.subgraph g (IntSet.union s c) in
 (* 	if d then Printf.eprintf "g = %a" output g; *)
 (* 	if d then Printf.eprintf " sc = %a" output sc; *)
@@ -441,7 +459,7 @@ let rec solve_cut_corner g =
 	if not (ELGraph.num_vertices rc' < ELGraph.num_vertices g
 	        || (ELGraph.num_vertices rc' = ELGraph.num_vertices g
 	            && Ulp.num_edges rc' < Ulp.num_edges g))
-	then ( if d then Printf.eprintf "gadget failed\n";
+	then ( if !Util.verbose then Printf.eprintf " failed to reduce\n%!";
 (* 	       Printf.eprintf "rc  = %a\n" output rc; *)
 (* 	       Printf.eprintf "rc' = %a\n" output rc'; *)
 	       loop rest )
@@ -463,24 +481,28 @@ let rec solve_cut_corner g =
     loop scs
 
 and solve_component g =
-  let g = ELGraph.fold_edges
-    (fun g i j {eq = eq; ne = ne} ->
+  if !Util.verbose
+  then Printf.eprintf "double edges\tn = %3d m = %4d\n%!"
+    (ELGraph.num_vertices g) (ELGraph.num_edges g);
+  let g, dk = ELGraph.fold_edges
+    (fun (g, dk) i j {eq = eq; ne = ne} ->
        if eq > 0 && ne > 0
        then
 	 if eq = ne
-	 then ELGraph.disconnect g i j
+	 then ELGraph.disconnect g i j, dk + eq
 	 else
-	   let m = min eq ne in ELGraph.set_label g i j {eq = eq - m; ne = ne - m}
-       else g) g g in
-  if !Util.verbose
-  then Printf.eprintf "comp\tn = %3d m = %4d\n%!" (ELGraph.num_vertices g) (ELGraph.num_edges g);
+	   let m = min eq ne in ELGraph.set_label g i j {eq = eq - m; ne = ne - m}, dk + m
+       else g, dk) g (g, 0) in
+  if !Util.verbose && dk > 0
+  then Printf.eprintf " k reduced by %d\n%!" dk;
   if ELGraph.num_vertices g <= 5 || !Util.max_cut_size < 2
   then solve_brute_force g
   else solve_cut_corner g
 
 and solve g =
   if !Util.verbose
-  then Printf.eprintf "solve\tn = %3d m = %4d\n%!" (ELGraph.num_vertices g) (ELGraph.num_edges g);
+  then Printf.eprintf "solve\t\tn = %3d m = %4d\n%!"
+    (ELGraph.num_vertices g) (ELGraph.num_edges g);
   if !Util.max_cut_size < 1
   then solve_brute_force g
   else
