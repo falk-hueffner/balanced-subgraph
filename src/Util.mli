@@ -18,6 +18,7 @@
 (** General helper functions.  *)
 
 val verbose : bool ref
+val max_cut_size : int ref
 
 val timer : unit -> float
 

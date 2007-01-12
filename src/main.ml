@@ -20,6 +20,8 @@ let usage_msg = "Find maximum sign consistent subgraphs";;
 let stats_only = ref false;;
 
 let specs = [
+  ("-c", Arg.Set_int(Util.max_cut_size),
+         "Set maximum cut size for data reduction (0..4)");
   ("-s", Arg.Set(stats_only),
          "Print statistics only");
   ("-v", Arg.Set(Util.verbose),
@@ -28,6 +30,10 @@ let specs = [
 
 let () =
   Arg.parse specs (fun _ -> Arg.usage specs usage_msg) usage_msg;
+  if !Util.max_cut_size < 0 || !Util.max_cut_size > 4 then begin
+    Printf.eprintf "maximum cut size must be 0..4";
+    exit 1;
+  end;
   let g, vertex_numbers, vertex_names = Ulp.input stdin in
 (*   Ulp.output stdout g; *)
   let start = Util.timer () in

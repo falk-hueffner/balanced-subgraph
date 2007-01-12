@@ -16,6 +16,7 @@
    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.  *)
 
 let verbose = ref false;;
+let max_cut_size = ref 3;;
 
 let timer () =
   let stamp = Unix.times () in

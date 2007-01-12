@@ -474,33 +474,33 @@ and solve_component g =
        else g) g g in
   if !Util.verbose
   then Printf.eprintf "comp\tn = %3d m = %4d\n%!" (ELGraph.num_vertices g) (ELGraph.num_edges g);
-  if ELGraph.num_vertices g <= 5
+  if ELGraph.num_vertices g <= 5 || !Util.max_cut_size < 2
   then solve_brute_force g
   else solve_cut_corner g
 
 and solve g =
   if !Util.verbose
   then Printf.eprintf "solve\tn = %3d m = %4d\n%!" (ELGraph.num_vertices g) (ELGraph.num_edges g);
-  let components = Cut.biconnected_components (ELGraph.unlabeled g) in
-    List.fold_left
-      (fun colors component ->
-	 let map_intersection m1 m2 =
-	   IntMap.fold
-	     (fun s k _ -> if IntMap.has_key m2 k then IntSet.add s k else s)
-	     m1
-	     IntSet.empty in
-	 let colors' = solve_component (ELGraph.subgraph g component) in
-(* 	   Printf.eprintf "colors  = %a\n" (IntMap.output Util.output_bool) colors; *)
-(* 	   Printf.eprintf "colors' = %a\n" (IntMap.output Util.output_bool) colors'; *)
-	 let cut = map_intersection colors colors' in
-	   if IntSet.is_empty cut
-	   then merge_colorings colors colors'
-	   else
-	     let v = IntSet.choose cut in
-(* 	       Printf.eprintf "v = %d c1 = %b c2 = %b\n" v (IntMap.get colors v) (IntMap.get colors' v); *)
-	       if IntMap.get colors v = IntMap.get colors' v
-	       then merge_colorings colors colors'
-	       else merge_colorings colors (invert_coloring colors'))
-      IntMap.empty
-      components
+  if !Util.max_cut_size < 1
+  then solve_brute_force g
+  else
+    let components = Cut.biconnected_components (ELGraph.unlabeled g) in
+      List.fold_left
+	(fun colors component ->
+	   let map_intersection m1 m2 =
+	     IntMap.fold
+	       (fun s k _ -> if IntMap.has_key m2 k then IntSet.add s k else s)
+	       m1
+	       IntSet.empty in
+	   let colors' = solve_component (ELGraph.subgraph g component) in
+	   let cut = map_intersection colors colors' in
+	     if IntSet.is_empty cut
+	     then merge_colorings colors colors'
+	     else
+	       let v = IntSet.choose cut in
+		 if IntMap.get colors v = IntMap.get colors' v
+		 then merge_colorings colors colors'
+		 else merge_colorings colors (invert_coloring colors'))
+	IntMap.empty
+	components
 ;;

@@ -86,13 +86,13 @@ let cut_corner g =
       let new_c = IntSet.minus (Graph.neighbors g best_v) s in
       let c = IntSet.union c new_c in
 (*  	Printf.eprintf "s' = %a c' = %a\n" IntSet.output s IntSet.output c; *)
-      let sc = if IntSet.size c <= 4 then (s, c) :: sc else sc in
+      let sc = if IntSet.size c <= !Util.max_cut_size then (s, c) :: sc else sc in
 	grow sc s c
   in
     Graph.fold_vertices
       (fun sc v neighbors_v ->
 	 let sc =
-	   if IntSet.size neighbors_v <= 4
+	   if IntSet.size neighbors_v <= !Util.max_cut_size
 	   then (IntSet.singleton v, neighbors_v) :: sc else sc
 	 in
 	   grow sc (IntSet.singleton v) neighbors_v)
