@@ -19,6 +19,7 @@
 
 val verbose : bool ref
 val max_cut_size : int ref
+val max_shift : int ref
 
 val timer : unit -> float
 

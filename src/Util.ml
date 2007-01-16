@@ -17,6 +17,7 @@
 
 let verbose = ref false;;
 let max_cut_size = ref 3;;
+let max_shift = ref 2;;
 
 let timer () =
   let stamp = Unix.times () in

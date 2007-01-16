@@ -352,13 +352,16 @@ let find_lincomb v vs =
 	match loop v vs max_cost with
 	    None -> trial v (max_cost + 1) max_max_cost
 	  | something -> something in
+  let min_gadget_sum = List.fold_left (fun min_gadget_sum (_, v, _) -> min min_gadget_sum (Array.fold_left (+) 0 v)) max_int vs in
   let rec shift d =
-    if d >= 3 then None
+    if d > !Util.max_shift then None
     else begin
       let v = Array.map ((+) d) v in
       if !Util.verbose
       then Printf.eprintf " shift %d: %a\n%!" d (Util.output_array Util.output_int) v;
-      let max_max_cost = ((Array.fold_left (+) 0 v) + 1) / 2 in (* every vec. has at least 2 1s *)
+      let s = Array.fold_left (+) 0 v in
+      if s >= 24 then None else
+      let max_max_cost = ((Array.fold_left (+) 0 v) + (min_gadget_sum)) / min_gadget_sum in
 	match trial v 0 max_max_cost with
 	    None -> shift (d + 1)
 	  | Some (cost, ds, gadgets) -> Some (cost + d, ds, gadgets)
@@ -397,7 +400,7 @@ let make_cut_gadget g c costs gadgets =
       g
   in
     match find_lincomb costs gadgets with
-	None -> assert false
+	None -> None
       | Some (cost, costvecs, gadgets) ->
 	  let arrayplus = fun a1 a2 ->
 	    let a = Array.copy a1 in
@@ -412,7 +415,7 @@ let make_cut_gadget g c costs gadgets =
 	  if !Util.verbose && costs'.(0) < costs.(0)
 	  then Printf.eprintf " k reduced by %d\n" (costs.(0) - costs'.(0));
 	  if d then Printf.eprintf " cost = %d\n" cost;
-	  List.fold_left apply_gadget g gadgets
+	  Some (List.fold_left apply_gadget g gadgets)
 ;;
 
 let rec solve_cut_corner g =
@@ -454,8 +457,9 @@ let rec solve_cut_corner g =
 	    (fun rc i j _ ->
 	       if IntSet.contains c i && IntSet.contains c j
 	       then ELGraph.disconnect rc i j else rc) g rc in
-	let rc' =
-	  make_cut_gadget rc c costs Gadgets.gadgets.(IntSet.size c) in
+	match make_cut_gadget rc c costs Gadgets.gadgets.(IntSet.size c) with
+	    None-> (if !Util.verbose then Printf.eprintf " failed to find good linear combination\n%!"; loop rest)
+	  | Some rc' ->
 	if not (ELGraph.num_vertices rc' < ELGraph.num_vertices g
 	        || (ELGraph.num_vertices rc' = ELGraph.num_vertices g
 	            && Ulp.num_edges rc' < Ulp.num_edges g))
