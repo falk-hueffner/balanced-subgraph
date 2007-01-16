@@ -72,7 +72,7 @@ let biconnected_components g =
 let cut_corner g =
   let rec grow sc s c =
 (*     Printf.eprintf "s = %a c = %a\n" IntSet.output s IntSet.output c; *)
-    if IntSet.size s > Graph.num_vertices g / 2
+    if IntSet.size s + IntSet.size c >= Graph.num_vertices g / 2
     then sc
     else
       let best_v, best_c_size =
