@@ -218,6 +218,12 @@ let solve_brute_force g =
     color g
   with Not_sign_consistent ->
     let n = ELGraph.num_vertices g in
+      (*
+      if n >= 24 then begin
+	Printf.printf "aborted n = %d m = %d / %d\n" (ELGraph.num_vertices g) (ELGraph.num_edges g) (Ulp.num_edges g );
+	exit 0;
+      end;
+      *)
       if n >= 8 then solve_iterative_compression g else
       let numbers, _ = ELGraph.fold_vertices
 	(fun (numbers, n) i _ -> IntMap.add numbers i n, n + 1) g (IntMap.empty, 0) in
@@ -360,7 +366,8 @@ let find_lincomb v vs =
       if !Util.verbose
       then Printf.eprintf " shift %d: %a\n%!" d (Util.output_array Util.output_int) v;
       let s = Array.fold_left (+) 0 v in
-      if s >= 24 then None else
+      if Array.length v >= 8 && s >= 52
+      then None else
       let max_max_cost = ((Array.fold_left (+) 0 v) + (min_gadget_sum)) / min_gadget_sum in
 	match trial v 0 max_max_cost with
 	    None -> shift (d + 1)
