@@ -208,6 +208,39 @@ let solve_occ g =
       color g'
 ;;
 
+let solve_external_program g =
+  if !Util.verbose
+  then Printf.eprintf "external\tn = %3d m = %4d\n%!" (ELGraph.num_vertices g) (ELGraph.num_edges g);
+(*   output stderr g; *)
+  let occ_out, occ_in = Unix.open_process "/home/mit/theinf1/hueffner/ulp/src/ulp-lp -e" in
+    ELGraph.iter_edges
+      (fun i j l ->
+	 if i <> j then begin
+	   for n = 1 to l.eq do
+	     Printf.fprintf occ_in "%3d %3d  0\n" i j;
+	   done;
+	   for n = 1 to l.ne do
+	     Printf.fprintf occ_in "%3d %3d  1\n" i j;
+	   done;
+	 end)
+      g;
+    close_out occ_in;
+    let rec loop edges =
+      try
+	let line = input_line occ_out in
+(*   	  Printf.eprintf "line = '%s'\n%!" line; *)
+	match Util.split_string line with
+	    [ v; w ] ->
+	      let i = int_of_string v and j = int_of_string w in
+		loop ((i, j) :: edges)
+	  | _ -> assert false
+      with End_of_file -> edges in
+    let edges = loop [] in
+    let g' = List.fold_left (fun g' (i, j) -> ELGraph.unconnect g' i j) g edges in
+    let g' = ELGraph.fold_vertices (fun g' i _ -> ELGraph.unconnect g' i i) g' g' in
+      color g'
+;;
+
 let solve_brute_force g =
   if !Util.verbose
   then( Printf.eprintf "brute force\tn = %3d m = %4d\n%!"
@@ -224,7 +257,8 @@ let solve_brute_force g =
 	exit 0;
       end;
       *)
-      if n >= 8 then solve_iterative_compression g else
+(*       if n >= 8 then solve_iterative_compression g else *)
+      if n >= 16 then solve_external_program g else
       let numbers, _ = ELGraph.fold_vertices
 	(fun (numbers, n) i _ -> IntMap.add numbers i n, n + 1) g (IntMap.empty, 0) in
       let rec loop best_del best_colors colors =
@@ -514,6 +548,7 @@ and solve g =
   if !Util.verbose
   then Printf.eprintf "solve\t\tn = %3d m = %4d\n%!"
     (ELGraph.num_vertices g) (ELGraph.num_edges g);
+(*   if true then solve_external_program g else *)
   if !Util.max_cut_size < 1
   then solve_brute_force g
   else
