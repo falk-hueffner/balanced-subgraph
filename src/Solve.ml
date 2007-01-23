@@ -242,8 +242,8 @@ let solve_brute_force g =
 	exit 0;
       end;
       *)
-(*       if n >= 8 then solve_iterative_compression g else *)
-      if n >= 16 then solve_external_program g else
+      if n >= 8 then solve_iterative_compression g else
+(*       if n >= 16 then solve_external_program g else *)
       let numbers, _ = ELGraph.fold_vertices
 	(fun (numbers, n) i _ -> IntMap.add numbers i n, n + 1) g (IntMap.empty, 0) in
       let rec loop best_del best_colors colors =
