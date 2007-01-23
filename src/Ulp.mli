@@ -45,3 +45,5 @@ exception Not_sign_consistent
 val color : t -> bool IntMap.t
 
 val coloring_cost : t -> bool IntMap.t -> int
+
+val to_array : t -> (int * int) array array

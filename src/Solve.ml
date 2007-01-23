@@ -41,21 +41,6 @@ external c_find_cut_partition :
   (int * int) array array -> int array -> int array -> int -> (int * int) list
   = "c_find_cut_partition" "c_find_cut_partition";;
 
-let graph_to_array g =
-  let n = ELGraph.max_vertex g in
-  let a = Array.make (n + 1) [| |] in
-    for i = 0 to n do
-      if not (ELGraph.has_vertex g i)
-      then a.(i) <- [| |]
-      else begin
-	a.(i) <- Array.make (ELGraph.deg g i) (0, 0);
-	ignore (ELGraph.fold_neighbors
-		  (fun j w l -> a.(i).(j) <- (w, l.eq + l.ne); j + 1) g i 0);
-      end
-    done;
-    a
-;;
-
 let solve_iterative_compression g =
   let d = false in
   if !Util.verbose
@@ -103,7 +88,7 @@ let solve_iterative_compression g =
       (Ulp.num_edges g) m0 k (IntSet.size s) (List.length cover);
 (*       (Util.output_list (fun c (i, j) -> Printf.fprintf c "(%d, %d)" i j)) cover; *)
     let cover' =
-      c_find_cut_partition (graph_to_array g') (IntSet.to_array s) (IntSet.to_array t) k in
+      c_find_cut_partition (Ulp.to_array g') (IntSet.to_array s) (IntSet.to_array t) k in
     let cover = if cover' = [] then cover else cover' in
     let cover =
       List.map
