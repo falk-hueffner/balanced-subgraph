@@ -27,10 +27,10 @@ It has been tested on:
   (Debian 1:3.3.5-13)
 
 The program is called "ulp". By default, it reads a graph from
-standard input and writes it to standard output. The graph format is a
-simple text format, where each line describes one edge, given by its
-two endpoints separated by whitespace, plus an optional edge label (0
-or 1):
+standard input (end with control D) and writes it to standard
+output. The graph format is a simple text format, where each line
+describes one edge, given by its two endpoints separated by
+whitespace, plus an optional edge label (0 or 1):
 
 v0 v1 1
 v1 v2
@@ -64,6 +64,8 @@ statistics:
    n      m    |C|    run time [s]
   193    493    12       0.26
 
+
+! |C| is size of solution (k) 
 
 ILP based solver
 ================
