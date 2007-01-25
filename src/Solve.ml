@@ -300,7 +300,7 @@ let solve_all_colorings g c =
   let c_n = IntSet.size c in
   let g', w = ELGraph.new_vertex g in
   let g', b = ELGraph.new_vertex g' in
-  let g' = ELGraph.connect g' b w { eq = 0; ne = 1 lsl 6; } in (* FIXME *)
+  let g' = ELGraph.connect g' b w { eq = 0; ne = 1 lsl 16; } in
   let rec loop colorings colors  =
     if colors >= (1 lsl (c_n - 1))
     then colorings
