@@ -444,6 +444,8 @@ let make_cut_gadget g c costs gadgets =
 	  Some (List.fold_left apply_gadget g gadgets)
 ;;
 
+let unreducible_sc = Hashtbl.create 31;;
+
 let rec solve_cut_corner g =
   let d = false in
   if !Util.verbose
@@ -471,9 +473,12 @@ let rec solve_cut_corner g =
     | (s, c) :: rest ->
 	if !Util.verbose then Printf.eprintf " |C| = %d |S| = %d\n%!"
 	  (IntSet.size c) (IntSet.size s);
+	if d then Printf.eprintf "c = %a s = %a\n" IntSet.output c IntSet.output s;
 	let sc = ELGraph.subgraph g (IntSet.union s c) in
-(* 	if d then Printf.eprintf "g = %a" output g; *)
-(* 	if d then Printf.eprintf " sc = %a" output sc; *)
+	if Hashtbl.mem unreducible_sc sc then loop rest else
+	let () = () in
+	if d then Printf.eprintf "g = %a" output g;
+ 	if d then Printf.eprintf " sc = %a" output sc; 
 	let colorings = solve_all_colorings sc c in
 	let costs = IntMap.map (fun _ coloring -> coloring_cost sc coloring) colorings in
 	if d then Printf.eprintf " costs: %a\n%!" (IntMap.output Util.output_int) costs;
@@ -484,16 +489,19 @@ let rec solve_cut_corner g =
 	       if IntSet.contains c i && IntSet.contains c j
 	       then ELGraph.disconnect rc i j else rc) g rc in
 	match make_cut_gadget rc c costs Gadgets.gadgets.(IntSet.size c) with
-	    None-> (if !Util.verbose then Printf.eprintf " failed to find good linear combination\n%!"; loop rest)
+	    None-> (if !Util.verbose then Printf.eprintf " failed to find good linear combination\n%!";
+		    Hashtbl.add unreducible_sc sc ();
+		    loop rest)
 	  | Some rc' ->
 	if not (ELGraph.num_vertices rc' < ELGraph.num_vertices g
 	        || (ELGraph.num_vertices rc' = ELGraph.num_vertices g
 	            && Ulp.num_edges rc' < Ulp.num_edges g))
 	then ( if !Util.verbose then Printf.eprintf " failed to reduce\n%!";
-(* 	       Printf.eprintf "rc  = %a\n" output rc; *)
-(* 	       Printf.eprintf "rc' = %a\n" output rc'; *)
+	       Hashtbl.add unreducible_sc sc ();
 	       loop rest )
 	else
+	  let () = () in
+          if d then Printf.eprintf "rc' = %a\n" output rc';
 	  let coloring = solve rc' in
 	  let coloring = 
  	    if IntMap.get coloring (IntSet.max c) = false
@@ -538,6 +546,7 @@ and solve g =
   then solve_brute_force g
   else
     let components = Cut.biconnected_components (ELGraph.unlabeled g) in
+(*       Printf.eprintf "components = %a\n" (Util.output_list IntSet.output) components; *)
       List.fold_left
 	(fun colors component ->
 	   let map_intersection m1 m2 =
