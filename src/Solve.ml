@@ -44,8 +44,8 @@ external c_find_cut_partition :
 let solve_iterative_compression g =
   let d = false in
   if !Util.verbose
-  then Printf.eprintf "iterative compression\tn = %3d m = %4d\n%!"
-    (ELGraph.num_vertices g) (ELGraph.num_edges g);
+  then Printf.eprintf "iterative compression\tn = %3d m = %4d (%4d)\n%!"
+    (ELGraph.num_vertices g) (ELGraph.num_edges g) (Ulp.num_edges g);
   let m0 = Ulp.num_edges g in
   let g = ELGraph.fold_vertices (fun g i _ -> ELGraph.unconnect g i i) g g in
   let g = ELGraph.fold_edges
@@ -133,7 +133,8 @@ let solve_iterative_compression g =
 
 let solve_occ g =
   if !Util.verbose
-  then Printf.eprintf "occ\tn = %3d m = %4d\n%!" (ELGraph.num_vertices g) (ELGraph.num_edges g);
+  then Printf.eprintf "occ\tn = %3d m = %4d (%4d)\n%!"
+    (ELGraph.num_vertices g) (ELGraph.num_edges g) (Ulp.num_edges g);
 (*   output stderr g; *)
   let occ_out, occ_in = Unix.open_process "occ -e" in
   let gadget_edges, _ =
@@ -195,7 +196,8 @@ let solve_occ g =
 
 let solve_external_program g =
   if !Util.verbose
-  then Printf.eprintf "external\tn = %3d m = %4d\n%!" (ELGraph.num_vertices g) (ELGraph.num_edges g);
+  then Printf.eprintf "external\tn = %3d m = %4d (%4d)\n%!"
+    (ELGraph.num_vertices g) (ELGraph.num_edges g) (Ulp.num_edges g);
 (*   output stderr g; *)
   let occ_out, occ_in = Unix.open_process "/home/mit/theinf1/hueffner/ulp/src/ulp-lp -e" in
     ELGraph.iter_edges
@@ -228,8 +230,8 @@ let solve_external_program g =
 
 let solve_brute_force g =
   if !Util.verbose
-  then( Printf.eprintf "brute force\tn = %3d m = %4d\n%!"
-	  (ELGraph.num_vertices g) (ELGraph.num_edges g);
+  then( Printf.eprintf "brute force\tn = %3d m = %4d (%4d)\n%!"
+    (ELGraph.num_vertices g) (ELGraph.num_edges g) (Ulp.num_edges g);
 (* 	Printf.eprintf "V = %a\n" IntSet.output (ELGraph.vertex_set g); *)
       );
   try
@@ -449,8 +451,8 @@ let unreducible_sc = Hashtbl.create 31;;
 let rec solve_cut_corner g =
   let d = false in
   if !Util.verbose
-  then Printf.eprintf "cut corner\tn = %3d m = %4d\n%!"
-    (ELGraph.num_vertices g) (ELGraph.num_edges g);
+  then Printf.eprintf "cut corner\tn = %3d m = %4d (%4d)\n%!"
+    (ELGraph.num_vertices g) (ELGraph.num_edges g) (Ulp.num_edges g);
     if d then Printf.eprintf " g = %a\n%!" output g;
   let deg2 =
     ELGraph.fold_vertices
@@ -520,8 +522,8 @@ let rec solve_cut_corner g =
 
 and solve_component g =
   if !Util.verbose
-  then Printf.eprintf "double edges\tn = %3d m = %4d\n%!"
-    (ELGraph.num_vertices g) (ELGraph.num_edges g);
+  then Printf.eprintf "double edges\tn = %3d m = %4d (%4d)\n%!"
+    (ELGraph.num_vertices g) (ELGraph.num_edges g) (Ulp.num_edges g);
   let g, dk = ELGraph.fold_edges
     (fun (g, dk) i j {eq = eq; ne = ne} ->
        if eq > 0 && ne > 0
@@ -539,8 +541,8 @@ and solve_component g =
 
 and solve g =
   if !Util.verbose
-  then Printf.eprintf "solve\t\tn = %3d m = %4d\n%!"
-    (ELGraph.num_vertices g) (ELGraph.num_edges g);
+  then Printf.eprintf "solve\t\tn = %3d m = %4d (%4d)\n%!"
+    (ELGraph.num_vertices g) (ELGraph.num_edges g) (Ulp.num_edges g);
 (*   if true then solve_external_program g else *)
   if !Util.max_cut_size < 1
   then solve_brute_force g
