@@ -76,7 +76,7 @@ let biconnected_components g =
 let cut_corner g =
   let rec grow sc s c =
 (*     Printf.eprintf "s = %a c = %a\n" IntSet.output s IntSet.output c; *)
-    if IntSet.size s + IntSet.size c >= Graph.num_vertices g / 2
+    if IntSet.size s >= 32
     then sc
     else
       let best_v, best_c_size =
@@ -90,11 +90,13 @@ let cut_corner g =
       let new_c = IntSet.minus (Graph.neighbors g best_v) s in
       let c = IntSet.union c new_c in
 (*  	Printf.eprintf "s' = %a c' = %a\n" IntSet.output s IntSet.output c; *)
+      if IntSet.is_empty c then sc else
       let sc = if IntSet.size c <= !Util.max_cut_size then (s, c) :: sc else sc in
 	grow sc s c
   in
     Graph.fold_vertices
       (fun sc v neighbors_v ->
+	 if IntSet.size neighbors_v = 0 then sc else
 	 let sc =
 	   if IntSet.size neighbors_v <= !Util.max_cut_size
 	   then (IntSet.singleton v, neighbors_v) :: sc else sc
