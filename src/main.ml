@@ -33,7 +33,7 @@ let specs = [
 let () =
   Arg.parse specs (fun _ -> Arg.usage specs usage_msg) usage_msg;
   if !Util.max_cut_size < 0 || !Util.max_cut_size > 4 then begin
-    Printf.eprintf "maximum cut size must be 0..4";
+    Printf.eprintf "maximum cut size must be 0..4\n";
     exit 1;
   end;
   let g, vertex_numbers, vertex_names = Ulp.input stdin in
