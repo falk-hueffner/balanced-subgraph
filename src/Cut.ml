@@ -50,23 +50,27 @@ let biconnected_components g =
       while i.(v) <= !top_s do
  	i.(pop_s ()) <- !c
       done
-    end
+    end in
+  let singletons = 
+    Graph.fold_vertices
+      (fun singletons v _ ->
+	 if i.(v) = -1 then
+	   if Graph.is_deg0 g v
+	   then (IntSet.singleton v) :: singletons
+	   else (dfs v; singletons)
+	 else singletons)
+      g [] in
+  let components = 
+    Graph.fold_edges
+      (fun components v w ->
+	 let c = min i.(v) i.(w) in
+	   IntMap.modify_default
+	     (fun component -> IntSet.put (IntSet.put component v) w)
+	     components c IntSet.empty)
+      g
+      IntMap.empty
   in
-    Graph.iter_vertices
-      (fun v _ ->
-	 if i.(v) = -1 && not (Graph.is_deg0 g v) then dfs v)
-      g;
-    let components = 
-      Graph.fold_edges
-	(fun components v w ->
-	   let c = min i.(v) i.(w) in
-	     IntMap.modify_default
-	       (fun component -> IntSet.put (IntSet.put component v) w)
-	       components c IntSet.empty)
-	g
-	IntMap.empty
-    in
-      IntMap.fold (fun components _ component -> component :: components) components []
+    IntMap.fold (fun components _ component -> component :: components) components singletons
 ;;
 
 let cut_corner g =
