@@ -37,13 +37,6 @@ struct vertex {
     struct neighbor neighbors[];
 };
 
-static inline unsigned *res(struct vertex **g, unsigned v, unsigned w) {
-    // FIXME use binary search
-    for (unsigned j = 0; ; j++)
-	if (g[v]->neighbors[j].neighbor == w)
-	    return &g[v]->neighbors[j].residual;
-}
-
 static inline int vertex_flow(struct vertex **g, unsigned v) {
     unsigned flow = 0;
     for (unsigned i = 0; i < g[v]->deg; i++)
