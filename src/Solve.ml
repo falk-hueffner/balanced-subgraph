@@ -287,50 +287,6 @@ let invert_coloring m =
   IntMap.fold (fun m k v -> IntMap.add m k (not v)) m IntMap.empty
 ;;
 
-let solve_all_colorings g c =
-  let d = false in
-(*   Printf.eprintf "g = %a\n" output g; *)
-  let merge g v1 v2 =
-    let g = 
-      ELGraph.fold_neighbors
-	(fun g j { eq = eq1; ne = un1 } ->
-	   ELGraph.modify_label_default
-	     (fun { eq = eq2; ne = un2 } -> { eq = eq1 + eq2; ne = un1 + un2 })
-	     g v1 j { eq = 0; ne = 0 })
-	g v2 g in
-      ELGraph.delete_vertex g v2 in
-  let c_n = IntSet.size c in
-  let g', w = ELGraph.new_vertex g in
-  let g', b = ELGraph.new_vertex g' in
-  let g' = ELGraph.connect g' b w { eq = 0; ne = 1 lsl 16; } in
-  let rec loop colorings colors  =
-    if colors >= (1 lsl (c_n - 1))
-    then colorings
-    else
-      let g', _ = IntSet.fold
-	(fun (g', i) v ->
-	   (if colors land (1 lsl i) <> 0
-	    then merge g' w v
-	    else merge g' b v), (i + 1))
-	c
-	(g', 0) in
-      if d then Printf.eprintf "sacg' = %a\n" output g';
-      let coloring = solve_brute_force g' in
-      if d then Printf.eprintf "coloring = %a\n" (IntMap.output Util.output_bool) coloring;
-      let coloring = if IntMap.get coloring w then coloring else invert_coloring coloring in
-      let coloring = IntMap.delete coloring w in
-      let coloring = IntMap.delete coloring b in
-      let coloring, _ =
-	IntSet.fold
-	  (fun (coloring, i) v -> IntMap.add coloring v (colors land (1 lsl i) <> 0), i + 1)
-	  c (coloring, 0) in
-      let colorings = IntMap.add colorings colors coloring
-      in				       
-	loop colorings (colors + 1)
-  in
-    loop IntMap.empty 0
-;;
-
 let find_lincomb v vs =
   if !Util.verbose
   then Printf.eprintf "linear combination\tv = %a\n%!" (Util.output_array Util.output_int) v;
@@ -448,12 +404,55 @@ let make_cut_gadget g c costs gadgets =
 
 let unreducible_sc = Hashtbl.create 31;;
 
-let rec solve_cut_corner g =
+let rec solve_all_colorings g c =
+  let d = false in
+(*   Printf.eprintf "g = %a\n" output g; *)
+  let merge g v1 v2 =
+    let g = 
+      ELGraph.fold_neighbors
+	(fun g j { eq = eq1; ne = un1 } ->
+	   ELGraph.modify_label_default
+	     (fun { eq = eq2; ne = un2 } -> { eq = eq1 + eq2; ne = un1 + un2 })
+	     g v1 j { eq = 0; ne = 0 })
+	g v2 g in
+      ELGraph.delete_vertex g v2 in
+  let c_n = IntSet.size c in
+  let g', w = ELGraph.new_vertex g in
+  let g', b = ELGraph.new_vertex g' in
+  let g' = ELGraph.connect g' b w { eq = 0; ne = Ulp.num_edges g; } in
+  let rec loop colorings colors  =
+    if colors >= (1 lsl (c_n - 1))
+    then colorings
+    else
+      let g', _ = IntSet.fold
+	(fun (g', i) v ->
+	   (if colors land (1 lsl i) <> 0
+	    then merge g' w v
+	    else merge g' b v), (i + 1))
+	c
+	(g', 0) in
+      if d then Printf.eprintf "sacg' = %a\n" output g';
+      let coloring = solve g' in
+      if d then Printf.eprintf "coloring = %a\n" (IntMap.output Util.output_bool) coloring;
+      let coloring = if IntMap.get coloring w then coloring else invert_coloring coloring in
+      let coloring = IntMap.delete coloring w in
+      let coloring = IntMap.delete coloring b in
+      let coloring, _ =
+	IntSet.fold
+	  (fun (coloring, i) v -> IntMap.add coloring v (colors land (1 lsl i) <> 0), i + 1)
+	  c (coloring, 0) in
+      let colorings = IntMap.add colorings colors coloring
+      in				       
+	loop colorings (colors + 1)
+  in
+    loop IntMap.empty 0
+
+and solve_cut_corner g =
   let d = false in
   if !Util.verbose
   then Printf.eprintf "cut corner\tn = %3d m = %4d (%4d)\n%!"
     (ELGraph.num_vertices g) (ELGraph.num_edges g) (Ulp.num_edges g);
-    if d then Printf.eprintf " g = %a\n%!" output g;
+  if !Util.max_cut_size < 2 || ELGraph.num_vertices g <= 10 then solve_brute_force g  else
   let deg2 =
     ELGraph.fold_vertices
       (fun deg2 i n ->
@@ -520,31 +519,11 @@ let rec solve_cut_corner g =
   in
     loop scs
 
-and solve_component g =
+and solve_biconnected g =
   if !Util.verbose
-  then Printf.eprintf "double edges\tn = %3d m = %4d (%4d)\n%!"
+  then Printf.eprintf "solve_biconn\tn = %3d m = %4d (%4d)\n%!"
     (ELGraph.num_vertices g) (ELGraph.num_edges g) (Ulp.num_edges g);
-  let g, dk = ELGraph.fold_edges
-    (fun (g, dk) i j {eq = eq; ne = ne} ->
-       if eq > 0 && ne > 0
-       then
-	 if eq = ne
-	 then ELGraph.disconnect g i j, dk + eq
-	 else
-	   let m = min eq ne in ELGraph.set_label g i j {eq = eq - m; ne = ne - m}, dk + m
-       else g, dk) g (g, 0) in
-  if !Util.verbose && dk > 0
-  then Printf.eprintf " k reduced by %d\n%!" dk;
-  if ELGraph.num_vertices g <= 5 || !Util.max_cut_size < 2
-  then solve_brute_force g
-  else solve_cut_corner g
-
-and solve g =
-  if !Util.verbose
-  then Printf.eprintf "solve\t\tn = %3d m = %4d (%4d)\n%!"
-    (ELGraph.num_vertices g) (ELGraph.num_edges g) (Ulp.num_edges g);
-(*   if true then solve_external_program g else *)
-  if !Util.max_cut_size < 1
+  if !Util.max_cut_size < 1 || ELGraph.num_vertices g <= 5
   then solve_brute_force g
   else
     let components = Cut.biconnected_components (ELGraph.unlabeled g) in
@@ -556,7 +535,7 @@ and solve g =
 	       (fun s k _ -> if IntMap.has_key m2 k then IntSet.add s k else s)
 	       m1
 	       IntSet.empty in
-	   let colors' = solve_component (ELGraph.subgraph g component) in
+	   let colors' = solve_cut_corner (ELGraph.subgraph g component) in
 	   let cut = map_intersection colors colors' in
 	     if IntSet.is_empty cut
 	     then merge_colorings colors colors'
@@ -567,4 +546,34 @@ and solve g =
 		 else merge_colorings colors (invert_coloring colors'))
 	IntMap.empty
 	components
+	
+and solve g =
+  if !Util.verbose
+  then Printf.eprintf "solve\t\tn = %3d m = %4d (%4d)\n%!"
+    (ELGraph.num_vertices g) (ELGraph.num_edges g) (Ulp.num_edges g);
+  if ELGraph.num_vertices g <= 5
+  then solve_brute_force g
+  else
+    let g, dk = ELGraph.fold_edges
+      (fun (g, dk) i j {eq = eq; ne = ne} ->
+	 if eq > 0 && ne > 0
+	 then
+	   if eq = ne
+	   then ELGraph.disconnect g i j, dk + eq
+	   else
+	     let m = min eq ne in ELGraph.set_label g i j {eq = eq - m; ne = ne - m}, dk + m
+	 else g, dk) g (g, 0) in
+    if !Util.verbose && dk > 0 then Printf.eprintf " double edges: k reduced by %d\n%!" dk;
+    let g, dk =
+      ELGraph.fold_vertices
+	(fun (g, dk) v n ->
+	   if IntMap.has_key n v
+	   then ELGraph.disconnect g v v, dk + 1
+	   else g, dk)
+	g
+	(g, 0)
+    in
+      if !Util.verbose && dk > 0 then Printf.eprintf " self-loops: k reduced by %d\n%!" dk;
+      solve_biconnected g
 ;;
+
