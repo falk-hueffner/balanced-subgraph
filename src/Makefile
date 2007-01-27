@@ -40,7 +40,7 @@ ulp: $(OBJS) $(C_OBJS) main.cmx
 
 #ulp-dbg: $(C_OBJS) $(DBG_OBJS) main.cmo
 ulp-dbg: $(C_OBJS) $(DBG_OBJS) main.cmo
-	$(OCAMLC) $(PROFILE) -o $@ $(DBG_LIBS) $^
+	$(OCAMLC) -custom $(PROFILE) -o $@ $(DBG_LIBS) $^
 
 gen-ulp: $(OBJS) $(C_OBJS) gen-ulp.cmx
 	$(OCAMLOPT) $(PROFILE) -o $@ $(LIBS) $^
