@@ -43,7 +43,10 @@ val size : t -> int
     [Invalid_argument] when [i] is negative. O(log n) time.  *)
 val contains : t -> int -> bool
 
+(** Returns the minimal element. O(log n) time.  *)
 val min : t -> int
+
+(** Returns the maximal element. O(log n) time.  *)
 val max : t -> int
   
 (** [choose s] returns an arbitrary element of [s], or raises
@@ -87,6 +90,7 @@ val intersection : t -> t -> t
 (** Set difference.  *)
 val minus : t -> t -> t
 
+(** Returns an array with the elements in increasing order.  *)
 val to_array : t -> int array
 
 (** [output c s] prints a debug representation of [s] to channel [c].

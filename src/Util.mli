@@ -17,13 +17,19 @@
 
 (** General helper functions.  *)
 
-val verbose : bool ref
-val max_cut_size : int ref
+(** Program options.  *)
 
+val verbose : bool ref			(** Option -v  *)
+val max_cut_size : int ref		(** Option -c  *)
+
+(** Current time stamp in seconds since some unspecified fixed point
+    in time.  *)
 val timer : unit -> float
 
+(** [fold_n f n] calculates [f (... f (f 0) 1 ... (n-1))].  *)
 val fold_n : ('a -> int -> 'a) -> int -> 'a -> 'a
 
+(** [list_contains l x] returns true if [l] contains [x].  *)
 val list_contains : 'a list -> 'a -> bool
  
 (** [output_int channel i] prints [i] on [channel].  *)
@@ -32,12 +38,12 @@ val output_int : out_channel -> int -> unit
 (** [output_bool channel b] prints [b] as '0' or '1' on [channel].  *)
 val output_bool : out_channel -> bool -> unit
 
-(** [output_list c p l] prints a debug representation of list [l] to
-    channel [c], using [p] to print values.  O(n) time.  *)
+(** [output_list p c l] prints a debug representation of list [l] to
+    channel [c], using [p] to print values.  *)
 val output_list : (out_channel -> 'a -> unit) -> out_channel -> 'a list -> unit
 
 (** [output_array p c a] prints a debug representation of array [a] to
-    channel [c], using [p] to print values.  O(n) time.  *)
+    channel [c], using [p] to print values.  *)
 val output_array : (out_channel -> 'a -> unit) -> out_channel -> 'a array -> unit
 
 (** [split_string s] splits the string [s] into a list of strings

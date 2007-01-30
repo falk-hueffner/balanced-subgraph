@@ -99,8 +99,10 @@ let fold_edges f g accu =
 
 let iter_edges f g = fold_edges (fun () i j l -> f i j l) g ();;
 
+(* FIXME could be made faster *)
 let vertex_set g = fold_vertices (fun s i _ -> IntSet.add s i) g IntSet.empty;;
 
+(* FIXME could be made faster *)
 let choose_edge g =
   match
     fold_edges (fun _ i j l -> Some (i, j, l)) g None
@@ -145,6 +147,7 @@ let is_connected_graph g =
 	s = vertex_set g
 ;;
 
+(* FIXME could be made faster *)
 let subgraph g s =
   let g' = IntSet.fold add_vertex s empty in
   fold_edges

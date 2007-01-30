@@ -17,6 +17,8 @@
 
 (** Cut related functions.  *)
 
+(** Returns a list of biconnected components.  *)
 val biconnected_components : Graph.t -> IntSet.t list
 
+(** Returns a list of candidate vertex cuts (see paper).  *)
 val cut_corner : Graph.t -> (IntSet.t * IntSet.t) list

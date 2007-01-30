@@ -108,11 +108,13 @@ val map : (int -> 'a -> 'b) -> 'a t -> 'b t
     and [x1 ... xN] are the associated data.  *)
 val fold : ('b -> int -> 'a -> 'b) -> 'a t -> 'b -> 'b
 
-(**  [iter f m] calls [f i1 x1, ..., f iN xN], where [i1 ... iN] are
-     the keys of all bindings in [m] (in increasing order), and [x1 ... xN]
-     are the associated data.  *)
+(** [iter f m] calls [f i1 x1, ..., f iN xN], where [i1 ... iN] are
+    the keys of all bindings in [m] (in increasing order), and [x1 ... xN]
+    are the associated data.  *)
 val iter : (int -> 'a -> unit) -> 'a t -> unit
 
+(** [filter p m] retains a map containing those pairs [k, x] from [m]
+    for which [p k x] returns true.  *)
 val filter : (int -> 'a -> bool) -> 'a t -> 'a t
 
 (** [output p c m] prints a debug representation of [s] to channel

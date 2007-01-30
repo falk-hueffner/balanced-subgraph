@@ -28,22 +28,24 @@ type edge = {
 (** A graph suitable to represent SCS instances.  *)
 type t = edge ELGraph.t
 
+(** Number of edges, accounting for multiple edges.  *)
 val num_edges : t -> int
 
-(** Read description from a channel.  *)    
+(** Read description from a channel. See README for the input format.  *)
 val input : in_channel -> (t * int StringMap.t * string IntMap.t)
 
 (** Write debug representation to a channel.  *)
 val output : out_channel -> t -> unit
 
-val output_edge : out_channel -> edge -> unit
-
+(** Returns true if the graph can be colored consistently. O(m log n) time. *)
 val is_sign_consistent : t -> bool
 
 exception Not_sign_consistent
 
+(** Returns a consistent coloring, or raises [Not_sign_consistent] if
+    the graph is not sign consistent. O(m log n) time. *)
 val color : t -> bool IntMap.t
 
+(** [coloring_cost g c] Returns the number of inconsistent edges of
+    [g] colored by [c]. O(m log n) time. *)
 val coloring_cost : t -> bool IntMap.t -> int
-
-val to_array : t -> (int * int) array array

@@ -50,6 +50,9 @@ val max_vertex : t -> int
     additional new vertex [i]. O(log n) time.  *)
 val new_vertex : t -> t * int
 
+(** [add_vertex g i] returns [g] with an additional new vertex
+    [i]. Raises [IntMap.Already_present] if [i] is already a
+    vertex. O(log n) time.  *)
 val add_vertex : t -> int -> t
 
 (** [connect g v w] returns [g] with vertices [v] and [w] connected.

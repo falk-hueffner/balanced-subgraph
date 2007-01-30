@@ -15,11 +15,13 @@
    with this program; if not, write to the Free Software Foundation, Inc.,
    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.  *)
 
-(** Solve the SCS problem. Returns a list of edges to delete to make a
-    graph sign-consistent. Note that while the return value does not
-    differentiate between deleting positive and negative edges, the result
-    is still eindeutig, since for one type all edges have to be deleted in
-    any valid solution.  *)
+(** Solve the SCS problem. Returns a coloring with minimum number of
+    conflict edges.  *)
 val solve : Scs.t -> bool IntMap.t
 
+(** [solve_all_colorings g c] optimally solves SCS under all possible
+    colorings of the vertices in [c], except that (because of symmetry)
+    the highest vertex in [c] is always colored 0. Returns a map of the
+    optimal colorings, where the keys are binary representation of the
+    coloring of [c].  *)
 val solve_all_colorings : Scs.t -> IntSet.t -> bool IntMap.t IntMap.t

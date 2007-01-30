@@ -169,17 +169,3 @@ let is_sign_consistent g =
   with
       Not_sign_consistent -> false
 ;;
-
-let to_array g =
-  let n = ELGraph.max_vertex g in
-  let a = Array.make (n + 1) [| |] in
-    for i = 0 to n do
-      if not (ELGraph.has_vertex g i)
-      then a.(i) <- [| |]
-      else begin
-	a.(i) <- Array.make (ELGraph.deg g i) (0, 0);
-	ignore (ELGraph.fold_neighbors (fun j w l -> a.(i).(j) <- (w, l.eq + l.ne); j + 1) g i 0);
-      end
-    done;
-    a
-;;
