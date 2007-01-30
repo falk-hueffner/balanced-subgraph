@@ -1,6 +1,6 @@
 #! /bin/sh
 
-if ~/ulp/src/ulp < $1
+if ~/ulp/src/scs < $1
 then false
 else true
 fi

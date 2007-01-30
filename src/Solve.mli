@@ -1,4 +1,4 @@
-(* ulp -- solve the undirected labeling problem
+(* scs -- solve the sign-consistent subgraph problem
    Copyright (C) 2006  Falk Hüffner
 
    This program is free software; you can redistribute it and/or modify
@@ -15,11 +15,11 @@
    with this program; if not, write to the Free Software Foundation, Inc.,
    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.  *)
 
-(** Solve the ULP problem. Returns a list of edges to delete to make a
+(** Solve the SCS problem. Returns a list of edges to delete to make a
     graph sign-consistent. Note that while the return value does not
     differentiate between deleting positive and negative edges, the result
     is still eindeutig, since for one type all edges have to be deleted in
     any valid solution.  *)
-val solve : Ulp.t -> bool IntMap.t
+val solve : Scs.t -> bool IntMap.t
 
-val solve_all_colorings : Ulp.t -> IntSet.t -> bool IntMap.t IntMap.t
+val solve_all_colorings : Scs.t -> IntSet.t -> bool IntMap.t IntMap.t

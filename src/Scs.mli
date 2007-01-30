@@ -1,4 +1,4 @@
-(* ulp -- solve the undirected labeling problem
+(* scs -- solve the sign-consistent subgraph problem
    Copyright (C) 2006  Falk Hüffner
 
    This program is free software; you can redistribute it and/or modify
@@ -15,7 +15,7 @@
    with this program; if not, write to the Free Software Foundation, Inc.,
    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.  *)
 
-(** The ULP solving algorithm.  *)
+(** The SCS solving algorithm.  *)
 
 module StringMap : Map.S
 
@@ -25,7 +25,7 @@ type edge = {
   ne: int;				(** multiplicity of negative edges (>= 0) *)
 }
 
-(** A graph suitable to represent ULP instances.  *)
+(** A graph suitable to represent SCS instances.  *)
 type t = edge ELGraph.t
 
 val num_edges : t -> int

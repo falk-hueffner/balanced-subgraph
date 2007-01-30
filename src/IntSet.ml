@@ -1,4 +1,4 @@
-(* ulp -- solve the undirected labeling problem
+(* scs -- solve the sign-consistent subgraph problem
    Copyright (C) 2006  Falk Hüffner
 
    This program is free software; you can redistribute it and/or modify

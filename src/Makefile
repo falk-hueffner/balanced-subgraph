@@ -1,4 +1,4 @@
-EXECS	  = ulp gen-ulp find-gadgets
+EXECS	  = scs gen-scs find-gadgets
 
 SOURCES   = \
 	Util.ml		\
@@ -7,7 +7,7 @@ SOURCES   = \
 	Graph.ml	\
 	ELGraph.ml	\
 	Cut.ml		\
-	Ulp.ml		\
+	Scs.ml		\
 	Gadgets.ml	\
 	Solve.ml
 
@@ -35,14 +35,14 @@ DBG_OBJS = $(SOURCES:.ml=.cmo)
 MLIS := $(wildcard *.mli)
 DBG_LIBS = $(LIBS:.cmxa=.cma)
 
-ulp: $(OBJS) $(C_OBJS) main.cmx
+scs: $(OBJS) $(C_OBJS) main.cmx
 	$(OCAMLOPT) $(PROFILE) -o $@ $(LIBS) $^
 
-#ulp-dbg: $(C_OBJS) $(DBG_OBJS) main.cmo
-ulp-dbg: $(C_OBJS) $(DBG_OBJS) main.cmo
+#scs-dbg: $(C_OBJS) $(DBG_OBJS) main.cmo
+scs-dbg: $(C_OBJS) $(DBG_OBJS) main.cmo
 	$(OCAMLC) -custom $(PROFILE) -o $@ $(DBG_LIBS) $^
 
-gen-ulp: $(OBJS) $(C_OBJS) gen-ulp.cmx
+gen-scs: $(OBJS) $(C_OBJS) gen-scs.cmx
 	$(OCAMLOPT) $(PROFILE) -o $@ $(LIBS) $^
 
 find-gadgets: $(OBJS) $(C_OBJS) find-gadgets.cmx

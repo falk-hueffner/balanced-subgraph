@@ -1,4 +1,4 @@
-(* ulp -- solve the undirected labeling problem
+(* scs -- solve the sign-consistent subgraph problem
    Copyright (C) 2006  Falk Hüffner
 
    This program is free software; you can redistribute it and/or modify
@@ -36,21 +36,21 @@ let () =
     Printf.eprintf "maximum cut size must be 0..4\n";
     exit 1;
   end;
-  let g, vertex_numbers, vertex_names = Ulp.input stdin in
-(*   Ulp.output stdout g; *)
+  let g, vertex_numbers, vertex_names = Scs.input stdin in
+(*   Scs.output stdout g; *)
   let start = Util.timer () in
   let colors = Solve.solve g in
 (*   Printf.eprintf "result: %a\n%!" (IntMap.output Util.output_bool) colors; *)
   let stop = Util.timer () in
-  let k = Ulp.coloring_cost g colors
+  let k = Scs.coloring_cost g colors
   in
     if !stats_only      
     then
       Printf.printf "%5d %6d %5d %10.2f\n"
-	(ELGraph.num_vertices g) (Ulp.num_edges g) k (stop -. start)
+	(ELGraph.num_vertices g) (Scs.num_edges g) k (stop -. start)
     else
       ELGraph.iter_edges
-	(fun i j { Ulp.eq = eq; Ulp.ne = ne } ->
+	(fun i j { Scs.eq = eq; Scs.ne = ne } ->
 	   if IntMap.get colors i = IntMap.get colors j
 	   then for l = 1 to ne do
 	     Printf.printf "%s %s 1\n" (IntMap.get vertex_names i) (IntMap.get vertex_names j)

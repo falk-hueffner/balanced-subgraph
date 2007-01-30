@@ -1,4 +1,4 @@
-(* ulp -- solve the undirected labeling problem
+(* scs -- solve the sign-consistent subgraph problem
    Copyright (C) 2006  Falk Hüffner
 
    This program is free software; you can redistribute it and/or modify
@@ -22,11 +22,11 @@ let fold_pairs f s1 s2 accu =
 
 let add_gadget gadgets g c_set cost =
   let colorings = Solve.solve_all_colorings g c_set in
-(*   let costs = IntMap.map (fun _ coloring -> Ulp.coloring_cost g coloring) colorings in *)
+(*   let costs = IntMap.map (fun _ coloring -> Scs.coloring_cost g coloring) colorings in *)
   let edges = ELGraph.fold_edges (fun r i j l -> (i, j, l) :: r) g [] in
   let costs = Array.init
     (IntMap.size colorings)
-    (fun i ->  Ulp.coloring_cost g (IntMap.get colorings i))
+    (fun i ->  Scs.coloring_cost g (IntMap.get colorings i))
   in
 (*     Printf.printf "%d %a\n%!" cost (Util.output_array Util.output_int) costs; *)
     (*
@@ -55,7 +55,7 @@ let print_gadget costs cost edges =
   done;
   print_string "|],[";
   List.iter
-    (fun (i, j, {Ulp.eq = eq; Ulp.ne = ne}) ->
+    (fun (i, j, {Scs.eq = eq; Scs.ne = ne}) ->
        Printf.printf "(%d,%d,{eq=%d;ne=%d});" i j eq ne)
     edges;
   print_string "]);\n";
@@ -70,9 +70,9 @@ let single_edge_gadgets gadgets c_size =
     List.fold_left
       (fun gadgets (i, j) ->
 	 let gadgets =
-	   add_gadget gadgets (ELGraph.connect g i j {Ulp.eq = 1; Ulp.ne = 0} ) c_set 0 in
+	   add_gadget gadgets (ELGraph.connect g i j {Scs.eq = 1; Scs.ne = 0} ) c_set 0 in
 	 let gadgets =
-	   add_gadget gadgets (ELGraph.connect g i j {Ulp.eq = 0; Ulp.ne = 1} ) c_set 0
+	   add_gadget gadgets (ELGraph.connect g i j {Scs.eq = 0; Scs.ne = 1} ) c_set 0
 	 in
 	   gadgets)
       gadgets edges
@@ -107,9 +107,9 @@ let extra_vertices_gadgets gadgets c_size s_size =
 	let g, _ = List.fold_left
 	  (fun (g, i) (v, w) ->
 	     if l.(i) > 0
-	     then ELGraph.connect g v w { Ulp.eq = l.(i); Ulp.ne = 0 }, i + 1
+	     then ELGraph.connect g v w { Scs.eq = l.(i); Scs.ne = 0 }, i + 1
 	     else if l.(i) < 0
-	     then ELGraph.connect g v w { Ulp.eq = 0; Ulp.ne = -l.(i) }, i + 1
+	     then ELGraph.connect g v w { Scs.eq = 0; Scs.ne = -l.(i) }, i + 1
 	     else g, i + 1)
 	  (g, 0)
 	  edges in

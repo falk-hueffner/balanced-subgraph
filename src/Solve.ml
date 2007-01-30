@@ -1,4 +1,4 @@
-(* ulp -- solve the undirected labeling problem
+(* scs -- solve the sign-consistent subgraph problem
    Copyright (C) 2006  Falk Hüffner
 
    This program is free software; you can redistribute it and/or modify
@@ -15,7 +15,7 @@
    with this program; if not, write to the Free Software Foundation, Inc.,
    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.  *)
 
-open Ulp;;				(* for the record field labels *)
+open Scs;;				(* for the record field labels *)
 
 let vertex_cover g =
   let rec loop s g =
@@ -45,8 +45,8 @@ let solve_iterative_compression g =
   let d = false in
   if !Util.verbose
   then Printf.eprintf "iterative compression\tn = %3d m = %4d (%4d)\n%!"
-    (ELGraph.num_vertices g) (ELGraph.num_edges g) (Ulp.num_edges g);
-  let m0 = Ulp.num_edges g in
+    (ELGraph.num_vertices g) (ELGraph.num_edges g) (Scs.num_edges g);
+  let m0 = Scs.num_edges g in
   let g = ELGraph.fold_vertices (fun g i _ -> ELGraph.unconnect g i i) g g in
   let g = ELGraph.fold_edges
     (fun g i j l ->
@@ -85,10 +85,10 @@ let solve_iterative_compression g =
       List.fold_left
 	(fun k (i, j) -> let l = ELGraph.get_label g i j in k + l.eq + l.ne) 0 cover in
     if !Util.verbose then Printf.eprintf " m = %d/%d k = %d vc = %d cover = %d\n%!"
-      (Ulp.num_edges g) m0 k (IntSet.size s) (List.length cover);
+      (Scs.num_edges g) m0 k (IntSet.size s) (List.length cover);
 (*       (Util.output_list (fun c (i, j) -> Printf.fprintf c "(%d, %d)" i j)) cover; *)
     let cover' =
-      c_find_cut_partition (Ulp.to_array g') (IntSet.to_array s) (IntSet.to_array t) k in
+      c_find_cut_partition (Scs.to_array g') (IntSet.to_array s) (IntSet.to_array t) k in
     let cover = if cover' = [] then cover else cover' in
     let cover =
       List.map
@@ -134,7 +134,7 @@ let solve_iterative_compression g =
 let solve_occ g =
   if !Util.verbose
   then Printf.eprintf "occ\tn = %3d m = %4d (%4d)\n%!"
-    (ELGraph.num_vertices g) (ELGraph.num_edges g) (Ulp.num_edges g);
+    (ELGraph.num_vertices g) (ELGraph.num_edges g) (Scs.num_edges g);
 (*   output stderr g; *)
   let occ_out, occ_in = Unix.open_process "occ -e" in
   let gadget_edges, _ =
@@ -197,9 +197,9 @@ let solve_occ g =
 let solve_external_program g =
   if !Util.verbose
   then Printf.eprintf "external\tn = %3d m = %4d (%4d)\n%!"
-    (ELGraph.num_vertices g) (ELGraph.num_edges g) (Ulp.num_edges g);
+    (ELGraph.num_vertices g) (ELGraph.num_edges g) (Scs.num_edges g);
 (*   output stderr g; *)
-  let occ_out, occ_in = Unix.open_process "/home/mit/theinf1/hueffner/ulp/src/ulp-lp -e" in
+  let occ_out, occ_in = Unix.open_process "/home/mit/theinf1/hueffner/scs/src/scs-lp -e" in
     ELGraph.iter_edges
       (fun i j l ->
 	 if i <> j then begin
@@ -231,7 +231,7 @@ let solve_external_program g =
 let solve_brute_force g =
   if !Util.verbose
   then( Printf.eprintf "brute force\tn = %3d m = %4d (%4d)\n%!"
-    (ELGraph.num_vertices g) (ELGraph.num_edges g) (Ulp.num_edges g);
+    (ELGraph.num_vertices g) (ELGraph.num_edges g) (Scs.num_edges g);
 (* 	Printf.eprintf "V = %a\n" IntSet.output (ELGraph.vertex_set g); *)
       );
   try
@@ -240,7 +240,7 @@ let solve_brute_force g =
     let n = ELGraph.num_vertices g in
       (*
       if n >= 24 then begin
-	Printf.printf "aborted n = %d m = %d / %d\n" (ELGraph.num_vertices g) (ELGraph.num_edges g) (Ulp.num_edges g );
+	Printf.printf "aborted n = %d m = %d / %d\n" (ELGraph.num_vertices g) (ELGraph.num_edges g) (Scs.num_edges g );
 	exit 0;
       end;
       *)
@@ -419,7 +419,7 @@ let rec solve_all_colorings g c =
   let c_n = IntSet.size c in
   let g', w = ELGraph.new_vertex g in
   let g', b = ELGraph.new_vertex g' in
-  let g' = ELGraph.connect g' b w { eq = 0; ne = Ulp.num_edges g; } in
+  let g' = ELGraph.connect g' b w { eq = 0; ne = Scs.num_edges g; } in
   let rec loop colorings colors  =
     if colors >= (1 lsl (c_n - 1))
     then colorings
@@ -451,7 +451,7 @@ and solve_cut_corner g =
   let d = false in
   if !Util.verbose
   then Printf.eprintf "cut corner\tn = %3d m = %4d (%4d)\n%!"
-    (ELGraph.num_vertices g) (ELGraph.num_edges g) (Ulp.num_edges g);
+    (ELGraph.num_vertices g) (ELGraph.num_edges g) (Scs.num_edges g);
   if !Util.max_cut_size < 2 || ELGraph.num_vertices g <= 10 then solve_brute_force g  else
   let deg2 =
     ELGraph.fold_vertices
@@ -496,7 +496,7 @@ and solve_cut_corner g =
 	  | Some rc' ->
 	if not (ELGraph.num_vertices rc' < ELGraph.num_vertices g
 	        || (ELGraph.num_vertices rc' = ELGraph.num_vertices g
-	            && Ulp.num_edges rc' < Ulp.num_edges g))
+	            && Scs.num_edges rc' < Scs.num_edges g))
 	then ( if !Util.verbose then Printf.eprintf " failed to reduce\n%!";
 	       Hashtbl.add unreducible_sc sc ();
 	       loop rest )
@@ -522,7 +522,7 @@ and solve_cut_corner g =
 and solve_biconnected g =
   if !Util.verbose
   then Printf.eprintf "solve_biconn\tn = %3d m = %4d (%4d)\n%!"
-    (ELGraph.num_vertices g) (ELGraph.num_edges g) (Ulp.num_edges g);
+    (ELGraph.num_vertices g) (ELGraph.num_edges g) (Scs.num_edges g);
   if !Util.max_cut_size < 1 || ELGraph.num_vertices g <= 5
   then solve_brute_force g
   else
@@ -550,7 +550,7 @@ and solve_biconnected g =
 and solve g =
   if !Util.verbose
   then Printf.eprintf "solve\t\tn = %3d m = %4d (%4d)\n%!"
-    (ELGraph.num_vertices g) (ELGraph.num_edges g) (Ulp.num_edges g);
+    (ELGraph.num_vertices g) (ELGraph.num_edges g) (Scs.num_edges g);
   if ELGraph.num_vertices g <= 5
   then solve_brute_force g
   else

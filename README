@@ -26,7 +26,7 @@ It has been tested on:
 * Debian GNU/Linux (i386) 3.1 with Objective Caml 3.08.3 and gcc 3.3.5
   (Debian 1:3.3.5-13)
 
-The program is called "ulp". By default, it reads a graph from
+The program is called "scs". By default, it reads a graph from
 standard input and writes it to standard output (note that on Unix
 systems, you can close standard input from the keyboard with
 Control-d). The graph format is a simple text format, where each line
@@ -47,7 +47,7 @@ endpoints are unequal. Default is "1".
 The output is a minimum set of edges C to delete to make the graph
 sign consistent. Example:
 
-$ ./ulp < test/rand02.graph
+$ ./scs < test/rand02.graph
 0 10 1
 1 8 0
 4 6 0
@@ -71,7 +71,7 @@ Here, k is size of solution.
 ILP based solver
 ================
 
-The Python script "ulp-lp" solves SCS by calling the ILP solver
+The Python script "scs-lp" solves SCS by calling the ILP solver
 "glpsol" from the glpk package
 (http://www.gnu.org/software/glpk/glpk.html). It has been tested with
 glpk 4.8.
