@@ -22,19 +22,10 @@ let fold_pairs f s1 s2 accu =
 
 let add_gadget gadgets g c_set cost =
   let colorings = Solve.solve_all_colorings g c_set in
-(*   let costs = IntMap.map (fun _ coloring -> Scs.coloring_cost g coloring) colorings in *)
   let edges = ELGraph.fold_edges (fun r i j l -> (i, j, l) :: r) g [] in
   let costs = Array.init
     (IntMap.size colorings)
-    (fun i ->  Scs.coloring_cost g (IntMap.get colorings i))
-  in
-(*     Printf.printf "%d %a\n%!" cost (Util.output_array Util.output_int) costs; *)
-    (*
-    if (* true ||  *)
-      match find_lincomb costs gadgets with
-	  None -> ((* Printf.printf "fresh\n%!"; *) true)
-	| Some (cost', _, _) ->  ((* Printf.printf "old: %d new: %d\n%!" cost' cost; *) cost < cost')
-    *)
+    (fun i ->  Scs.coloring_cost g (IntMap.get colorings i)) in
   let rec test = function
       [] -> true
     | (cost', costs', edges') :: gadgets ->
@@ -84,7 +75,6 @@ let extra_vertices_gadgets gadgets c_size s_size =
   let g = Util.fold_n ELGraph.add_vertex (c_size + s_size) ELGraph.empty in
   let edges = fold_pairs (fun l i j -> (i, j) :: l) s_set c_set [] in
   let edges = fold_pairs (fun l i j -> if i < j then (i, j) :: l else l) s_set s_set edges in
-(*     Util.output_list (fun c (i, j) -> Printf.fprintf c "(%d, %d)" i j) stdout edges; *)
   let m = List.length edges in
   let max_mult = 1 in
   let l_min = -max_mult and l_max = max_mult in
@@ -136,45 +126,4 @@ let () =
     List.iter
       (fun (cost, costs, edges) -> print_gadget costs cost edges)
       (List.sort compare gadgets);
-    (*
-    let vv = [
-(*       [| 3; 3; 2; 4; 4; 3; 3; 4 |]; *)
-(*       [| 5; 7; 5; 7; 7; 6; 7; 6 |]; *)
-(*       [| 5; 5; 7; 7; 7; 7; 7; 7 |]; *)
-(*       [| 3; 5; 5; 5; 4; 5; 6; 4 |]; *)
-(*       [| 2; 4; 4; 5; 3; 5; 5; 4 |]; *)
-(*       [| 5; 5; 4; 4; 4; 5; 5; 5 |]; *)
-(*       [| 4; 7; 6; 7; 8; 9; 8; 7 |]; *)
-(*       [| 6; 5; 5; 6; 6; 5; 5; 6 |]; *)
-(*       [| 6; 5; 5; 4; 5; 4; 4; 3 |]; *)
-(*       [| 5; 4; 5; 4; 4; 5; 4; 5 |]; *)
-(*       [| 7; 7; 5; 7; 9; 7; 7; 7 |]; *)
-(*       [| 2; 3; 3; 2; 3; 3; 4; 2 |]; *)
-(*       [| 8; 7; 8; 7; 7; 8; 7; 8 |]; *)
-(*       [| 4; 4; 4; 4; 4; 4; 4; 4 |]; *)
-(*       [| 6; 6; 5; 5; 7; 5; 7; 6 |]; *)
-(*       [| 1; 2; 4; 1; 2; 3; 3; 0 |]; *)
-      [| 4; 6; 4; 4; 5; 7; 6; 5; 4; 7; 6; 6; 3; 5; 5; 5 |]; (* 2 enough!  *)
-      [| 5; 5; 9; 6; 4; 7; 7; 6; 6; 6; 8; 5; 5; 8; 6; 6 |]; (* 2 not enough, apparently... *)
-      [| 9; 9; 8; 8; 6; 6; 7; 7; 8; 8; 7; 7; 7; 7; 8; 8 |];
-      [| 8; 7; 7; 8; 8; 7; 7; 8; 8; 7; 7; 8; 8; 7; 7; 8 |];
-      [| 9; 9; 8; 8; 9; 9; 8; 8; 8; 8; 9; 9; 8; 8; 9; 9 |];
-      [| 9; 8; 8; 6; 9; 9; 9; 6; 9; 8; 9; 6; 9; 9; 11; 8 |];      
-    ]
-    in
-    List.iter
-      (fun v ->
-	 Util.output_array Util.output_int stdout v; print_newline ();
-	 match find_lincomb v gadgets with
-	     None -> ()
-	   | Some (cost, costvecs, gadgets) ->
-	       Printf.printf "costs: %d\n" cost;
-	       List.iter
-		 (fun costvec ->
-		    Printf.printf "%a\n" (Util.output_array Util.output_int) costvec)
-		 costvecs;
-	       print_newline ();
-      ) vv;
-    *)
-    exit 0;
 ;;

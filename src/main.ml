@@ -35,10 +35,8 @@ let () =
     exit 1;
   end;
   let g, vertex_numbers, vertex_names = Scs.input stdin in
-(*   Scs.output stdout g; *)
   let start = Util.timer () in
   let colors = Solve.solve g in
-(*   Printf.eprintf "result: %a\n%!" (IntMap.output Util.output_bool) colors; *)
   let stop = Util.timer () in
   let k = Scs.coloring_cost g colors
   in

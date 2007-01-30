@@ -56,7 +56,6 @@ let to_array g =
 ;;
 
 let solve_iterative_compression g =
-  let d = false in
   if !Util.verbose
   then Printf.eprintf "iterative compression\tn = %3d m = %4d (%4d)\n%!"
     (ELGraph.num_vertices g) (ELGraph.num_edges g) (Scs.num_edges g);
@@ -100,7 +99,6 @@ let solve_iterative_compression g =
 	(fun k (i, j) -> let l = ELGraph.get_label g i j in k + l.eq + l.ne) 0 cover in
     if !Util.verbose then Printf.eprintf " m = %d/%d k = %d vc = %d cover = %d\n%!"
       (Scs.num_edges g) m0 k (IntSet.size s) (List.length cover);
-(*       (Util.output_list (fun c (i, j) -> Printf.fprintf c "(%d, %d)" i j)) cover; *)
     let cover' =
       c_find_cut_partition (to_array g') (IntSet.to_array s) (IntSet.to_array t) k in
     let cover = if cover' = [] then cover else cover' in
@@ -140,126 +138,20 @@ let solve_iterative_compression g =
 	     (g, cover))
       g
       (ELGraph.empty, []) in
-    if d then Printf.eprintf "coloring...\n%!";
-  let g' = List.fold_left (fun g' (i, j) -> if d then Printf.eprintf "unc %d %d\n%!" i j; ELGraph.unconnect g' i j) g cover in
+  let g' = List.fold_left (fun g' (i, j) -> ELGraph.unconnect g' i j) g cover in
     color g'
-;;
-
-let solve_occ g =
-  if !Util.verbose
-  then Printf.eprintf "occ\tn = %3d m = %4d (%4d)\n%!"
-    (ELGraph.num_vertices g) (ELGraph.num_edges g) (Scs.num_edges g);
-(*   output stderr g; *)
-  let occ_out, occ_in = Unix.open_process "occ -e" in
-  let gadget_edges, _ =
-    ELGraph.fold_edges
-      (fun (gadget_edges, v) i j { eq = eq; ne = ne } ->
-	 if i = j then gadget_edges, v else
-	 let ne =
-	   if ne > 0
-	   then (Printf.fprintf occ_in "%d %d\n" i j;
-(*   		 Printf.eprintf        "%d %d\n" i j; *)
-		 ne - 1)
-	   else ne in
-	 let gadget_edges, v =
-	   Util.fold_n
-	     (fun (gadget_edges, v) _ ->
-		Printf.fprintf occ_in "%d %d\n%d %d\n%d %d\n" i v  v (v+1)  (v+1) j;
-(*   		Printf.eprintf        "%d %d\n%d %d\n%d %d\n" i v  v (v+1)  (v+1) j; *)
-		let gadget_edges = IntMap.add gadget_edges v     (i, j) in
-		let gadget_edges = IntMap.add gadget_edges (v+1) (i, j) in
-		  gadget_edges, v+2)
-	     ne
-	     (gadget_edges, v) in
-	 let gadget_edges, v =
-	   Util.fold_n
-	     (fun (gadget_edges, v) _ ->
-		Printf.fprintf occ_in "%d %d\n%d %d\n" i v  v j;
-(*   		Printf.eprintf        "%d %d\n%d %d\n" i v  v j; *)
-		let gadget_edges = IntMap.add gadget_edges v     (i, j) in
-		  gadget_edges, v+1)
-	     eq
-	     (gadget_edges, v)
-	 in
-	   gadget_edges, v)
-      g
-      (IntMap.empty, (ELGraph.max_vertex g) + 1)
-  in
-    close_out occ_in;
-    let rec loop edges =
-      try
-	let line = input_line occ_out in
-(*   	  Printf.eprintf "line = '%s'\n%!" line; *)
-	match Util.split_string line with
-	    [ v; w ] ->
-	      let i = int_of_string v and j = int_of_string w in
-	      let i, j =
-		if not (ELGraph.has_vertex g i) then IntMap.get gadget_edges i
-		else if not (ELGraph.has_vertex g j) then IntMap.get gadget_edges j
-		else i, j
-	      in
-(*  		Printf.eprintf "is = %d %d\n%!" i j; *)
-		loop ((i, j) :: edges)
-	  | _ -> assert false
-      with End_of_file -> edges in
-    let edges = loop [] in
-    let g' = List.fold_left (fun g' (i, j) -> ELGraph.unconnect g' i j) g edges in
-    let g' = ELGraph.fold_vertices (fun g' i _ -> ELGraph.unconnect g' i i) g' g' in
-      color g'
-;;
-
-let solve_external_program g =
-  if !Util.verbose
-  then Printf.eprintf "external\tn = %3d m = %4d (%4d)\n%!"
-    (ELGraph.num_vertices g) (ELGraph.num_edges g) (Scs.num_edges g);
-(*   output stderr g; *)
-  let occ_out, occ_in = Unix.open_process "/home/mit/theinf1/hueffner/scs/src/scs-lp -e" in
-    ELGraph.iter_edges
-      (fun i j l ->
-	 if i <> j then begin
-	   for n = 1 to l.eq do
-	     Printf.fprintf occ_in "%3d %3d  0\n" i j;
-	   done;
-	   for n = 1 to l.ne do
-	     Printf.fprintf occ_in "%3d %3d  1\n" i j;
-	   done;
-	 end)
-      g;
-    close_out occ_in;
-    let rec loop edges =
-      try
-	let line = input_line occ_out in
-(*   	  Printf.eprintf "line = '%s'\n%!" line; *)
-	match Util.split_string line with
-	    [ v; w ] ->
-	      let i = int_of_string v and j = int_of_string w in
-		loop ((i, j) :: edges)
-	  | _ -> assert false
-      with End_of_file -> edges in
-    let edges = loop [] in
-    let g' = List.fold_left (fun g' (i, j) -> ELGraph.unconnect g' i j) g edges in
-    let g' = ELGraph.fold_vertices (fun g' i _ -> ELGraph.unconnect g' i i) g' g' in
-      color g'
 ;;
 
 let solve_brute_force g =
   if !Util.verbose
   then( Printf.eprintf "brute force\tn = %3d m = %4d (%4d)\n%!"
     (ELGraph.num_vertices g) (ELGraph.num_edges g) (Scs.num_edges g);
-(* 	Printf.eprintf "V = %a\n" IntSet.output (ELGraph.vertex_set g); *)
       );
   try
     color g
   with Not_sign_consistent ->
     let n = ELGraph.num_vertices g in
-      (*
-      if n >= 24 then begin
-	Printf.printf "aborted n = %d m = %d / %d\n" (ELGraph.num_vertices g) (ELGraph.num_edges g) (Scs.num_edges g );
-	exit 0;
-      end;
-      *)
       if n >= 8 then solve_iterative_compression g else
-(*       if n >= 16 then solve_external_program g else *)
       let numbers, _ = ELGraph.fold_vertices
 	(fun (numbers, n) i _ -> IntMap.add numbers i n, n + 1) g (IntMap.empty, 0) in
       let rec loop best_del best_colors colors =
@@ -273,7 +165,6 @@ let solve_brute_force g =
 		 if color v = color w then del + ne else del + eq)
 	      g 0
 	  in
-(* 	    Printf.eprintf "colors = %d del = %d\n%!" colors del; *)
 	    if del < best_del
 	    then loop del colors (colors + 1)
 	    else loop best_del best_colors (colors + 1) in
@@ -304,8 +195,6 @@ let invert_coloring m =
 let find_lincomb v vs =
   if !Util.verbose
   then Printf.eprintf "linear combination\tv = %a\n%!" (Util.output_array Util.output_int) v;
-  let db = false in
-  if db then Printf.eprintf "find_lincomb\n%!";
   let normalize v =
     let m = Array.fold_left min max_int v in
       Array.map (fun i -> i - m) v in
@@ -325,7 +214,6 @@ let find_lincomb v vs =
       loop 0 in
   let apply v d =
     Array.mapi (fun i x -> x - d.(i)) v in
-    
   let rec loop v vs' max_cost =
     if is_zero v
     then Some (0, [], [])
@@ -342,35 +230,32 @@ let find_lincomb v vs =
 	      loop v vs' max_cost in
   let v = normalize v in
   let rec trial v max_cost max_max_cost =
-    if db then Printf.eprintf "trial max_cost = %d max_max_cost = %d\n%!" max_cost max_max_cost;
     if max_cost > max_max_cost
     then None
       else
 	match loop v vs max_cost with
 	    None -> trial v (max_cost + 1) max_max_cost
 	  | something -> something in
-  let min_gadget_sum = List.fold_left (fun min_gadget_sum (_, v, _) -> min min_gadget_sum (Array.fold_left (+) 0 v)) max_int vs in
+  let min_gadget_sum =
+    List.fold_left
+      (fun min_gadget_sum (_, v, _) ->
+	 min min_gadget_sum (Array.fold_left (+) 0 v)) max_int vs in
   let rec shift d =
-(*     if d > !Util.max_shift then None else *)
-    begin
-      let v = Array.map ((+) d) v in
+    let v = Array.map ((+) d) v in
       if !Util.verbose
       then Printf.eprintf " shift %d: %a\n%!" d (Util.output_array Util.output_int) v;
       let s = Array.fold_left (+) 0 v in
-      if Array.length v >= 8 && s >= 26
-      then None else
-      let max_max_cost = ((Array.fold_left (+) 0 v) + (min_gadget_sum)) / min_gadget_sum in
-	match trial v 0 max_max_cost with
-	    None -> shift (d + 1)
-	  | Some (cost, ds, gadgets) -> Some (cost + d, ds, gadgets)
-    end
+	if Array.length v >= 8 && s >= 26
+	then None else
+	  let max_max_cost = ((Array.fold_left (+) 0 v) + (min_gadget_sum)) / min_gadget_sum in
+	    match trial v 0 max_max_cost with
+		None -> shift (d + 1)
+	      | Some (cost, ds, gadgets) -> Some (cost + d, ds, gadgets)
   in
     shift 0
 ;;
 
 let make_cut_gadget g c costs gadgets =
-  let d = false in
-  if d then Printf.eprintf "make_cut_gadget costs = %a\n" (IntMap.output Util.output_int) costs;
   let costs = Array.init (IntMap.size costs) (fun i -> IntMap.get costs i) in
   let apply_gadget g edges =
     let vs, _ = IntSet.fold (fun (vs, n) ci -> IntMap.add vs n ci, n + 1) c (IntMap.empty, 0) in
@@ -407,20 +292,14 @@ let make_cut_gadget g c costs gadgets =
 	      done; a in
 	  let costs' =
 	    List.fold_left arrayplus (Array.make (Array.length costs) 0) costvecs in
-	  if d then Printf.eprintf " old: %a new: %a\n"
-	    (Util.output_array Util.output_int) costs
-	    (Util.output_array Util.output_int) costs';
 	  if !Util.verbose && costs'.(0) < costs.(0)
 	  then Printf.eprintf " k reduced by %d\n" (costs.(0) - costs'.(0));
-	  if d then Printf.eprintf " cost = %d\n" cost;
 	  Some (List.fold_left apply_gadget g gadgets)
 ;;
 
 let unreducible_sc = Hashtbl.create 31;;
 
 let rec solve_all_colorings g c =
-  let d = false in
-(*   Printf.eprintf "g = %a\n" output g; *)
   let merge g v1 v2 =
     let g = 
       ELGraph.fold_neighbors
@@ -445,9 +324,7 @@ let rec solve_all_colorings g c =
 	    else merge g' b v), (i + 1))
 	c
 	(g', 0) in
-      if d then Printf.eprintf "sacg' = %a\n" output g';
       let coloring = solve g' in
-      if d then Printf.eprintf "coloring = %a\n" (IntMap.output Util.output_bool) coloring;
       let coloring = if IntMap.get coloring w then coloring else invert_coloring coloring in
       let coloring = IntMap.delete coloring w in
       let coloring = IntMap.delete coloring b in
@@ -462,11 +339,10 @@ let rec solve_all_colorings g c =
     loop IntMap.empty 0
 
 and solve_cut_corner g =
-  let d = false in
   if !Util.verbose
   then Printf.eprintf "cut corner\tn = %3d m = %4d (%4d)\n%!"
     (ELGraph.num_vertices g) (ELGraph.num_edges g) (Scs.num_edges g);
-  if !Util.max_cut_size < 2 || ELGraph.num_vertices g <= 10 then solve_brute_force g  else
+  if !Util.max_cut_size < 2 || ELGraph.num_vertices g <= 10 then solve_brute_force g else
   let deg2 =
     ELGraph.fold_vertices
       (fun deg2 i n ->
@@ -488,15 +364,11 @@ and solve_cut_corner g =
     | (s, c) :: rest ->
 	if !Util.verbose then Printf.eprintf " |C| = %d |S| = %d\n%!"
 	  (IntSet.size c) (IntSet.size s);
-	if d then Printf.eprintf "c = %a s = %a\n" IntSet.output c IntSet.output s;
 	let sc = ELGraph.subgraph g (IntSet.union s c) in
 	if Hashtbl.mem unreducible_sc sc then loop rest else
 	let () = () in
-	if d then Printf.eprintf "g = %a" output g;
- 	if d then Printf.eprintf " sc = %a" output sc; 
 	let colorings = solve_all_colorings sc c in
 	let costs = IntMap.map (fun _ coloring -> coloring_cost sc coloring) colorings in
-	if d then Printf.eprintf " costs: %a\n%!" (IntMap.output Util.output_int) costs;
 	let rc = IntSet.fold ELGraph.delete_vertex s g in
 	let rc =
 	  ELGraph.fold_edges
@@ -504,25 +376,24 @@ and solve_cut_corner g =
 	       if IntSet.contains c i && IntSet.contains c j
 	       then ELGraph.disconnect rc i j else rc) g rc in
 	match make_cut_gadget rc c costs Gadgets.gadgets.(IntSet.size c) with
-	    None-> (if !Util.verbose then Printf.eprintf " failed to find good linear combination\n%!";
-		    Hashtbl.add unreducible_sc sc ();
-		    loop rest)
+	    None -> (if !Util.verbose
+		     then Printf.eprintf " failed to find good linear combination\n%!";
+		     Hashtbl.add unreducible_sc sc ();
+		     loop rest)
 	  | Some rc' ->
 	if not (ELGraph.num_vertices rc' < ELGraph.num_vertices g
 	        || (ELGraph.num_vertices rc' = ELGraph.num_vertices g
 	            && Scs.num_edges rc' < Scs.num_edges g))
-	then ( if !Util.verbose then Printf.eprintf " failed to reduce\n%!";
-	       Hashtbl.add unreducible_sc sc ();
-	       loop rest )
-	else
-	  let () = () in
-          if d then Printf.eprintf "rc' = %a\n" output rc';
+	then begin
+	  if !Util.verbose then Printf.eprintf " failed to reduce\n%!";
+	  Hashtbl.add unreducible_sc sc ();
+	  loop rest
+	end else
 	  let coloring = solve rc' in
 	  let coloring = 
  	    if IntMap.get coloring (IntSet.max c) = false
 	    then coloring else invert_coloring coloring in
 	  let coloring = IntMap.filter (fun i _ -> ELGraph.has_vertex rc i) coloring in
-	  if d then Printf.eprintf "coloring: %a\n%!" (IntMap.output Util.output_bool) coloring;
 	  let code, _ =
 	    IntSet.fold
 	      (fun (code, n) v ->
@@ -541,7 +412,6 @@ and solve_biconnected g =
   then solve_brute_force g
   else
     let components = Cut.biconnected_components (ELGraph.unlabeled g) in
-(*       Printf.eprintf "components = %a\n" (Util.output_list IntSet.output) components; *)
       List.fold_left
 	(fun colors component ->
 	   let map_intersection m1 m2 =
@@ -590,4 +460,3 @@ and solve g =
       if !Util.verbose && dk > 0 then Printf.eprintf " self-loops: k reduced by %d\n%!" dk;
       solve_biconnected g
 ;;
-
