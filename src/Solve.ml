@@ -337,8 +337,8 @@ let find_lincomb v vs =
 	  | something -> something in
   let min_gadget_sum = List.fold_left (fun min_gadget_sum (_, v, _) -> min min_gadget_sum (Array.fold_left (+) 0 v)) max_int vs in
   let rec shift d =
-    if d > !Util.max_shift then None
-    else begin
+(*     if d > !Util.max_shift then None else *)
+    begin
       let v = Array.map ((+) d) v in
       if !Util.verbose
       then Printf.eprintf " shift %d: %a\n%!" d (Util.output_array Util.output_int) v;

@@ -22,8 +22,6 @@ let stats_only = ref false;;
 let specs = [
   ("-c", Arg.Set_int(Util.max_cut_size),
          "Set maximum cut size for data reduction (0..4)");
-  ("-i", Arg.Set_int(Util.max_shift),
-         "Set maximum shift");
   ("-s", Arg.Set(stats_only),
          "Print statistics only");
   ("-v", Arg.Set(Util.verbose),
