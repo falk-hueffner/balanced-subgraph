@@ -1,4 +1,6 @@
-EXECS	  = scs gen-scs find-gadgets
+PACKAGE	  = scs
+VER	  = 1.0
+EXECS	  = scs gen-scs
 
 SOURCES   = \
 	Util.ml		\
@@ -51,6 +53,22 @@ find-gadgets: $(OBJS) $(C_OBJS) find-gadgets.cmx
 doc/index.html: $(MLIS)
 	mkdir -p doc
 	ocamldoc -html -d doc $^
+
+dist: all
+	rm -rf $(PACKAGE)-$(VER)/
+	mkdir $(PACKAGE)-$(VER)/
+	cp COPYING README $(PACKAGE)-$(VER)/
+	cp $(SOURCES) $(MLIS) $(PACKAGE)-$(VER)/
+	cp main.ml gen-scs.ml $(PACKAGE)-$(VER)/
+	cp $(C_SOURCES) $(PACKAGE)-$(VER)/
+	cp Makefile .depend $(PACKAGE)-$(VER)/
+	mkdir $(PACKAGE)-$(VER)/test/
+	cp test/* $(PACKAGE)-$(VER)/test/
+	cp test.sh $(PACKAGE)-$(VER)/
+	mkdir $(PACKAGE)-$(VER)/data/
+	cp -r ../data/* $(PACKAGE)-$(VER)/data/
+	cp $(PACKAGE)-lp $(PACKAGE)-$(VER)/
+	GZIP=--best tar -cvzf $(PACKAGE)-$(VER).tar.gz $(PACKAGE)-$(VER)
 
 .SUFFIXES: .ml .mli .cmo .cmi .cmx
 
