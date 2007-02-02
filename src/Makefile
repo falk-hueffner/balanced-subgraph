@@ -31,16 +31,15 @@ CFLAGS   += -W -Wall -Wno-unused -Werror
 
 all: depend $(EXECS) doc/index.html
 
-OBJS = $(SOURCES:.ml=.cmx)
-C_OBJS = $(C_SOURCES:.c=.o)
-DBG_OBJS = $(SOURCES:.ml=.cmo)
-MLIS := $(wildcard *.mli)
-DBG_LIBS = $(LIBS:.cmxa=.cma)
+OBJS	  = $(SOURCES:.ml=.cmx)
+C_OBJS	  = $(C_SOURCES:.c=.o)
+DBG_OBJS  = $(SOURCES:.ml=.cmo)
+MLIS	 := $(SOURCES:.ml=.mli)
+DBG_LIBS  = $(LIBS:.cmxa=.cma)
 
 scs: $(OBJS) $(C_OBJS) main.cmx
 	$(OCAMLOPT) $(PROFILE) -o $@ $(LIBS) $^
 
-#scs-dbg: $(C_OBJS) $(DBG_OBJS) main.cmo
 scs-dbg: $(C_OBJS) $(DBG_OBJS) main.cmo
 	$(OCAMLC) -custom $(PROFILE) -o $@ $(DBG_LIBS) $^
 
