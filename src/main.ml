@@ -35,6 +35,9 @@ let () =
     exit 1;
   end;
   let g, vertex_numbers, vertex_names = Scs.input stdin in
+  if !stats_only      
+  then
+    Printf.printf "%5d %6d %!" (ELGraph.num_vertices g) (Scs.num_edges g);
   let start = Util.timer () in
   let colors = Solve.solve g in
   let stop = Util.timer () in
@@ -42,8 +45,7 @@ let () =
   in
     if !stats_only      
     then
-      Printf.printf "%5d %6d %5d %10.2f\n"
-	(ELGraph.num_vertices g) (Scs.num_edges g) k (stop -. start)
+      Printf.printf "%5d %10.2f\n" k (stop -. start)
     else
       ELGraph.iter_edges
 	(fun i j { Scs.eq = eq; Scs.ne = ne } ->
