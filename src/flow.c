@@ -18,13 +18,14 @@
 #include <alloca.h>
 #include <assert.h>
 #include <stdbool.h>
-#include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 
 #include <caml/alloc.h>
 #include <caml/memory.h>
 #include <caml/mlvalues.h>
+
+typedef unsigned long long uint64_t;
 
 struct neighbor {
     unsigned neighbor;
@@ -44,20 +45,8 @@ static inline int vertex_flow(struct vertex **g, unsigned v) {
     return flow;
 }
 
-static void dump_graph(struct vertex **g, unsigned n) {
-    for (unsigned v = 0; v < n; v++) {
-	printf("%u: %d\n", v, vertex_flow(g, v));
-	for (unsigned i = 0; i < g[v]->deg; i++) {
-	    unsigned w = g[v]->neighbors[i].neighbor;
-	    printf("%u -> %u: %d/%u\n",
-		   v, w, g[v]->neighbors[i].flow, g[v]->neighbors[i].residual);
-	}
-    }
-}
-
 static inline void push(struct vertex **g, unsigned v, unsigned w) {
     for (unsigned j = 0; ; j++) {
-	//fprintf(stderr, "v %d:%d\n", v, g[v]->neighbors[j].neighbor);
 	if (g[v]->neighbors[j].neighbor == w) {
 	    --g[v]->neighbors[j].residual;
 	    ++g[v]->neighbors[j].flow;
@@ -65,7 +54,6 @@ static inline void push(struct vertex **g, unsigned v, unsigned w) {
 	}
     }
     for (unsigned j = 0; ; j++) {
-	//fprintf(stderr, "w %d:%d\n", w, g[w]->neighbors[j].neighbor);
 	if (g[w]->neighbors[j].neighbor == v) {
 	    ++g[w]->neighbors[j].residual;
 	    --g[w]->neighbors[j].flow;
@@ -76,7 +64,6 @@ static inline void push(struct vertex **g, unsigned v, unsigned w) {
 
 static unsigned augment_many_many(struct vertex **g, unsigned n,
 				  const unsigned *s, unsigned n_s, const bool *is_t) {
-    //fprintf(stderr, "n =  %d\n", n);
     unsigned q[n];
     memcpy(q, s, n_s * sizeof *s);
     unsigned *qhead = q, *qtail = q + n_s;
@@ -86,19 +73,14 @@ static unsigned augment_many_many(struct vertex **g, unsigned n,
 	pred[s[i]] = s[i];
     while (qhead != qtail) {
 	unsigned v = *qhead++;
-	//fprintf(stderr, "popped %d\n", v);
 	for (unsigned i = 0; i < g[v]->deg; i++) {
 	    unsigned w = g[v]->neighbors[i].neighbor;	    
-	    //fprintf(stderr, "found %d pred[%d] = %d\n", w, w, pred[w]);
 	    if (pred[w] == -1 && g[v]->neighbors[i].residual > 0) {
-		//fprintf(stderr, "push %d\n", w);
 		pred[w] = v;
 		if (is_t[w]) {
-		    //fprintf(stderr, "success\n");
 		    unsigned target = w;
 		    while ((unsigned) pred[w] != w) {
 			unsigned v = pred[w];
-			//fprintf(stderr, "v = %d w = %d\n", v, w);
 			push(g, v, w);
 			w = v;
 		    }
@@ -109,13 +91,11 @@ static unsigned augment_many_many(struct vertex **g, unsigned n,
 	}
     }
 
-    //fprintf(stderr, "fail\n");
     return -1;
 }
 
 static unsigned drain_source(struct vertex **g, unsigned n,
 			     const unsigned s, const bool *is_t) {
-    //fprintf(stderr, "n =  %d\n", n);
     unsigned q[n];
     unsigned *qhead = q, *qtail = q;
     *qtail++ = s;
@@ -124,12 +104,9 @@ static unsigned drain_source(struct vertex **g, unsigned n,
     pred[s] = s;
     while (qhead != qtail) {
 	unsigned v = *qhead++;
-	//fprintf(stderr, "popped %d\n", v);
 	for (unsigned i = 0; i < g[v]->deg; i++) {
 	    unsigned w = g[v]->neighbors[i].neighbor;	    
-	    //fprintf(stderr, "found %d pred[%d] = %d\n", w, w, pred[w]);
 	    if (pred[w] == -1 && g[v]->neighbors[i].flow > 0) {
-		//fprintf(stderr, "push %d\n", w);
 		pred[w] = v;
 		if (is_t[w]) {
 		    unsigned target = w;
@@ -138,7 +115,6 @@ static unsigned drain_source(struct vertex **g, unsigned n,
 			push(g, w, v);
 			w = v;
 		    }
-		    //fprintf(stderr, "success\n");
 		    return target;
 		}
 		*qtail++ = w;
@@ -146,13 +122,11 @@ static unsigned drain_source(struct vertex **g, unsigned n,
 	}
     }
 
-    //fprintf(stderr, "fail\n");
     return -1;
 }
 
 static unsigned drain_target(struct vertex **g, unsigned n,
 			     const unsigned s, const bool *is_t) {
-    //fprintf(stderr, "n =  %d\n", n);
     unsigned q[n];
     unsigned *qhead = q, *qtail = q;
     *qtail++ = s;
@@ -161,12 +135,9 @@ static unsigned drain_target(struct vertex **g, unsigned n,
     pred[s] = s;
     while (qhead != qtail) {
 	unsigned v = *qhead++;
-	//fprintf(stderr, "popped %d\n", v);
 	for (unsigned i = 0; i < g[v]->deg; i++) {
 	    unsigned w = g[v]->neighbors[i].neighbor;	    
-	    //fprintf(stderr, "found %d pred[%d] = %d\n", w, w, pred[w]);
 	    if (pred[w] == -1 && g[v]->neighbors[i].flow < 0) {
-		//fprintf(stderr, "push %d\n", w);
 		pred[w] = v;
 		if (is_t[w]) {
 		    unsigned target = w;
@@ -175,7 +146,6 @@ static unsigned drain_target(struct vertex **g, unsigned n,
 			push(g, v, w);
 			w = v;
 		    }
-		    //fprintf(stderr, "success\n");
 		    return target;
 		}
 		*qtail++ = w;
@@ -183,45 +153,6 @@ static unsigned drain_target(struct vertex **g, unsigned n,
 	}
     }
 
-    //fprintf(stderr, "fail\n");
-    return -1;
-}
-
-
-static unsigned augment_one_one(struct vertex **g, unsigned n,
-				const unsigned s, const unsigned t) {
-    //fprintf(stderr, "n =  %d\n", n);
-    unsigned q[n];
-    unsigned *qhead = q, *qtail = q;
-    *qtail++ = s;
-    int pred[n];
-    memset(pred, -1, sizeof pred);
-    pred[s] = s;
-    while (qhead != qtail) {
-	unsigned v = *qhead++;
-	//fprintf(stderr, "popped %d\n", v);
-	for (unsigned i = 0; i < g[v]->deg; i++) {
-	    unsigned w = g[v]->neighbors[i].neighbor;	    
-	    //fprintf(stderr, "found %d pred[%d] = %d\n", w, w, pred[w]);
-	    if (pred[w] == -1 && g[v]->neighbors[i].residual > 0) {
-		//fprintf(stderr, "push %d\n", w);
-		pred[w] = v;
-		if (w == t) {
-		    unsigned target = w;
-		    while ((unsigned) pred[w] != w) {
-			unsigned v = pred[w];
-			push(g, v, w);
-			w = v;
-		    }
-		    //fprintf(stderr, "success\n");
-		    return target;
-		}
-		*qtail++ = w;
-	    }
-	}
-    }
-
-    //fprintf(stderr, "fail\n");
     return -1;
 }
 
@@ -243,30 +174,15 @@ static inline uint64_t gray_change(uint64_t x) {
     return ctz64(gray_code(x) ^ gray_code(x + 1));
 }
 
-#define D 0
-
 static value find_cut_partition(struct vertex **g, unsigned n,
 				unsigned *s, unsigned n_s,
 				unsigned *t,
 				bool *is_s, bool *is_t, unsigned k) {
-    if(D) { dump_graph(g, n); putchar('\n'); }
-
-#if D
-    fprintf(stderr, "s = ");
-    for (unsigned i = 0; i < n_s; i++)
-	fprintf(stderr, "%d ", s[i]);
-    fprintf(stderr, "\nt = ");
-    for (unsigned i = 0; i < n_s; i++)
-	fprintf(stderr, "%d ", t[i]);
-    fprintf(stderr, "\n");
-#endif
-    
     for (unsigned i = 0; i < k; i++) {	
 	if (augment_many_many(g, n, s, n_s, is_t) == (unsigned) -1) {
 	    assert(i == k - 1);
 	    goto found_cut;
 	}
-	if (D) { fprintf(stderr, "prepass %d\n", i); dump_graph(g, n); putchar('\n'); }
     }
 
     uint64_t code = 0;
@@ -277,13 +193,11 @@ static value find_cut_partition(struct vertex **g, unsigned n,
 	while (vertex_flow(g, t[a])) {
 	    ++augmentations;
 	    unsigned target = drain_target(g, n, t[a], is_s);
-	    if (D) { fprintf(stderr, "unaugmented %d -> s, target = %d\n", t[a], target); dump_graph(g, n); putchar('\n'); }
 	    assert(target != (unsigned) -1);	    
 	}
 	while (vertex_flow(g, s[a])) {
 	    ++augmentations;
 	    unsigned target = drain_source(g, n, s[a], is_t);
-	    if (D) { fprintf(stderr, "unaugmented t -> %d, target = %d\n", s[a], target); dump_graph(g, n); putchar('\n'); }
 	    assert(target != (unsigned) -1);
 	}
 
@@ -297,23 +211,12 @@ static value find_cut_partition(struct vertex **g, unsigned n,
 	is_s[s[a]] = true;
 	is_t[t[a]] = true;
 
-#if D
-	fprintf(stderr, "s = ");
-	for (unsigned i = 0; i < n_s; i++)
-	    fprintf(stderr, "%d ", s[i]);
-	fprintf(stderr, "\nt = ");
-	for (unsigned i = 0; i < n_s; i++)
-	    fprintf(stderr, "%d ", t[i]);
-	fprintf(stderr, "\n");
-#endif
 	for (unsigned i = 0; i < augmentations; i++) {
 	    unsigned target = augment_many_many(g, n, s, n_s, is_t);
 	    if (target == (unsigned) -1) {
 		assert(i == augmentations - 1);
-		if (D) { fprintf(stderr, "cannot augmented s -> t\n"); dump_graph(g, n); putchar('\n'); }
 		goto found_cut;
 	    }
-	    if (D) { fprintf(stderr, "augmented s -> t, target = %d\n", target); dump_graph(g, n); putchar('\n'); }
 	}
 
 	++code;
@@ -322,8 +225,6 @@ static value find_cut_partition(struct vertex **g, unsigned n,
     return Val_int(0);		/* [] */
 
 found_cut:;
-    if (D) fprintf(stderr, "found cut\n");
-    
     unsigned q[n];
     memcpy(q, s, n_s * sizeof *s);
     unsigned *qhead = q, *qtail = q + n_s;
@@ -333,13 +234,11 @@ found_cut:;
 	seen[s[i]] = true;
     while (qhead != qtail) {
 	unsigned v = *qhead++;
-	//fprintf(stderr, "popped %d\n", v);
 	for (unsigned i = 0; i < g[v]->deg; i++) {
 	    unsigned w = g[v]->neighbors[i].neighbor;
 	    if (!seen[w] && g[v]->neighbors[i].residual > 0) {
 		seen[w] = true;
 		*qtail++ = w;
-		//fprintf(stderr, "pushed %d\n", w);
 	    }
 	}
     }
@@ -349,9 +248,7 @@ found_cut:;
     for (unsigned v = 0; v < n; v++) {
 	for (unsigned i = 0; i < g[v]->deg; i++) {
 	    unsigned w = g[v]->neighbors[i].neighbor;
-	    //printf("%d %d %d %d\n", v, w, seen[v], seen[w]);
 	    if (v < w && seen[v] != seen[w]) {
-		if (D) fprintf(stderr, "cutedge %d %d\n", v, w);
 		value p = caml_alloc_tuple(2);
 		Store_field(p, 0, Val_int(v));
 		Store_field(p, 1, Val_int(w));
@@ -413,6 +310,5 @@ CAMLprim value c_find_cut_partition(value vg, value vs, value vt, value vk) {
 	is_t[t[i]] = true;
     }
 
-    //dump_graph(g, n); putchar('\n');
     return find_cut_partition(g, n, s, n_s, t, is_s, is_t, k);
 }
