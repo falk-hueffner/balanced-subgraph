@@ -93,7 +93,6 @@ let solve_iterative_compression g =
 	   let g' = ELGraph.disconnect g' i j in
 	   let j' = IntMap.get t_of_s i in
 	     ELGraph.connect g' j j' l) g' cover in
-    let num_pairs = IntSet.size s in
     let k =
       List.fold_left
 	(fun k (i, j) -> let l = ELGraph.get_label g i j in k + l.eq + l.ne) 0 cover in
