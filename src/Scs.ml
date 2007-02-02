@@ -48,7 +48,14 @@ let is_int s =
 let input channel =
   let rec loop lines lineno =
     try
-      let line = strip_comment (input_line channel) in
+      let line = input_line channel in
+      if line = "# Graph Name\013" then begin
+	let l = ref "" in
+	  while !l <> "# Edges\013" do
+	    l := input_line channel;
+	  done;
+      end;
+      let line = strip_comment line in
       let line = Util.split_string line in
 	if line = [] then loop lines (lineno + 1)
 	else
