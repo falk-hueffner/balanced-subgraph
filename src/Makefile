@@ -20,13 +20,14 @@ LIBS      = unix.cmxa
 
 #PROFILE  = -p
 
-OCAMLC    = ocamlc -g -warn-error A $(INCLUDES)
-OCAMLOPT  = ocamlopt.opt -warn-error A $(INCLUDES)
+OCAMLC    = ocamlc.opt -g $(INCLUDES)
+OCAMLOPT  = ocamlopt.opt $(INCLUDES)
 OCAMLDEP  = ocamldep $(INCLUDES)
 
+CC	  = gcc
 CFLAGS    = -std=c99 -g -I $(HOME)/include
 CFLAGS   += -O3 $(shell gcc-arch) $(PROFILE) -funroll-all-loops -ffast-math
-CFLAGS   += -W -Wall -Wno-unused -Werror
+CFLAGS   += -W -Wall
 #CFLAGS  += -DNDEBUG
 
 all: depend $(EXECS) doc/index.html
