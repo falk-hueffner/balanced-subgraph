@@ -15,7 +15,7 @@
    with this program; if not, write to the Free Software Foundation, Inc.,
    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.  *)
 
-(** The SCS solving algorithm.  *)
+(** The BSG solving algorithm.  *)
 
 module StringMap : Map.S
 
@@ -25,7 +25,7 @@ type edge = {
   ne: int;				(** multiplicity of negative edges (>= 0) *)
 }
 
-(** A graph suitable to represent SCS instances.  *)
+(** A graph suitable to represent BSG instances.  *)
 type t = edge ELGraph.t
 
 (** Number of edges, accounting for multiple edges.  *)

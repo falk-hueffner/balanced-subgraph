@@ -15,11 +15,11 @@
    with this program; if not, write to the Free Software Foundation, Inc.,
    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.  *)
 
-(** Solve the SCS problem. Returns a coloring with minimum number of
+(** Solve the BSG problem. Returns a coloring with minimum number of
     conflict edges.  *)
 val solve : Bsg.t -> bool IntMap.t
 
-(** [solve_all_colorings g c] optimally solves SCS under all possible
+(** [solve_all_colorings g c] optimally solves BSG under all possible
     colorings of the vertices in [c], except that (because of symmetry)
     the highest vertex in [c] is always colored 0. Returns a map of the
     optimal colorings, where the keys are binary representation of the
