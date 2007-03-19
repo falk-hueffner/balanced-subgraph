@@ -1,6 +1,6 @@
 PACKAGE	  = bsg
 VER	  = 1.0
-EXECS	  = bsg gen-scs
+EXECS	  = bsg gen-bsg
 
 SOURCES   = \
 	Util.ml		\
@@ -44,7 +44,7 @@ bsg: $(OBJS) $(C_OBJS) main.cmx
 bsg-dbg: $(C_OBJS) $(DBG_OBJS) main.cmo
 	$(OCAMLC) -custom $(PROFILE) -o $@ $(DBG_LIBS) $^
 
-gen-bsg: $(OBJS) $(C_OBJS) gen-scs.cmx
+gen-bsg: $(OBJS) $(C_OBJS) gen-bsg.cmx
 	$(OCAMLOPT) $(PROFILE) -o $@ $(LIBS) $^
 
 find-gadgets: $(OBJS) $(C_OBJS) find-gadgets.cmx
