@@ -40,9 +40,9 @@ let () =
 	      ELGraph.modify_label_default
 		(fun label ->
 		   if IntMap.get c i = IntMap.get c j
-		   then { label with Bsg.eq = label.Scs.eq + 1}
-		   else { label with Bsg.ne = label.Scs.ne + 1})
-		g i j { Bsg.eq = 0; Scs.ne = 0 }
+		   then { label with Bsg.eq = label.Bsg.eq + 1}
+		   else { label with Bsg.ne = label.Bsg.ne + 1})
+		g i j { Bsg.eq = 0; Bsg.ne = 0 }
 	    in
 	      loop g (m - 1)
     in
@@ -54,23 +54,23 @@ let () =
 	let i = Random.int n and j = Random.int n in
 	  if i = j then loop g k
 	  else
-	    let { Bsg.eq = eq; Scs.ne = ne } =
-	      ELGraph.get_label_default g i j { Bsg.eq = 0; Scs.ne = 0 }
+	    let { Bsg.eq = eq; Bsg.ne = ne } =
+	      ELGraph.get_label_default g i j { Bsg.eq = 0; Bsg.ne = 0 }
 	    in
 	      if IntMap.get c i = IntMap.get c j
 	      then
 		if eq > 0
-		then loop (ELGraph.set_label g i j { Bsg.eq = eq - 1; Scs.ne = ne + 1}) (k - 1)
+		then loop (ELGraph.set_label g i j { Bsg.eq = eq - 1; Bsg.ne = ne + 1}) (k - 1)
 		else loop g k
 	      else
 		if ne > 0
-		then loop (ELGraph.set_label g i j { Bsg.eq = eq + 1; Scs.ne = ne - 1}) (k - 1)
+		then loop (ELGraph.set_label g i j { Bsg.eq = eq + 1; Bsg.ne = ne - 1}) (k - 1)
 		else loop g k
     in
       loop g k
   in
     ELGraph.iter_edges
-      (fun i j { Bsg.eq = eq; Scs.ne = ne } ->
+      (fun i j { Bsg.eq = eq; Bsg.ne = ne } ->
 	 for l = 1 to eq do
 	   Printf.printf "%3d %3d  0\n" i j
 	 done;

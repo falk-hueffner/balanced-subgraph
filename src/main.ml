@@ -48,7 +48,7 @@ let () =
       Printf.printf "%5d %10.2f\n" k (stop -. start)
     else
       ELGraph.iter_edges
-	(fun i j { Bsg.eq = eq; Scs.ne = ne } ->
+	(fun i j { Bsg.eq = eq; Bsg.ne = ne } ->
 	   if IntMap.get colors i = IntMap.get colors j
 	   then for l = 1 to ne do
 	     Printf.printf "%s %s 1\n" (IntMap.get vertex_names i) (IntMap.get vertex_names j)

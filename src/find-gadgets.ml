@@ -46,7 +46,7 @@ let print_gadget costs cost edges =
   done;
   print_string "|],[";
   List.iter
-    (fun (i, j, {Bsg.eq = eq; Scs.ne = ne}) ->
+    (fun (i, j, {Bsg.eq = eq; Bsg.ne = ne}) ->
        Printf.printf "(%d,%d,{eq=%d;ne=%d});" i j eq ne)
     edges;
   print_string "]);\n";
@@ -61,9 +61,9 @@ let single_edge_gadgets gadgets c_size =
     List.fold_left
       (fun gadgets (i, j) ->
 	 let gadgets =
-	   add_gadget gadgets (ELGraph.connect g i j {Bsg.eq = 1; Scs.ne = 0} ) c_set 0 in
+	   add_gadget gadgets (ELGraph.connect g i j {Bsg.eq = 1; Bsg.ne = 0} ) c_set 0 in
 	 let gadgets =
-	   add_gadget gadgets (ELGraph.connect g i j {Bsg.eq = 0; Scs.ne = 1} ) c_set 0
+	   add_gadget gadgets (ELGraph.connect g i j {Bsg.eq = 0; Bsg.ne = 1} ) c_set 0
 	 in
 	   gadgets)
       gadgets edges
@@ -97,9 +97,9 @@ let extra_vertices_gadgets gadgets c_size s_size =
 	let g, _ = List.fold_left
 	  (fun (g, i) (v, w) ->
 	     if l.(i) > 0
-	     then ELGraph.connect g v w { Bsg.eq = l.(i); Scs.ne = 0 }, i + 1
+	     then ELGraph.connect g v w { Bsg.eq = l.(i); Bsg.ne = 0 }, i + 1
 	     else if l.(i) < 0
-	     then ELGraph.connect g v w { Bsg.eq = 0; Scs.ne = -l.(i) }, i + 1
+	     then ELGraph.connect g v w { Bsg.eq = 0; Bsg.ne = -l.(i) }, i + 1
 	     else g, i + 1)
 	  (g, 0)
 	  edges in

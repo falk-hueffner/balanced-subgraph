@@ -382,7 +382,7 @@ and solve_cut_corner g =
 	  | Some rc' ->
 	if not (ELGraph.num_vertices rc' < ELGraph.num_vertices g
 	        || (ELGraph.num_vertices rc' = ELGraph.num_vertices g
-	            && Bsg.num_edges rc' < Scs.num_edges g))
+	            && Bsg.num_edges rc' < Bsg.num_edges g))
 	then begin
 	  if !Util.verbose then Printf.eprintf " failed to reduce\n%!";
 	  Hashtbl.add unreducible_sc sc ();
