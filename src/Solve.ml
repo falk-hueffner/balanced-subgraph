@@ -1,4 +1,4 @@
-(* scs -- solve the sign-consistent subgraph problem
+(* bsg -- solve the balanced subgraph problem
    Copyright (C) 2006  Falk Hüffner
 
    This program is free software; you can redistribute it and/or modify
@@ -15,7 +15,7 @@
    with this program; if not, write to the Free Software Foundation, Inc.,
    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.  *)
 
-open Scs;;				(* for the record field labels *)
+open Bsg;;				(* for the record field labels *)
 
 let vertex_cover g =
   let rec loop s g =
@@ -58,8 +58,8 @@ let to_array g =
 let solve_iterative_compression g =
   if !Util.verbose
   then Printf.eprintf "iterative compression\tn = %3d m = %4d (%4d)\n%!"
-    (ELGraph.num_vertices g) (ELGraph.num_edges g) (Scs.num_edges g);
-  let m0 = Scs.num_edges g in
+    (ELGraph.num_vertices g) (ELGraph.num_edges g) (Bsg.num_edges g);
+  let m0 = Bsg.num_edges g in
   let g = ELGraph.fold_vertices (fun g i _ -> ELGraph.unconnect g i i) g g in
   let g = ELGraph.fold_edges
     (fun g i j l ->
@@ -97,7 +97,7 @@ let solve_iterative_compression g =
       List.fold_left
 	(fun k (i, j) -> let l = ELGraph.get_label g i j in k + l.eq + l.ne) 0 cover in
     if !Util.verbose then Printf.eprintf " m = %d/%d k = %d vc = %d cover = %d\n%!"
-      (Scs.num_edges g) m0 k (IntSet.size s) (List.length cover);
+      (Bsg.num_edges g) m0 k (IntSet.size s) (List.length cover);
     let cover' =
       c_find_cut_partition (to_array g') (IntSet.to_array s) (IntSet.to_array t) k in
     let cover = if cover' = [] then cover else cover' in
@@ -144,7 +144,7 @@ let solve_iterative_compression g =
 let solve_brute_force g =
   if !Util.verbose
   then( Printf.eprintf "brute force\tn = %3d m = %4d (%4d)\n%!"
-    (ELGraph.num_vertices g) (ELGraph.num_edges g) (Scs.num_edges g);
+    (ELGraph.num_vertices g) (ELGraph.num_edges g) (Bsg.num_edges g);
       );
   try
     color g
@@ -311,7 +311,7 @@ let rec solve_all_colorings g c =
   let c_n = IntSet.size c in
   let g', w = ELGraph.new_vertex g in
   let g', b = ELGraph.new_vertex g' in
-  let g' = ELGraph.connect g' b w { eq = 0; ne = Scs.num_edges g; } in
+  let g' = ELGraph.connect g' b w { eq = 0; ne = Bsg.num_edges g; } in
   let rec loop colorings colors  =
     if colors >= (1 lsl (c_n - 1))
     then colorings
@@ -340,7 +340,7 @@ let rec solve_all_colorings g c =
 and solve_cut_corner g =
   if !Util.verbose
   then Printf.eprintf "cut corner\tn = %3d m = %4d (%4d)\n%!"
-    (ELGraph.num_vertices g) (ELGraph.num_edges g) (Scs.num_edges g);
+    (ELGraph.num_vertices g) (ELGraph.num_edges g) (Bsg.num_edges g);
   if !Util.max_cut_size < 2 || ELGraph.num_vertices g <= 10 then solve_brute_force g else
   let deg2 =
     ELGraph.fold_vertices
@@ -349,15 +349,15 @@ and solve_cut_corner g =
 	 then Some (IntSet.singleton i, IntMap.fold (fun n i _ -> IntSet.add n i) n IntSet.empty)
 	 else deg2)
       g None in
-  let scs =
+  let bsg =
     match deg2 with
 	Some (s, c) -> [s, c]
       | None -> Cut.cut_corner (ELGraph.unlabeled g) in
-  let scs = List.sort
+  let bsg = List.sort
     (fun (s1, c1) (s2, c2) ->
        if IntSet.size c1 <> IntSet.size c2
        then compare (IntSet.size c1) (IntSet.size c2)
-       else compare (IntSet.size s2) (IntSet.size s1)) scs in
+       else compare (IntSet.size s2) (IntSet.size s1)) bsg in
   let rec loop = function
       [] -> solve_brute_force g
     | (s, c) :: rest ->
@@ -382,7 +382,7 @@ and solve_cut_corner g =
 	  | Some rc' ->
 	if not (ELGraph.num_vertices rc' < ELGraph.num_vertices g
 	        || (ELGraph.num_vertices rc' = ELGraph.num_vertices g
-	            && Scs.num_edges rc' < Scs.num_edges g))
+	            && Bsg.num_edges rc' < Scs.num_edges g))
 	then begin
 	  if !Util.verbose then Printf.eprintf " failed to reduce\n%!";
 	  Hashtbl.add unreducible_sc sc ();
@@ -401,12 +401,12 @@ and solve_cut_corner g =
 	  let coloring_sc = IntMap.get colorings code in
 	    merge_colorings coloring coloring_sc
   in
-    loop scs
+    loop bsg
 
 and solve_biconnected g =
   if !Util.verbose
   then Printf.eprintf "solve_biconn\tn = %3d m = %4d (%4d)\n%!"
-    (ELGraph.num_vertices g) (ELGraph.num_edges g) (Scs.num_edges g);
+    (ELGraph.num_vertices g) (ELGraph.num_edges g) (Bsg.num_edges g);
   if !Util.max_cut_size < 1 || ELGraph.num_vertices g <= 5
   then solve_brute_force g
   else
@@ -433,7 +433,7 @@ and solve_biconnected g =
 and solve g =
   if !Util.verbose
   then Printf.eprintf "solve\t\tn = %3d m = %4d (%4d)\n%!"
-    (ELGraph.num_vertices g) (ELGraph.num_edges g) (Scs.num_edges g);
+    (ELGraph.num_vertices g) (ELGraph.num_edges g) (Bsg.num_edges g);
   if ELGraph.num_vertices g <= 5
   then solve_brute_force g
   else

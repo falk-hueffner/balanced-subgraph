@@ -1,4 +1,4 @@
-(* scs -- solve the sign-consistent subgraph problem
+(* bsg -- solve the balanced subgraph problem
    Copyright (C) 2006  Falk Hüffner
 
    This program is free software; you can redistribute it and/or modify
@@ -15,7 +15,7 @@
    with this program; if not, write to the Free Software Foundation, Inc.,
    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.  *)
 
-open Scs;;
+open Bsg;;
 
 let gadgets = [|
   (* 0 *)

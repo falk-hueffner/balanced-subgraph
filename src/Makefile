@@ -1,6 +1,6 @@
-PACKAGE	  = scs
+PACKAGE	  = bsg
 VER	  = 1.0
-EXECS	  = scs gen-scs
+EXECS	  = bsg gen-scs
 
 SOURCES   = \
 	Util.ml		\
@@ -9,7 +9,7 @@ SOURCES   = \
 	Graph.ml	\
 	ELGraph.ml	\
 	Cut.ml		\
-	Scs.ml		\
+	Bsg.ml		\
 	Gadgets.ml	\
 	Solve.ml
 
@@ -38,13 +38,13 @@ DBG_OBJS  = $(SOURCES:.ml=.cmo)
 MLIS	 := $(SOURCES:.ml=.mli)
 DBG_LIBS  = $(LIBS:.cmxa=.cma)
 
-scs: $(OBJS) $(C_OBJS) main.cmx
+bsg: $(OBJS) $(C_OBJS) main.cmx
 	$(OCAMLOPT) $(PROFILE) -o $@ $(LIBS) $^
 
-scs-dbg: $(C_OBJS) $(DBG_OBJS) main.cmo
+bsg-dbg: $(C_OBJS) $(DBG_OBJS) main.cmo
 	$(OCAMLC) -custom $(PROFILE) -o $@ $(DBG_LIBS) $^
 
-gen-scs: $(OBJS) $(C_OBJS) gen-scs.cmx
+gen-bsg: $(OBJS) $(C_OBJS) gen-scs.cmx
 	$(OCAMLOPT) $(PROFILE) -o $@ $(LIBS) $^
 
 find-gadgets: $(OBJS) $(C_OBJS) find-gadgets.cmx
@@ -59,7 +59,7 @@ dist: all
 	mkdir $(PACKAGE)-$(VER)/
 	cp COPYING README $(PACKAGE)-$(VER)/
 	cp $(SOURCES) $(MLIS) $(PACKAGE)-$(VER)/
-	cp main.ml gen-scs.ml $(PACKAGE)-$(VER)/
+	cp main.ml gen-bsg.ml $(PACKAGE)-$(VER)/
 	cp $(C_SOURCES) $(PACKAGE)-$(VER)/
 	cp Makefile .depend $(PACKAGE)-$(VER)/
 	mkdir $(PACKAGE)-$(VER)/test/

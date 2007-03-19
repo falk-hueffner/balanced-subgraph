@@ -1,4 +1,4 @@
-/* scs -- solve the sign-consistent subgraph problem
+/* bsg -- solve the balanced subgraph problem
    Copyright (C) 2006  Falk Hüffner
 
    This program is free software; you can redistribute it and/or modify

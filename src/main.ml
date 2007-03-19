@@ -1,4 +1,4 @@
-(* scs -- solve the sign-consistent subgraph problem
+(* bsg -- solve the balanced subgraph problem
    Copyright (C) 2006  Falk Hüffner
 
    This program is free software; you can redistribute it and/or modify
@@ -34,21 +34,21 @@ let () =
     Printf.eprintf "maximum cut size must be 0..4\n";
     exit 1;
   end;
-  let g, vertex_numbers, vertex_names = Scs.input stdin in
+  let g, vertex_numbers, vertex_names = Bsg.input stdin in
   if !stats_only      
   then
-    Printf.printf "%5d %6d %!" (ELGraph.num_vertices g) (Scs.num_edges g);
+    Printf.printf "%5d %6d %!" (ELGraph.num_vertices g) (Bsg.num_edges g);
   let start = Util.timer () in
   let colors = Solve.solve g in
   let stop = Util.timer () in
-  let k = Scs.coloring_cost g colors
+  let k = Bsg.coloring_cost g colors
   in
     if !stats_only      
     then
       Printf.printf "%5d %10.2f\n" k (stop -. start)
     else
       ELGraph.iter_edges
-	(fun i j { Scs.eq = eq; Scs.ne = ne } ->
+	(fun i j { Bsg.eq = eq; Scs.ne = ne } ->
 	   if IntMap.get colors i = IntMap.get colors j
 	   then for l = 1 to ne do
 	     Printf.printf "%s %s 1\n" (IntMap.get vertex_names i) (IntMap.get vertex_names j)

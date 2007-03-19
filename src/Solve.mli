@@ -1,4 +1,4 @@
-(* scs -- solve the sign-consistent subgraph problem
+(* bsg -- solve the balanced subgraph problem
    Copyright (C) 2006  Falk Hüffner
 
    This program is free software; you can redistribute it and/or modify
@@ -17,11 +17,11 @@
 
 (** Solve the SCS problem. Returns a coloring with minimum number of
     conflict edges.  *)
-val solve : Scs.t -> bool IntMap.t
+val solve : Bsg.t -> bool IntMap.t
 
 (** [solve_all_colorings g c] optimally solves SCS under all possible
     colorings of the vertices in [c], except that (because of symmetry)
     the highest vertex in [c] is always colored 0. Returns a map of the
     optimal colorings, where the keys are binary representation of the
     coloring of [c].  *)
-val solve_all_colorings : Scs.t -> IntSet.t -> bool IntMap.t IntMap.t
+val solve_all_colorings : Bsg.t -> IntSet.t -> bool IntMap.t IntMap.t
