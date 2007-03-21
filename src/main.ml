@@ -15,7 +15,7 @@
    with this program; if not, write to the Free Software Foundation, Inc.,
    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.  *)
 
-let usage_msg = "Find maximum sign consistent subgraphs";;
+let usage_msg = "Find maximum balanced subgraphs";;
 
 let stats_only = ref false;;
 
@@ -45,7 +45,7 @@ let () =
   in
     if !stats_only      
     then
-      Printf.printf "%5d %10.2f\n" k (stop -. start)
+      Printf.printf "%5d %5d %10.2f\n" k (Bsg.cut_value g colors) (stop -. start)
     else
       ELGraph.iter_edges
 	(fun i j { Bsg.eq = eq; Bsg.ne = ne } ->
