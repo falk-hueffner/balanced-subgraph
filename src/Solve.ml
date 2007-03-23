@@ -349,15 +349,15 @@ and solve_cut_corner g =
 	 then Some (IntSet.singleton i, IntMap.fold (fun n i _ -> IntSet.add n i) n IntSet.empty)
 	 else deg2)
       g None in
-  let bsg =
+  let scs =
     match deg2 with
 	Some (s, c) -> [s, c]
       | None -> Cut.cut_corner (ELGraph.unlabeled g) in
-  let bsg = List.sort
+  let scs = List.sort
     (fun (s1, c1) (s2, c2) ->
        if IntSet.size c1 <> IntSet.size c2
        then compare (IntSet.size c1) (IntSet.size c2)
-       else compare (IntSet.size s2) (IntSet.size s1)) bsg in
+       else compare (IntSet.size s2) (IntSet.size s1)) scs in
   let rec loop = function
       [] -> solve_brute_force g
     | (s, c) :: rest ->
@@ -401,7 +401,7 @@ and solve_cut_corner g =
 	  let coloring_sc = IntMap.get colorings code in
 	    merge_colorings coloring coloring_sc
   in
-    loop bsg
+    loop scs
 
 and solve_biconnected g =
   if !Util.verbose
