@@ -45,7 +45,7 @@ let () =
   in
     if !stats_only      
     then
-      Printf.printf "%5d %5d %10.2f\n" k (Bsg.cut_value g colors) (stop -. start)
+      Printf.printf "%5d %10.2f\n" k (stop -. start)
     else
       ELGraph.iter_edges
 	(fun i j { Bsg.eq = eq; Bsg.ne = ne } ->

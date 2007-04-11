@@ -169,15 +169,6 @@ let coloring_cost g colors =
     g 0
 ;;
 
-let cut_value g colors =
-  ELGraph.fold_edges
-    (fun k i j { eq = eq; ne = ne } ->
-       if IntMap.get colors i <> IntMap.get colors j
-       then k + ne - eq
-       else k)
-    g 0
-;;
-
 let is_sign_consistent g =
   try
     ignore (color g);
