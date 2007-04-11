@@ -45,7 +45,9 @@ that this graph format cannot describe degree-0 vertices; however,
 they are irrelevant for the Balanced Subgraph poblem anyway. Label "0"
 indicates an edge that demands that the coloring of its endpoints are
 equal, and "1" demands that the coloring of its endpoints are
-unequal. Default is "1".
+unequal. Default is "1". This means that when no edge labels are given
+at all, the input instance is treated as an Edge Bipartization
+instance.
 
 The output is a minimum set of edges C to delete to make the graph
 sign consistent. Example:
