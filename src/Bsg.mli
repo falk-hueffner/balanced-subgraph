@@ -49,8 +49,3 @@ val color : t -> bool IntMap.t
 (** [coloring_cost g c] returns the number of inconsistent edges of
     [g] colored by [c]. O(m log n) time. *)
 val coloring_cost : t -> bool IntMap.t -> int
-
-(** [coloring_cost g c] returns the value of the cut when weighting
-    negative edges with 1 and positive edges with -1. O(m log n)
-    time. *)
-val cut_value : t -> bool IntMap.t -> int
