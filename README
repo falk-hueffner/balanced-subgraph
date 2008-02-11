@@ -56,10 +56,10 @@ $ ./bsg < test/rand02.graph
 0 10 1
 1 8 0
 4 6 0
-7 17 0
+5 16 1
 9 10 0
-11 17 1
-13 14 0
+11 14 0
+11 17 0
 
 Option "-c" controls the size of cuts sought for in the data reduction
 rules. Default is 4.
