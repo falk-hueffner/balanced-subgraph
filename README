@@ -64,8 +64,7 @@ $ ./bsg < test/rand02.graph
 Option "-c" controls the size of cuts sought for in the data reduction
 rules. Default is 4.
 
-
-With -s, one gets only a single line of output containing some
+With "-s", one gets only a single line of output containing some
 statistics:
 
    n      m     k     runtime [s]
