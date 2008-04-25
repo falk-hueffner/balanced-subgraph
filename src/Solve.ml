@@ -150,6 +150,7 @@ let solve_brute_force g =
     color g
   with Not_sign_consistent ->
     let n = ELGraph.num_vertices g in
+      Util.max_unreducible_size := max !Util.max_unreducible_size n;
       if n >= 8 then solve_iterative_compression g else
       let numbers, _ = ELGraph.fold_vertices
 	(fun (numbers, n) i _ -> IntMap.add numbers i n, n + 1) g (IntMap.empty, 0) in

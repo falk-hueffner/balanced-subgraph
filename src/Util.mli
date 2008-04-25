@@ -22,6 +22,11 @@
 val verbose : bool ref			(** Option -v  *)
 val max_cut_size : int ref		(** Option -c  *)
 
+(** Statistics.  *)
+
+(** Maximum size of an unreducible component.  *)
+val max_unreducible_size : int ref
+  
 (** Current time stamp in seconds since some unspecified fixed point
     in time.  *)
 val timer : unit -> float

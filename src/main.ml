@@ -45,7 +45,7 @@ let () =
   in
     if !stats_only      
     then
-      Printf.printf "%5d %10.2f\n" k (stop -. start)
+      Printf.printf "%5d %10.2f %3d\n" k (stop -. start) !Util.max_unreducible_size
     else
       ELGraph.iter_edges
 	(fun i j { Bsg.eq = eq; Bsg.ne = ne } ->
