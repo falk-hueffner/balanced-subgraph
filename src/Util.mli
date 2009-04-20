@@ -31,7 +31,7 @@ val max_unreducible_size : int ref
     in time.  *)
 val timer : unit -> float
 
-(** [fold_n f n] calculates [f (... f (f 0) 1 ... (n-1))].  *)
+(** [fold_n f n accu] calculates [f (... f (f accu 0) 1 ... (n-1))].  *)
 val fold_n : ('a -> int -> 'a) -> int -> 'a -> 'a
 
 (** [list_contains l x] returns true if [l] contains [x].  *)
