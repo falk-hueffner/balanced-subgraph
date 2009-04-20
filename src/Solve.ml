@@ -245,7 +245,8 @@ let find_lincomb v vs =
       if !Util.verbose
       then Printf.eprintf " shift %d: %a\n%!" d (Util.output_array Util.output_int) v;
       let s = Array.fold_left (+) 0 v in
-	if Array.length v >= 8 && s >= 26
+	if Array.length v >= 4 && s >= 26
+	  || Array.length v >= 8 && s >= 24
 	then None else
 	  let max_max_cost = ((Array.fold_left (+) 0 v) + (min_gadget_sum)) / min_gadget_sum in
 	    match trial v 0 max_max_cost with
