@@ -37,6 +37,9 @@ val input : in_channel -> (t * int StringMap.t * string IntMap.t)
 (** Write debug representation to a channel.  *)
 val output : out_channel -> t -> unit
 
+(** Write debug representation of an edge to a channel.  *)
+val output_edge : out_channel -> edge -> unit
+
 (** Returns true if the graph can be colored consistently. O(m log n) time. *)
 val is_sign_consistent : t -> bool
 
