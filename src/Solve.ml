@@ -213,11 +213,62 @@ let normalize v =
     Array.map (fun i -> i - m) v
 ;;
 
-let apply v d = Array.mapi (fun i x -> x - d.(i)) v;;
+let array_max_i v =
+  let vmax = ref v.(0) and imax = ref 0 in
+    for i = 1 to Array.length v - 1 do
+      if v.(i) > !vmax then (imax := i; vmax := v.(i))
+    done;
+    !imax
+;;
 
-let find_lincomb v vs =
+let array_for_all p a =
+  let rec loop i =
+    i >= Array.length a || (p a.(i) && loop (i + 1))
+  in
+    loop 0
+;;
+
+let is_zero = array_for_all (fun x -> x = 0);;
+let apply v d = Array.mapi (fun i x -> x - d.(i)) v;;
+let parity v = (Array.fold_left (lxor) 0 v) land 1;;
+let zeros v = Array.fold_left (fun zeros x -> if x = 0 then zeros + 1 else zeros) 0 v;;
+
+let rec find_lincomb4 v gadgets =
+  let v = normalize v in
+  let v, chosen =
+    if parity v = 0 then v, [] else
+      let v = if zeros v <= 1 then v else Array.map ((+) 1) v in
+      let rec loop = function
+	  [] -> raise (Failure "find_lincomb4")
+	| (cost, d, edges) :: gadgets ->
+	    if parity d <> 1 || not (can_apply v d) then loop gadgets
+	    else d, edges in
+      let d, edges = loop gadgets in
+      let v = apply v d in
+	v, [edges] in
+  let rec loop v chosen =
+    if is_zero v
+    then chosen
+    else
+      let v = if zeros v < 3 then v else Array.map ((+) 1) v in
+      let max_i = array_max_i v in
+      let rec loop2 = function
+	  [] -> raise (Failure "find_lincomb4")
+	| (cost, d, edges) :: gadgets ->
+	    if parity d <> 0 || d.(max_i) = 0 || not (can_apply v d) then loop2 gadgets
+	    else d, edges in
+      let d, edges = loop2 gadgets in
+      let v = apply v d in
+      let chosen = edges :: chosen in
+	loop v chosen
+  in
+     Some (loop v chosen)
+;;
+
+let find_lincomb v vs = 
   if !Util.verbose
   then Printf.eprintf "linear combination\tv = %a\n%!" (Util.output_array Util.output_int) v;
+  if Array.length v = 4 then find_lincomb4 v vs else
   let rec loop v vs' max_cost =
     if array_is_zero v
     then Some []
@@ -249,8 +300,7 @@ let find_lincomb v vs =
       if !Util.verbose
       then Printf.eprintf " shift %d: %a\n%!" d (Util.output_array Util.output_int) v;
       let s = Array.fold_left (+) 0 v in
-	if Array.length v >= 4 && s >= 26
-	  || Array.length v >= 8 && s >= 24
+	if s >= 24
 	then None else
 	  let max_max_cost = ((Array.fold_left (+) 0 v) + (min_gadget_sum)) / min_gadget_sum in
 	    match trial v 0 max_max_cost with
@@ -288,8 +338,7 @@ let make_cut_gadget g c costs gadgets =
   in
     match find_lincomb costs gadgets with
 	None -> None
-      | Some gadgets ->
-	  Some (List.fold_left apply_gadget g gadgets)
+      | Some gadgets -> Some (List.fold_left apply_gadget g gadgets)
 ;;
 
 let unreducible_sc = Hashtbl.create 31;;
