@@ -289,11 +289,6 @@ let make_cut_gadget g c costs gadgets =
     match find_lincomb costs gadgets with
 	None -> None
       | Some gadgets ->
-	  let arrayplus = fun a1 a2 ->
-	    let a = Array.copy a1 in
-	      for i = 0 to Array.length a - 1 do
-		a.(i) <- a.(i) + a2.(i)
-	      done; a in
 	  Some (List.fold_left apply_gadget g gadgets)
 ;;
 
