@@ -220,7 +220,7 @@ let find_lincomb v vs =
   then Printf.eprintf "linear combination\tv = %a\n%!" (Util.output_array Util.output_int) v;
   let rec loop v vs' max_cost =
     if array_is_zero v
-    then Some (0, [], [])
+    then Some []
     else
       match vs' with
 	  [] -> None
@@ -229,7 +229,7 @@ let find_lincomb v vs =
 	    then let v' = apply v d in
 	      match loop v' vs (max_cost - cost) with
 		  None -> loop v vs' max_cost
-		| Some (cost', ds, gadgets) -> Some (cost + cost', d :: ds, edges :: gadgets)
+		| Some gadgets -> Some (edges :: gadgets)
 	    else
 	      loop v vs' max_cost in
   let v = normalize v in
@@ -239,7 +239,7 @@ let find_lincomb v vs =
       else
 	match loop v vs max_cost with
 	    None -> trial v (max_cost + 1) max_max_cost
-	  | something -> something in
+	  | gadgets -> gadgets in
   let min_gadget_sum =
     List.fold_left
       (fun min_gadget_sum (_, v, _) ->
@@ -255,8 +255,7 @@ let find_lincomb v vs =
 	  let max_max_cost = ((Array.fold_left (+) 0 v) + (min_gadget_sum)) / min_gadget_sum in
 	    match trial v 0 max_max_cost with
 		None -> shift (d + 1)
-	      | Some (cost, ds, gadgets) -> Some (cost + d, ds, gadgets)
-  in
+	      | gadgets -> gadgets in
     shift 0
 ;;
 
@@ -289,16 +288,12 @@ let make_cut_gadget g c costs gadgets =
   in
     match find_lincomb costs gadgets with
 	None -> None
-      | Some (cost, costvecs, gadgets) ->
+      | Some gadgets ->
 	  let arrayplus = fun a1 a2 ->
 	    let a = Array.copy a1 in
 	      for i = 0 to Array.length a - 1 do
 		a.(i) <- a.(i) + a2.(i)
 	      done; a in
-	  let costs' =
-	    List.fold_left arrayplus (Array.make (Array.length costs) 0) costvecs in
-	  if !Util.verbose && costs'.(0) < costs.(0)
-	  then Printf.eprintf " k reduced by %d\n" (costs.(0) - costs'.(0));
 	  Some (List.fold_left apply_gadget g gadgets)
 ;;
 
