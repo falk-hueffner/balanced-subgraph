@@ -192,30 +192,34 @@ let invert_coloring m =
   IntMap.fold (fun m k v -> IntMap.add m k (not v)) m IntMap.empty
 ;;
 
+let array_for_all p a =
+  let rec loop i =
+    i >= Array.length a || (p a.(i) && loop (i + 1))
+  in
+    loop 0
+;;
+
+let array_is_zero = array_for_all (fun x -> x = 0);;
+
+let can_apply v d =  
+  let rec loop i =
+    i >= Array.length v || (v.(i) - d.(i) >= 0 && loop (i + 1))
+  in
+    loop 0
+;;
+
+let normalize v =
+  let m = Array.fold_left min max_int v in
+    Array.map (fun i -> i - m) v
+;;
+
+let apply v d = Array.mapi (fun i x -> x - d.(i)) v;;
+
 let find_lincomb v vs =
   if !Util.verbose
   then Printf.eprintf "linear combination\tv = %a\n%!" (Util.output_array Util.output_int) v;
-  let normalize v =
-    let m = Array.fold_left min max_int v in
-      Array.map (fun i -> i - m) v in
-  let is_zero v =
-    let rec loop i =
-      if i >= Array.length v
-      then true
-      else v.(i) = 0 && loop (i + 1)
-    in
-      loop 0 in
-  let can_apply v d =
-    let rec loop i =
-      if i >= Array.length v
-      then true
-      else v.(i) - d.(i) >= 0 && loop (i + 1)
-    in
-      loop 0 in
-  let apply v d =
-    Array.mapi (fun i x -> x - d.(i)) v in
   let rec loop v vs' max_cost =
-    if is_zero v
+    if array_is_zero v
     then Some (0, [], [])
     else
       match vs' with
