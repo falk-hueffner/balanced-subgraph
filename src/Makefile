@@ -1,6 +1,6 @@
 PACKAGE	  = bsg
 VER	  = 1.0
-EXECS	  = bsg gen-bsg
+EXECS	  = bsg gen-bsg tanglegram
 
 SOURCES   = \
 	Util.ml		\
@@ -30,7 +30,7 @@ CFLAGS   += -O3 $(shell gcc-arch) $(PROFILE) -funroll-all-loops -ffast-math
 CFLAGS   += -W -Wall
 #CFLAGS  += -DNDEBUG
 
-all: depend $(EXECS) doc/index.html
+all: $(EXECS) doc/index.html
 
 OBJS	  = $(SOURCES:.ml=.cmx)
 C_OBJS	  = $(C_SOURCES:.c=.o)
@@ -49,6 +49,12 @@ gen-bsg: $(OBJS) $(C_OBJS) gen-bsg.cmx
 
 find-gadgets: $(OBJS) $(C_OBJS) find-gadgets.cmx
 	$(OCAMLOPT) $(PROFILE) -o $@ $(LIBS) $^
+
+tanglegram.cmx: tanglegram.ml
+	$(OCAMLOPT) -pp camlp4o $(PROFILE) -c $<
+
+tanglegram: $(OBJS) $(C_OBJS) tanglegram.cmx
+	$(OCAMLOPT) -pp camlp4o $(PROFILE) -o $@ $(LIBS) $^
 
 doc/index.html: $(MLIS)
 	mkdir -p doc
@@ -89,10 +95,8 @@ realclean: clean
 	rm -rf doc
 	rm -f *~ *.old *.bak
 
-.depend: depend
-
 depend: $(SOURCES)
-	$(OCAMLDEP) *.mli *.ml > .depend
+	$(OCAMLDEP) -pp camlp4o *.mli *.ml > .depend
 	$(CC) $(CFLAGS) -MM *.c >> .depend
 
 include .depend
