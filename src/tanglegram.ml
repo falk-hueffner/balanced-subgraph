@@ -1,5 +1,5 @@
 (* bsg -- solve the balanced subgraph problem
-   Copyright (C) 2006  Falk Hüffner
+   Copyright (C) 2009  Falk Hüffner
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -20,16 +20,16 @@
 type 'a tree = Leaf of 'a | Node of 'a tree * 'a tree;;
 
 let rec fold_dfs f accu = function
-    Leaf(x) -> f accu x
-  | Node(t1, t2) ->
+    Leaf x -> f accu x
+  | Node (t1, t2) ->
       let accu = fold_dfs f accu t1 in
       let accu = fold_dfs f accu t2 in
 	accu
 ;;
 
 let rec map f = function
-    Leaf(x) -> Leaf(f x)
-  | Node(t1, t2) -> Node(map f t1, map f t2)
+    Leaf x -> Leaf (f x)
+  | Node (t1, t2) -> Node (map f t1, map f t2)
 ;;
 
 let lex = Genlex.make_lexer ["("; ")"; ","];;
@@ -69,7 +69,7 @@ and parse_tuple = parser
 
 let rec output_tree printer channel = function
     Leaf s -> printer channel s
-  | Node(t1, t2) ->
+  | Node (t1, t2) ->
       Printf.fprintf channel "(%a,%a)" (output_tree printer) t1 (output_tree printer) t2
 ;;
 
@@ -81,20 +81,20 @@ let parse_trees s1 s2 =
   let name_of_leaf = IntMap.empty in
   let leaf_of_name = StringMap.empty in
   let rec loop name_of_leaf leaf_of_name = function
-      Leaf(s) ->
+      Leaf s ->
 	let i = IntMap.size name_of_leaf
 	in
 	  ((IntMap.add name_of_leaf i s),
 	   (StringMap.add s i leaf_of_name),
-	   Leaf(i))
-    | Node(t1, t2) ->
+	   Leaf i)
+    | Node (t1, t2) ->
 	let name_of_leaf, leaf_of_name, t1 = loop name_of_leaf leaf_of_name t1 in
 	let name_of_leaf, leaf_of_name, t2 = loop name_of_leaf leaf_of_name t2 in
 	  name_of_leaf, leaf_of_name, Node(t1, t2) in
   let name_of_leaf, leaf_of_name, t1 = loop name_of_leaf leaf_of_name t1 in
   let rec loop = function
-      Leaf(s) -> Leaf(StringMap.find s leaf_of_name)
-    | Node(t1, t2) -> Node(loop t1, loop t2) in
+      Leaf s -> Leaf (StringMap.find s leaf_of_name)
+    | Node (t1, t2) -> Node (loop t1, loop t2) in
   let t2 = loop t2 in
     t1, t2, name_of_leaf
 ;;
@@ -110,10 +110,10 @@ let read_tree_file channel =
 
 let tanglegram_to_bsg t1 t2 =
   let rec loop path i parents = function
-      Leaf(x) ->
+      Leaf x ->
 	let parents = IntMap.add parents x (List.rev path) in
 	  parents, i
-    | Node(l, r) ->
+    | Node (l, r) ->
 	let path = i :: path in
 	let i = i + 1 in
 	let parents, i = loop path i parents l in
