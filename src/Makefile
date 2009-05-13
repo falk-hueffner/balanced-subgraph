@@ -53,8 +53,14 @@ find-gadgets: $(OBJS) $(C_OBJS) find-gadgets.cmx
 tanglegram.cmx: tanglegram.ml
 	$(OCAMLOPT) -pp camlp4o $(PROFILE) -c $<
 
+tanglegram.cmo: tanglegram.ml
+	$(OCAMLC) -pp camlp4o $(PROFILE) -c $<
+
 tanglegram: $(OBJS) $(C_OBJS) tanglegram.cmx
 	$(OCAMLOPT) -pp camlp4o $(PROFILE) -o $@ $(LIBS) $^
+
+tanglegram-dbg: $(C_OBJS) $(DBG_OBJS) tanglegram.cmo 
+	$(OCAMLC) -custom -pp camlp4o $(PROFILE) -o $@ $(DBG_LIBS) $^
 
 doc/index.html: $(MLIS)
 	mkdir -p doc
