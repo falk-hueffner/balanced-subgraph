@@ -73,6 +73,10 @@ val add : t -> int -> t
     [Invalid_argument] when [i] is negative. O(log n) time.  *)
 val delete : t -> int -> t
 
+(** [delete s i] returns a set containing all elements of [s], minus
+    [i]. Raises [Invalid_argument] when [i] is negative. O(log n) time.  *)
+val remove : t -> int -> t
+
 (** [fold f s a] computes [(f iN ... (f i1 a)...)], where [i1 ... iN]
     are the elements of [s].  O(n) time.  *)
 val fold : ('a -> int -> 'a) -> t -> 'a -> 'a
