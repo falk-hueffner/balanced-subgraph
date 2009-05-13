@@ -15,7 +15,7 @@
    with this program; if not, write to the Free Software Foundation, Inc.,
    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.  *)
 
-(** The BSG solving algorithm.  *)
+(** Signed graph type and balanced coloring algorithm.  *)
 
 module StringMap : Map.S
 
@@ -31,6 +31,9 @@ type t = edge ELGraph.t
 (** Number of edges, accounting for multiple edges.  *)
 val num_edges : t -> int
 
+(** [is_negative g i j] returns true if [{i, j}] is negative in [g].  *)
+val is_negative : t -> int -> int -> bool
+  
 (** Read description from a channel. See README for the input format.  *)
 val input : in_channel -> (t * int StringMap.t * string IntMap.t)
 

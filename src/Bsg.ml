@@ -26,6 +26,11 @@ type t = edge ELGraph.t;;
 
 let num_edges g = ELGraph.fold_edges (fun m _ _ { eq = eq; ne = ne } -> m + eq + ne) g 0;;
 
+let is_negative g i j =
+  match ELGraph.get_label g i j with
+      { eq = eq; ne = ne } -> ne > eq
+;;
+
 let strip_comment s =
   if String.contains s '#' then String.sub s 0 (String.index s '#') else s
 ;;
