@@ -341,6 +341,27 @@ let make_cut_gadget g c costs gadgets =
       | Some gadgets -> Some (List.fold_left apply_gadget g gadgets)
 ;;
 
+(* merge w into v *)
+let merge_vertices g v w =
+  let invert ({eq = eq; ne = ne} as label) =
+    if Bsg.is_negative g v w then {eq = ne; ne = eq} else label in
+  let label_plus {eq = eq1; ne = ne1} {eq = eq2; ne = ne2} =
+    let eq = eq1 + eq2 and ne = ne1 + ne2 in
+    let m = min eq ne in
+      {eq = eq - m; ne = ne - m} in
+    (*     {eq = eq1 + eq2; ne = ne1 + ne2} in *)
+  let nw = ELGraph.neighbors g w in
+  let g = ELGraph.delete_vertex g w in
+    IntMap.fold
+      (fun g x wxlabel ->
+	 let label = ELGraph.get_label_default g v x {eq = 0; ne = 0} in
+	 let label = label_plus label (invert wxlabel) in
+	   if label.eq = 0 && label.ne = 0
+	   then ELGraph.unconnect g v x
+	   else ELGraph.set_label g v x label)
+      nw g
+;;
+
 let unreducible_sc = Hashtbl.create 31;;
 
 let rec solve_all_colorings g c =
@@ -386,7 +407,7 @@ and solve_cut_corner g =
   if !Util.verbose
   then Printf.eprintf "cut corner\tn = %3d m = %4d (%4d)\n%!"
     (ELGraph.num_vertices g) (ELGraph.num_edges g) (Bsg.num_edges g);
-  if !Util.max_cut_size < 2 || ELGraph.num_vertices g <= 10 then solve_brute_force g else
+  if !Util.max_cut_size < 2 || ELGraph.num_vertices g <= 10 then solve_heavy_edge g else
   let deg2 =
     ELGraph.fold_vertices
       (fun deg2 i n ->
@@ -404,7 +425,7 @@ and solve_cut_corner g =
        then compare (IntSet.size c1) (IntSet.size c2)
        else compare (IntSet.size s2) (IntSet.size s1)) scs in
   let rec loop = function
-      [] -> solve_brute_force g
+      [] -> solve_heavy_edge g
     | (s, c) :: rest ->
 	if !Util.verbose then Printf.eprintf " |C| = %d |S| = %d\n%!"
 	  (IntSet.size c) (IntSet.size s);
@@ -447,6 +468,61 @@ and solve_cut_corner g =
 	    merge_colorings coloring coloring_sc
   in
     loop scs
+
+and solve_heavy_edge g =
+  if 1 = 0 then solve_brute_force g else
+  if ELGraph.num_vertices g <= 5 then solve_brute_force g else let () = () in
+  if !Util.verbose
+  then Printf.eprintf "solve_heavy_edge\tn = %3d m = %4d (%4d)\n%!"
+    (ELGraph.num_vertices g) (ELGraph.num_edges g) (Bsg.num_edges g);
+(*     Printf.eprintf "  initial: %a\n" Bsg.output g; *)
+  let to_check = ELGraph.vertex_set g in
+  let same x = x in
+  let rec loop g to_check merged =
+    if IntSet.is_empty to_check then g, merged
+    else
+      let i, to_check = IntSet.pop to_check in
+      let maxj, maxw, sumw =
+	IntMap.fold
+	  (fun (maxj, maxw, sumw) j {eq = eq; ne = ne} ->
+	     let w = eq + ne - (min eq ne) in
+	     let sumw = sumw + w
+	     in
+	       if w >= maxw then j, w, sumw
+	       else maxj, maxw, sumw)
+	  (ELGraph.neighbors g i) (-1, -1, 0)
+      in
+	if maxw >= sumw - maxw then
+	  (if !Util.verbose
+	   then Printf.eprintf " merge %d %d (w = %d sum = %d)\n" i maxj maxw sumw;
+(* 	     Printf.eprintf "  before: %a\n" Bsg.output g; *)
+	   let op = if Bsg.is_negative g i maxj then not else same in
+	   let g = merge_vertices g i maxj in
+	   let g = ELGraph.disconnect g i i in
+(* 	     Printf.eprintf "  merged: %a\n" Bsg.output g; *)
+	   let merged = IntMap.add merged maxj (i, op) in
+	   let to_check = IntSet.remove to_check maxj in
+	   let to_check =
+	     ELGraph.fold_neighbors
+	       (fun to_check j _ -> IntSet.put to_check j) g i to_check
+	   in
+(* 	     IntMap.output Util.output_int stderr merged; prerr_newline (); *)
+	     loop g to_check merged)
+	else loop g to_check merged in
+  let g, merged = loop g to_check IntMap.empty in
+  let rec lookup coloring v =
+    match IntMap.get_opt merged v with
+	None -> IntMap.get coloring v
+      | Some (w, op) -> op (lookup coloring w)
+  in
+    if IntMap.is_empty merged
+    then solve_brute_force g
+    else
+      (* restart, might have double edges, self loops, or zero weight edges  *)
+      let coloring = solve g in
+	IntMap.fold
+	  (fun coloring v _ -> IntMap.add coloring v (lookup coloring v))
+	  merged coloring
 
 and solve_biconnected g =
   if !Util.verbose
