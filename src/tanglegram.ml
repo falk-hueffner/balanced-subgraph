@@ -186,10 +186,10 @@ let () =
   if false then begin
     ELGraph.iter_edges
       (fun i j l ->
-	 for i = 0 to l.Bsg.eq - 1 - min l.Bsg.eq  l.Bsg.ne do	
+	 for k = 1 to l.Bsg.eq - min l.Bsg.eq l.Bsg.ne do	
 	   Printf.printf "%d %d 0\n" i j
 	 done;
-	 for i = 0 to l.Bsg.ne - 1 - min l.Bsg.eq  l.Bsg.ne do	
+	 for k = 1 to l.Bsg.ne - min l.Bsg.eq l.Bsg.ne do	
 	   Printf.printf "%d %d 1\n" i j
 	 done)
       g;
