@@ -183,6 +183,18 @@ let () =
   let t1, t2, name_of_leaf = parse_trees s1 s2 in
   let start = Util.timer () in
   let g = tanglegram_to_bsg t1 t2 in
+  if false then begin
+    ELGraph.iter_edges
+      (fun i j l ->
+	 for i = 0 to l.Bsg.eq - 1 - min l.Bsg.eq  l.Bsg.ne do	
+	   Printf.printf "%d %d 0\n" i j
+	 done;
+	 for i = 0 to l.Bsg.ne - 1 - min l.Bsg.eq  l.Bsg.ne do	
+	   Printf.printf "%d %d 1\n" i j
+	 done)
+      g;
+    exit 0;
+  end;
   if !stats_only
   then
     Printf.printf "%5d %6d %!" (ELGraph.num_vertices g) (Bsg.num_edges g);
