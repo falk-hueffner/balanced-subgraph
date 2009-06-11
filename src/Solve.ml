@@ -108,35 +108,55 @@ let solve_iterative_compression g =
 	   let j = IntMap.get_default s_of_t j j in
 	     i, j)
 	cover in
-      g, cover in
-  let _, cover =    
-    ELGraph.fold_edges
-      (fun (g, cover) i j l ->
-	 let g = ELGraph.set_vertex g i in
-	 let g = ELGraph.set_vertex g j in
-	 let deq = if l.eq > 0 then 1 else 0 in
-	 let dne = if l.ne > 0 then 1 else 0 in
-	   Util.fold_n
-	     (fun (g, cover) _ ->
-		let g = ELGraph.modify_label_default
-		  (fun {eq = eq; ne = ne} -> {eq = eq + deq; ne = ne + dne})
-		  g i j {eq = 0; ne = 0}
-		in
-		  if not (Util.list_contains cover (i, j))
-		    && (is_sign_consistent
-			  (List.fold_left (fun g (i, j) -> ELGraph.disconnect g i j) g cover))
-		  then g, cover
-		  else
-		    let cover =
-		      if  not (Util.list_contains cover (i, j))
-		      then (i, j) :: cover
-		      else cover
+      cover in
+  let cover =
+    if !Util.downward_compress
+    then
+      let rndcol = ELGraph.fold_vertices
+	(fun rndcol i _ -> IntMap.add rndcol i (Random.bool ())) g IntMap.empty in
+      let cover =
+	ELGraph.fold_edges
+	  (fun cover i j l ->
+	     let (=@) = if Bsg.is_negative g i j then (<>) else (=) in
+	       if IntMap.get rndcol i =@ IntMap.get rndcol j
+	       then cover else (i, j) :: cover)
+	  g [] in
+      let rec loop cover =
+	let cover' = compress g cover in
+	  if cover' <> cover then loop cover' else cover
+      in
+	loop cover    
+    else
+      let _, cover =	
+	ELGraph.fold_edges
+	  (fun (g, cover) i j l ->
+	     let g = ELGraph.set_vertex g i in
+	     let g = ELGraph.set_vertex g j in
+	     let deq = if l.eq > 0 then 1 else 0 in
+	     let dne = if l.ne > 0 then 1 else 0 in
+	       Util.fold_n
+		 (fun (g, cover) _ ->
+		    let g = ELGraph.modify_label_default
+		      (fun {eq = eq; ne = ne} -> {eq = eq + deq; ne = ne + dne})
+		      g i j {eq = 0; ne = 0}
 		    in
-		      compress g cover)
-	     (max l.eq l.ne)
-	     (g, cover))
-      g
-      (ELGraph.empty, []) in
+		      if not (Util.list_contains cover (i, j))
+			&& (is_sign_consistent
+			      (List.fold_left (fun g (i, j) -> ELGraph.disconnect g i j) g cover))
+		      then g, cover
+		      else
+			let cover =
+			  if  not (Util.list_contains cover (i, j))
+			  then (i, j) :: cover
+			  else cover
+			in
+			  g, compress g cover)
+		 (max l.eq l.ne)
+		 (g, cover))
+	  g
+	  (ELGraph.empty, [])
+      in
+	cover in
   let g' = List.fold_left (fun g' (i, j) -> ELGraph.unconnect g' i j) g cover in
     color g'
 ;;

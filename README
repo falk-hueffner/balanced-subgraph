@@ -1,12 +1,19 @@
 This package contains the source and the test data for a solver for
 the Balanced Subgraph problem, based on data reduction rules and
-iterative compression. It is described in the paper:
+iterative compression. It is described in the papers:
 
   Falk Hüffner, Nadja Betzler, and Rolf Niedermeier:
   Optimal Edge Deletions for Signed Graph Balancing.
   In Proceedings of the 6th Workshop on Experimental Algorithms (WEA'07),
   Rome, Italy. June 2007.
   Lecture Notes in Computer Science, Springer.
+
+  Falk Hüffner, Nadja Betzler, and Rolf Niedermeier:
+  Separator-based data reduction for signed graph balancing.
+  Journal of Combinatorial Optimization.
+  Accepted for publication, January 2009.
+  http://dx.doi.org/10.1007/s10878-009-9212-2
+  (extended version of the WEA '07 paper)
 
 A signed graph is a graph whose edges are labelled positive or
 negative. A signed graph is said to be balanced if the set of negative
@@ -64,6 +71,11 @@ $ ./bsg < test/rand02.graph
 Option "-c" controls the size of cuts sought for in the data reduction
 rules. Default is 4.
 
+Option "-d" starts the iterative compression solver with a heuristic
+solution instead of building up the graph inductively. This forfeits
+the worst-case bound, and is often slower, but gives good results for
+certain types of input (in particular, with many parallel edges).
+
 With "-s", one gets only a single line of output containing some
 statistics:
 
@@ -71,7 +83,8 @@ statistics:
   193    493    12       0.26       34
 
 
-Here, k is size of solution and n' the number of vertices of the largest remaining component after data reduction.
+Here, k is size of solution and n' the number of vertices of the
+largest remaining component after data reduction.
 
 With "-v" you get some information about the progress of the programm..
 
@@ -87,7 +100,7 @@ glpk 4.8.
 Test data
 =========
 
-The directory "test" contains some random test instances.
+The directory "test" contains some assorted test instances.
 
 -- Falk Hüffner (http://theinf1.informatik.uni-jena.de/~hueffner/)
    11 January 2007

@@ -180,7 +180,8 @@ static value find_cut_partition(struct vertex **g, unsigned n,
 				bool *is_s, bool *is_t, unsigned k) {
     for (unsigned i = 0; i < k; i++) {	
 	if (augment_many_many(g, n, s, n_s, is_t) == (unsigned) -1) {
-	    assert(i == k - 1);
+	    // assertion not valid with downward compression
+	    // assert(i == k - 1);
 	    goto found_cut;
 	}
     }
@@ -214,7 +215,8 @@ static value find_cut_partition(struct vertex **g, unsigned n,
 	for (unsigned i = 0; i < augmentations; i++) {
 	    unsigned target = augment_many_many(g, n, s, n_s, is_t);
 	    if (target == (unsigned) -1) {
-		assert(i == augmentations - 1);
+		// assertion not valid with downward compression
+		// assert(i == augmentations - 1);
 		goto found_cut;
 	    }
 	}
