@@ -40,6 +40,7 @@ snp24        28
 snp08        10
 snp15        24
 snp20        28
+tang04      218
 snp11        16
 snp12         3
 test09        1
@@ -47,6 +48,8 @@ snp13        12
 test15        1
 snp09         8
 snp19        34
+tang03      767
+tang01      638
 snp17        20
 snp06         4
 snp07         9
@@ -54,6 +57,7 @@ rand03        7
 test34        5
 rand01       11
 snp21        27
+tang02      839
 snp14        16
 rand02        7
 snp10        11
