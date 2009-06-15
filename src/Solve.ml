@@ -112,15 +112,7 @@ let solve_iterative_compression g =
   let cover =
     if !Util.downward_compress
     then
-      let rndcol = ELGraph.fold_vertices
-	(fun rndcol i _ -> IntMap.add rndcol i (Random.bool ())) g IntMap.empty in
-      let cover =
-	ELGraph.fold_edges
-	  (fun cover i j l ->
-	     let (=@) = if Bsg.is_negative g i j then (<>) else (=) in
-	       if IntMap.get rndcol i =@ IntMap.get rndcol j
-	       then cover else (i, j) :: cover)
-	  g [] in
+      let cover = Bsg.cover g (Bsg.heuristic g) in
       let rec loop cover =
 	let cover' = compress g cover in
 	  if cover' <> cover then loop cover' else cover

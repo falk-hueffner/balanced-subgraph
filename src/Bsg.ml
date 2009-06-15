@@ -181,3 +181,48 @@ let is_sign_consistent g =
   with
       Not_sign_consistent -> false
 ;;
+
+let cover g colors =
+  ELGraph.fold_edges
+    (fun cover i j l ->
+       let (=@) = if is_negative g i j then (<>) else (=) in
+	 if IntMap.get colors i =@ IntMap.get colors j
+	 then cover else (i, j) :: cover)
+    g []
+;;
+
+let heuristic1 g =
+  let colors = ELGraph.fold_vertices
+    (fun colors i _ -> IntMap.add colors i (Random.bool ())) g IntMap.empty in
+  let todo = ELGraph.vertex_set g in
+  let rec loop colors todo =
+    if IntSet.is_empty todo
+    then colors
+    else
+      let i, todo = IntSet.pop todo in
+      let colors' = IntMap.modify not colors i in
+	if coloring_cost g colors' < coloring_cost g colors
+	then
+	  let new_todo =
+	    IntMap.fold (fun new_todo i _ -> IntSet.add new_todo i) (ELGraph.neighbors g i) IntSet.empty
+	  in
+	    loop colors' (IntSet.union todo new_todo)
+	else loop colors todo
+  in
+    loop colors todo
+;;
+
+let heuristic g =
+  let colors = IntMap.empty in
+  let cost = max_int in
+  let rec loop cost colors i =
+    if i <= 0 then colors
+    else
+      let colors' = heuristic1 g in
+      let cost' = coloring_cost g colors' in
+	if cost' < cost
+	then loop cost' colors' (pred i)
+	else loop cost  colors  (pred i)
+  in
+    loop cost colors 13
+;;

@@ -55,3 +55,7 @@ val color : t -> bool IntMap.t
 (** [coloring_cost g c] returns the number of inconsistent edges of
     [g] colored by [c]. O(m log n) time. *)
 val coloring_cost : t -> bool IntMap.t -> int
+
+val heuristic : t -> bool IntMap.t
+
+val cover : t -> bool IntMap.t -> (int * int) list
