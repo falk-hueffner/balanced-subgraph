@@ -18,19 +18,57 @@
 open Bsg;;				(* for the record field labels *)
 
 let vertex_cover g =
-  let rec loop s g =
-    if ELGraph.num_edges g = 0
-    then s
-    else
-      let i, j, _ = ELGraph.choose_edge g in
-	if      ELGraph.deg g i = 1 then loop (IntSet.add s j) (ELGraph.delete_vertex g j)
-	else if ELGraph.deg g j = 1 then loop (IntSet.add s i) (ELGraph.delete_vertex g i)
-	else
-	  let si = loop (IntSet.add s i) (ELGraph.delete_vertex g i) in
-	  let sj = loop (IntSet.add s j) (ELGraph.delete_vertex g j) in
-	    if IntSet.size si < IntSet.size sj then si else sj
+  let rec vertex_cover' g max_vc =
+    let rec loop g vc m md todo =
+      if IntSet.is_empty todo
+      then g, vc, m, md
+      else
+	let i, todo = IntSet.pop todo in
+	let d = ELGraph.deg g i in
+	let g = if d = 0 then ELGraph.delete_vertex g i else g in
+	let g, vc, todo =
+	  if d = 1 then
+	    let j = IntMap.min_key (ELGraph.neighbors g i) in
+	    let g = ELGraph.delete_vertex g i in
+	    let todo = ELGraph.fold_neighbors (fun todo k _ -> IntSet.put todo k) g j todo in
+	    let g = ELGraph.delete_vertex g j in
+	    let todo = IntSet.remove todo j in
+	    let vc = IntSet.add vc j in
+	      g, vc, todo
+	  else g, vc, todo in
+	let m, md = if d >= 2 && d > m then i, d else m, md in
+	  loop g vc m md todo in
+    let g, vc, m, md = loop g IntSet.empty (-1) 0 (ELGraph.vertex_set g) in
+    let m, md =
+      ELGraph.fold_vertices
+	(fun (m, md) i n_i ->
+	   let d = IntMap.size n_i in
+	     if d > m then i, d else m, md)
+	g (-1, 0)
+    in
+      if md = 0 then Some vc
+      else
+	match
+	  let g' = ELGraph.delete_vertex g m in
+	  let vc1 = vertex_cover' g' (max_vc - 1) in
+	  let g' = ELGraph.fold_neighbors (fun g' i _ -> ELGraph.delete_vertex g' i) g m g' in
+	  let max_vc' = match vc1 with None -> max_vc | Some vc -> IntSet.size vc - 1 in
+	  let vc2 = vertex_cover' g' (max_vc' - md) in
+	    match vc1, vc2 with
+		None, None -> failwith "vertex_cover"
+	      | Some vs1, None -> vc1
+	      | None, Some vs2 -> vc2
+	      | Some vs1, Some vs2 ->
+		  if IntSet.size vs1 + 1 <= IntSet.size vs2 + md
+		  then Some (IntSet.add vs1 m)
+		  else Some (ELGraph.fold_neighbors (fun vs2 i _ -> IntSet.add vs2 i) g m vs2)
+	with
+	    None -> None
+	  | Some vc' -> Some (IntSet.union vc vc')
   in
-    loop IntSet.empty g
+    match vertex_cover' g max_int with
+	Some vs -> vs
+      | None -> failwith "vertex_cover"
 ;;
 
 let gray_code x = x lxor (x lsr 1);;
