@@ -27,11 +27,6 @@ let rec fold_dfs f accu = function
 	accu
 ;;
 
-let rec map f = function
-    Leaf x -> Leaf (f x)
-  | Node (t1, t2) -> Node (map f t1, map f t2)
-;;
-
 let lex = Genlex.make_lexer ["("; ")"; ","];;
 
 type token = Lparen | Rparen | Comma | String of string;;
@@ -65,7 +60,6 @@ let rec parse_tree = parser
 and parse_tuple = parser
     [< t1 = parse_tree; 'Comma; t2 = parse_tree; >] -> Node(t1, t2)
 ;;
-
 
 let rec output_tree printer channel = function
     Leaf s -> printer channel s
