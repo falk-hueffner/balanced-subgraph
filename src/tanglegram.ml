@@ -27,8 +27,6 @@ let rec fold_dfs f accu = function
 	accu
 ;;
 
-let lex = Genlex.make_lexer ["("; ")"; ","];;
-
 type token = Lparen | Rparen | Comma | String of string;;
 
 let rec find_first_of s pat p0 =
