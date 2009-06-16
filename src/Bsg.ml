@@ -200,8 +200,16 @@ let heuristic1 g =
     then colors
     else
       let i, todo = IntSet.pop todo in
+      let col_i = IntMap.get colors i in
+      let sat, unsat =
+	ELGraph.fold_neighbors
+	  (fun (sat, unsat) j {eq=eq; ne=ne} ->
+	     if col_i = IntMap.get colors j
+	     then sat + eq, unsat + ne
+	     else sat + ne, unsat + eq)
+	  g i (0, 0) in
       let colors' = IntMap.modify not colors i in
-	if coloring_cost g colors' < coloring_cost g colors
+	if unsat > sat
 	then
 	  let new_todo =
 	    IntMap.fold (fun new_todo i _ -> IntSet.add new_todo i) (ELGraph.neighbors g i) IntSet.empty
