@@ -37,14 +37,15 @@ let rec find_first_of s pat p0 =
 
 let lex s =
   let pos = ref 0 in
-  let next_token pos =
+  let rec next_token pos =
     if !pos >= String.length s
     then None
     else match s.[!pos] with
-	'(' -> incr pos; Some Lparen
+	' ' | '\t' -> incr pos; next_token pos
+      | '(' -> incr pos; Some Lparen
       | ')' -> incr pos; Some Rparen
       | ',' -> incr pos; Some Comma
-      | _ -> let pos2 = find_first_of s "()," !pos in
+      | _ -> let pos2 = find_first_of s "(), \t" !pos in
 	let str = String.sub s !pos (pos2 - !pos) in
 	  pos := pos2;
 	  Some (String str)
@@ -93,11 +94,9 @@ let parse_trees s1 s2 =
 
 let read_tree_file channel =
   let l1 = input_line channel in
-  let l2 = input_line channel in
-  let l3 = input_line channel in
-    if l1 <> "TCG 2.0" then
-      raise (Failure "read_tree_file");
-    l2, l3
+    if l1 = "TCG 2.0"
+    then input_line channel, input_line channel
+    else l1, input_line channel
 ;;
 
 let tanglegram_to_bsg t1 t2 =
