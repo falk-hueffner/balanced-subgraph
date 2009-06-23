@@ -166,8 +166,8 @@ let stats_only = ref false;;
 let specs = [
   ("-c", Arg.Set_int(Util.max_cut_size),
          "Set maximum cut size for data reduction (0..4)");
-  ("-d", Arg.Set(Util.downward_compress),
-         "Start iterative compression with heuristic solution");
+  ("-u", Arg.Clear(Util.downward_compress),
+         "Use induction for iterative compression");
   ("-s", Arg.Set(stats_only),
          "Print statistics only");
   ("-v", Arg.Set(Util.verbose),
@@ -175,6 +175,7 @@ let specs = [
 ];;
 
 let () =
+  Util.downward_compress := true;
   Arg.parse specs (fun _ -> Arg.usage specs usage_msg) usage_msg;
   if !Util.max_cut_size < 0 || !Util.max_cut_size > 4 then begin
     Printf.eprintf "maximum cut size must be 0..4\n";
