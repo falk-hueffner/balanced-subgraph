@@ -93,10 +93,18 @@ let parse_trees s1 s2 =
 ;;
 
 let read_tree_file channel =
-  let l1 = input_line channel in
-    if l1 = "TCG 2.0"
-    then input_line channel, input_line channel
-    else l1, input_line channel
+  let rec loop trees =
+    try
+      let l = input_line channel in
+      let l = if String.contains l '#' then String.sub l 0 (String.index l '#') else l in
+      let l = Util.strip l in
+	if l = "TCG 2.0" || l = "" then loop trees
+	else loop (l :: trees)
+    with End_of_file -> trees
+  in
+    match loop [] with
+	[l1; l2] -> l1, l2
+      | _ -> raise (Failure "Need exactly two trees")
 ;;
 
 let tanglegram_to_bsg t1 t2 =
