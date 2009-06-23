@@ -52,6 +52,8 @@ val output_list : (out_channel -> 'a -> unit) -> out_channel -> 'a list -> unit
     channel [c], using [p] to print values.  *)
 val output_array : (out_channel -> 'a -> unit) -> out_channel -> 'a array -> unit
 
+val strip : string -> string
+  
 (** [split_string s] splits the string [s] into a list of strings
     which are separated by whitespace.  *)
 val split_string : string -> string list

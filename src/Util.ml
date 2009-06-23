@@ -73,6 +73,18 @@ let is_whitespace = function
   | _ -> false
 ;;
 
+let strip s =
+  let rec find_start p =
+    if p >= String.length s || not (is_whitespace s.[p]) then p
+    else find_start (p + 1) in
+  let rec find_end p =
+    if p <= 0 || not (is_whitespace s.[p]) then p + 1
+    else find_end (p - 1) in
+  let start = find_start 0 in
+  let end' = find_end (String.length s - 1) in
+    String.sub s start (end' - start)
+;;
+
 let split_string s =
   let rec loop p word_start words =
     if p > String.length s then words
