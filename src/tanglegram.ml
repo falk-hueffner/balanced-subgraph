@@ -55,9 +55,9 @@ let lex s =
 
 let rec parse_tree = parser
     [< 'Lparen; t = parse_tuple; 'Rparen >] -> t
-  | [< 'String s >] -> Leaf(s)
+  | [< 'String s >] -> Leaf s
 and parse_tuple = parser
-    [< t1 = parse_tree; 'Comma; t2 = parse_tree; >] -> Node(t1, t2)
+    [< t1 = parse_tree; 'Comma; t2 = parse_tree; >] -> Node (t1, t2)
 ;;
 
 let rec output_tree printer channel = function
@@ -83,7 +83,7 @@ let parse_trees s1 s2 =
     | Node (t1, t2) ->
 	let name_of_leaf, leaf_of_name, t1 = loop name_of_leaf leaf_of_name t1 in
 	let name_of_leaf, leaf_of_name, t2 = loop name_of_leaf leaf_of_name t2 in
-	  name_of_leaf, leaf_of_name, Node(t1, t2) in
+	  name_of_leaf, leaf_of_name, Node (t1, t2) in
   let name_of_leaf, leaf_of_name, t1 = loop name_of_leaf leaf_of_name t1 in
   let rec loop = function
       Leaf s -> Leaf (StringMap.find s leaf_of_name)
@@ -155,8 +155,7 @@ let tanglegram_to_bsg t1 t2 =
 	     g lca_t1 (n + lca_t2) { Bsg.eq = 0; Bsg.ne = 0 })
       g leaves_t1
   in
-    g
-      
+    g      
 ;;
 
 let usage_msg = "Find optimal tanglegrams";;
@@ -210,14 +209,14 @@ let () =
       Printf.printf "%5d %10.2f %3d\n" k (stop -. start) !Util.max_unreducible_size
     else
       let rec loop i = function
-	  Node(l, r) ->
+	  Node (l, r) ->
 	    let swap = IntMap.get colors i in
 	    let i = i + 1 in
 	    let l, i = loop i l in
 	    let r, i = loop i r in
 	      if swap
-	      then Node(r, l), i
-	      else Node(l, r), i
+	      then Node (r, l), i
+	      else Node (l, r), i
 	| leaf -> leaf, i in
       let t1', _ = loop 0 t1 in
       let t2', _ = loop n t2 in
