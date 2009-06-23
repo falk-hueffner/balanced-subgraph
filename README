@@ -20,6 +20,13 @@ negative. A signed graph is said to be balanced if the set of negative
 edges form a cut. The Balanced Subgraph problem is to find a minimum
 cardinality set of edges whose deletion makes the graph balanced.
 
+Further it contains the source for a solver for the Tanglegram Layout
+problem, based on a reduction to Balanced Subgraph. The Tanglegram
+Layout problem is, given two binary phylogenetic trees covering the
+same species, to arrange them leaves side-by-side such that a minimum
+number of crossings is induced by connecting pairs of identical
+species.
+
 The current version can be obtained at
 http://theinf1.informatik.uni-jena.de/bsg/. It is distributed under
 the terms of the GNU General Public License (GPL, see COPYING).
@@ -35,14 +42,21 @@ It has been tested on:
 * Debian GNU/Linux (i386) 3.1 with Objective Caml 3.08.3 and gcc 3.3.5
   (Debian 1:3.3.5-13)
 * Debian GNU/Linux (alpha) 4.0 with Objective Caml 3.09.2 and gcc 4.2.0
+* Sun Solaris 10 (i386) 8/07 with Objective Caml 3.11.1 and gcc 3.4.3
 
-The program is called "bsg". By default, it reads a graph from
-standard input and writes it to standard output (note that on Unix
-systems, you can close standard input from the keyboard with
-Control-d). The graph format is a simple text format, where each line
-describes one edge, given by its two endpoints separated by
-whitespace, plus an optional edge label (0 or 1):
 
+Balanced Subgraph solver
+========================
+
+The program is called "bsg". It reads a graph from standard input and
+writes it to standard output (note that on Unix systems, you can close
+standard input from the keyboard with Control-d). The graph format is
+a simple text format, where each line describes one edge, given by its
+two endpoints separated by whitespace, plus an optional edge label (0
+or 1). Comment text starting with '#' will be ignored up to the next
+newline. Example:
+
+# graph
 v0 v1 1
 v1 v2
 v2 v0 0
@@ -88,13 +102,43 @@ largest remaining component after data reduction.
 
 With "-v" you get some information about the progress of the programm..
 
-ILP based solver
-================
+ILP based Balanced Subgraph solver
+==================================
 
 The Python script "bsg-lp" solves the Balanced Subgraph problem by
 calling the ILP solver "glpsol" from the glpk package
 (http://www.gnu.org/software/glpk/glpk.html). It has been tested with
-glpk 4.8.
+glpk 4.8. It is typically much slower than "bsg" and only included for
+verification purposes.
+
+
+Tanglegram Layout solver
+========================
+
+The program is called "tanglegram". By default, it reads a pair of
+trees from standard input and writes the solution to standard output
+(note that on Unix systems, you can close standard input from the
+keyboard with Control-d). The input format is a simple text format,
+where each of the two trees is on one line, with tree structure
+indicated by nesting brackets. Comment text starting with '#' will be
+ignored up to the next newline. Example:
+
+# tree
+(a, (b, c))
+((b, a), c)
+
+Vertex names can be any combination of letters, digits, and _.
+
+The output is a rearrangement of the two trees that minimizes the
+number of crossings when connecting identical species. Example:
+
+$ printf "(a, (b, c))\n((b, a), c)\n" | ./tanglegram
+((a,b),c)
+(a,(b,c))
+
+Options "-c", "-s", and "-v" are as for the Balanced Subgraph solver.
+Option "-d" is default, since it often speeds up computation
+considerably; the original behavior can be restored with "-u".
 
 
 Test data
@@ -102,5 +146,13 @@ Test data
 
 The directory "test" contains some assorted test instances.
 
+
+Version history
+===============
+
+1.0	2007-04-11	initial release
+2.0	2009-06-23	tanglegram solver, new reduction rules, "-d" option
+
+
 -- Falk Hüffner (http://theinf1.informatik.uni-jena.de/~hueffner/)
-   11 January 2007
+   23 June 2009
