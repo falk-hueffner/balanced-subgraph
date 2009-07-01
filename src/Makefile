@@ -1,5 +1,5 @@
 PACKAGE	  = bsg
-VER	  = 1.0
+VER	  = 2.0
 EXECS	  = bsg gen-bsg tanglegram
 
 SOURCES   = \
@@ -71,7 +71,7 @@ dist: all
 	mkdir $(PACKAGE)-$(VER)/
 	cp COPYING README $(PACKAGE)-$(VER)/
 	cp $(SOURCES) $(MLIS) $(PACKAGE)-$(VER)/
-	cp main.ml gen-bsg.ml $(PACKAGE)-$(VER)/
+	cp main.ml gen-bsg.ml tanglegram.ml $(PACKAGE)-$(VER)/
 	cp $(C_SOURCES) $(PACKAGE)-$(VER)/
 	cp Makefile .depend $(PACKAGE)-$(VER)/
 	mkdir $(PACKAGE)-$(VER)/test/
