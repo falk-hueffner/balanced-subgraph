@@ -104,7 +104,7 @@ let read_tree_file channel =
   in
     match loop [] with
 	[l1; l2] -> l1, l2
-      | _ -> raise (Failure "Need exactly two trees")
+      | _ -> failwith "Need exactly two trees"
 ;;
 
 let tanglegram_to_bsg t1 t2 =
@@ -123,7 +123,7 @@ let tanglegram_to_bsg t1 t2 =
   let leaves_t1 = List.rev (fold_dfs (fun ls l -> l :: ls) [] t1) in
   let leaves_t2 = List.rev (fold_dfs (fun ls l -> l :: ls) [] t2) in
   let rec list_pos x = function
-      [] -> raise (Failure "list_pos")
+      [] -> failwith "list_pos"
     | y :: _ when y = x -> 0
     | y :: ys -> 1 + list_pos x ys in
   let rec fold_pairs f accu = function
@@ -138,7 +138,7 @@ let tanglegram_to_bsg t1 t2 =
     in
       match (l1, l2) with
 	  x :: xs, y :: ys when x = y -> loop x (xs, ys)
-	| _ -> raise (Failure "last_common_elt") in
+	| _ -> failwith "last_common_elt" in
   let n = IntMap.size t1_parents - 1 in
   let g = Util.fold_n (fun g i -> ELGraph.add_vertex g i) (2 * n) ELGraph.empty in
   let g =
