@@ -289,7 +289,7 @@ let rec find_lincomb4 v gadgets =
     if parity v = 0 then v, [] else
       let v = if zeros v <= 1 then v else Array.map ((+) 1) v in
       let rec loop = function
-	  [] -> raise (Failure "find_lincomb4")
+	  [] -> failwith "find_lincomb4"
 	| (cost, d, edges) :: gadgets ->
 	    if parity d <> 1 || not (can_apply v d) then loop gadgets
 	    else d, edges in
@@ -303,7 +303,7 @@ let rec find_lincomb4 v gadgets =
       let v = if zeros v < 3 then v else Array.map ((+) 1) v in
       let max_i = array_max_i v in
       let rec loop2 = function
-	  [] -> raise (Failure "find_lincomb4")
+	  [] -> failwith "find_lincomb4"
 	| (cost, d, edges) :: gadgets ->
 	    if parity d <> 0 || d.(max_i) = 0 || not (can_apply v d) then loop2 gadgets
 	    else d, edges in
