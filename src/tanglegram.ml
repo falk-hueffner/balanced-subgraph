@@ -89,17 +89,19 @@ let label_tree s =
 ;;
 
 let read_tree_file channel =
-  let rec loop trees =
+  let rec loop trees edges =
     try
       let l = input_line channel in
       let l = if String.contains l '#' then String.sub l 0 (String.index l '#') else l in
       let l = Util.strip l in
-	if l = "TCG 2.0" || l = "" then loop trees
-	else loop (l :: trees)
-    with End_of_file -> trees
+	if l = "TCG 2.0" || l = "" then loop trees edges
+	else if List.length trees < 2
+	then loop (l :: trees) edges
+	else loop trees (l :: edges)
+    with End_of_file -> trees, edges
   in
-    match loop [] with
-	[l1; l2] -> l1, l2
+    match loop [] [] with
+	[l2; l1], edges -> l1, l2, edges
       | _ -> failwith "Need exactly two trees"
 ;;
 
@@ -116,7 +118,7 @@ let tanglegram_to_bsg tl tr edges =
 	  parents, i in
   let tl_parents, _ = loop [] 0 IntMap.empty tl in
   let tr_parents, _ = loop [] 0 IntMap.empty tr in
-  let tl_pos = fold_dfs (fun pos x -> IntMap.add pos x (IntMap.size pos)) IntMap.empty tl in
+  let tl_pos = fold_dfs (fun pos x -> Printf.printf "%d->%d\n" x (IntMap.size pos); IntMap.add pos x (IntMap.size pos)) IntMap.empty tl in
   let tr_pos = fold_dfs (fun pos x -> IntMap.add pos x (IntMap.size pos)) IntMap.empty tr in
   let rec fold_pairs f accu = function
       [] -> accu
@@ -173,16 +175,20 @@ let () =
     Printf.eprintf "maximum cut size must be 0..4\n";
     exit 1;
   end;
-  let s1, s2 = read_tree_file stdin in
+  let s1, s2, edges = read_tree_file stdin in
   let t1, name_of_leaf_t1, leaf_of_name_t1 = label_tree s1 in
   let t2, name_of_leaf_t2, leaf_of_name_t2 = label_tree s2 in
+  let edges = List.map
+    (fun l -> match Util.split_string l with
+	 [s1; s2] -> StringMap.find s1 leaf_of_name_t1, StringMap.find s2 leaf_of_name_t2
+       | _ -> failwith "Bad edge syntax") edges in
   let start = Util.timer () in
   let edges = IntMap.fold
     (fun edges x name_x ->
        if StringMap.mem name_x leaf_of_name_t2
        then (x, (StringMap.find name_x leaf_of_name_t2)) :: edges
        else edges)
-    name_of_leaf_t1 [] in
+    name_of_leaf_t1 edges in
   let g = tanglegram_to_bsg t1 t2 edges in
   if false then begin
     ELGraph.iter_edges
@@ -202,7 +208,7 @@ let () =
   let colors = Solve.solve g in
   let stop = Util.timer () in
   let k = Bsg.coloring_cost g colors in
-  let n = IntMap.size colors / 2
+  let n = IntMap.size name_of_leaf_t1 - 1
   in
     if !stats_only      
     then
