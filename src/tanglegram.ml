@@ -118,8 +118,6 @@ let tanglegram_to_bsg tl tr edges =
 	  parents, i in
   let tl_parents, _ = loop [] 0 IntMap.empty tl in
   let tr_parents, _ = loop [] 0 IntMap.empty tr in
-  let tl_pos = fold_dfs (fun pos x -> Printf.printf "%d->%d\n" x (IntMap.size pos); IntMap.add pos x (IntMap.size pos)) IntMap.empty tl in
-  let tr_pos = fold_dfs (fun pos x -> IntMap.add pos x (IntMap.size pos)) IntMap.empty tr in
   let rec fold_pairs f accu = function
       [] -> accu
     | x :: xs ->
@@ -140,8 +138,7 @@ let tanglegram_to_bsg tl tr edges =
     fold_pairs
       (fun g (l1, r1) (l2, r2) ->
 	 if l1 = l2 || r1 = r2 then g else
-	   let crosses = (IntMap.get tl_pos l1 < IntMap.get tl_pos l2)
-	              <> (IntMap.get tr_pos r1 < IntMap.get tr_pos r2) in
+	   let crosses = (l1 < l2) <> (r1 < r2) in
 	   let lca_tl = last_common_elt (IntMap.get tl_parents l1) (IntMap.get tl_parents l2) in
 	   let lca_tr = last_common_elt (IntMap.get tr_parents r1) (IntMap.get tr_parents r2) in
 	     ELGraph.modify_label_default
