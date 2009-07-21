@@ -68,13 +68,13 @@ let rec output_tree printer channel = function
 
 module StringMap = Map.Make(String);;
 
-let parse_trees s1 s2 =
-  let t1 = parse_tree (lex (s1)) in
-  let t2 = parse_tree (lex (s2)) in
+let label_tree s =
+  let t = parse_tree (lex (s)) in
   let name_of_leaf = IntMap.empty in
   let leaf_of_name = StringMap.empty in
   let rec loop name_of_leaf leaf_of_name = function
       Leaf s ->
+	if StringMap.mem s leaf_of_name then failwith "Duplicate leaf label" else
 	let i = IntMap.size name_of_leaf
 	in
 	  ((IntMap.add name_of_leaf i s),
@@ -84,12 +84,8 @@ let parse_trees s1 s2 =
 	let name_of_leaf, leaf_of_name, t1 = loop name_of_leaf leaf_of_name t1 in
 	let name_of_leaf, leaf_of_name, t2 = loop name_of_leaf leaf_of_name t2 in
 	  name_of_leaf, leaf_of_name, Node (t1, t2) in
-  let name_of_leaf, leaf_of_name, t1 = loop name_of_leaf leaf_of_name t1 in
-  let rec loop = function
-      Leaf s -> Leaf (StringMap.find s leaf_of_name)
-    | Node (t1, t2) -> Node (loop t1, loop t2) in
-  let t2 = loop t2 in
-    t1, t2, name_of_leaf
+  let name_of_leaf, leaf_of_name, t = loop name_of_leaf leaf_of_name t in
+    t, name_of_leaf, leaf_of_name
 ;;
 
 let read_tree_file channel =
@@ -107,7 +103,7 @@ let read_tree_file channel =
       | _ -> failwith "Need exactly two trees"
 ;;
 
-let tanglegram_to_bsg t1 t2 =
+let tanglegram_to_bsg tl tr edges =
   let rec loop path i parents = function
       Leaf x ->
 	let parents = IntMap.add parents x (List.rev path) in
@@ -118,14 +114,10 @@ let tanglegram_to_bsg t1 t2 =
 	let parents, i = loop path i parents l in
 	let parents, i = loop path i parents r in
 	  parents, i in
-  let t1_parents, _ = loop [] 0 IntMap.empty t1 in
-  let t2_parents, _ = loop [] 0 IntMap.empty t2 in
-  let leaves_t1 = List.rev (fold_dfs (fun ls l -> l :: ls) [] t1) in
-  let leaves_t2 = List.rev (fold_dfs (fun ls l -> l :: ls) [] t2) in
-  let rec list_pos x = function
-      [] -> failwith "list_pos"
-    | y :: _ when y = x -> 0
-    | y :: ys -> 1 + list_pos x ys in
+  let tl_parents, _ = loop [] 0 IntMap.empty tl in
+  let tr_parents, _ = loop [] 0 IntMap.empty tr in
+  let tl_pos = fold_dfs (fun pos x -> IntMap.add pos x (IntMap.size pos)) IntMap.empty tl in
+  let tr_pos = fold_dfs (fun pos x -> IntMap.add pos x (IntMap.size pos)) IntMap.empty tr in
   let rec fold_pairs f accu = function
       [] -> accu
     | x :: xs ->
@@ -136,26 +128,27 @@ let tanglegram_to_bsg t1 t2 =
 	x :: xs, y :: ys when x = y -> loop x (xs, ys)
       | _ -> result
     in
-      match (l1, l2) with
+      match l1, l2 with
 	  x :: xs, y :: ys when x = y -> loop x (xs, ys)
 	| _ -> failwith "last_common_elt" in
-  let n = IntMap.size t1_parents - 1 in
-  let g = Util.fold_n (fun g i -> ELGraph.add_vertex g i) (2 * n) ELGraph.empty in
-  let g =
-    fold_pairs
-      (fun g x y ->	 
-	 let crosses = list_pos x leaves_t2 > list_pos y leaves_t2 in
-	 let lca_t1 = last_common_elt (IntMap.get t1_parents x) (IntMap.get t1_parents y) in
-	 let lca_t2 = last_common_elt (IntMap.get t2_parents x) (IntMap.get t2_parents y) in
-	   ELGraph.modify_label_default
-	     (fun label ->
-		if not crosses
-		then { label with Bsg.eq = label.Bsg.eq + 1}
-		else { label with Bsg.ne = label.Bsg.ne + 1})
-	     g lca_t1 (n + lca_t2) { Bsg.eq = 0; Bsg.ne = 0 })
-      g leaves_t1
+  let nl = IntMap.size tl_parents - 1 in
+  let nr = IntMap.size tr_parents - 1 in
+  let g = Util.fold_n (fun g i -> ELGraph.add_vertex g i) (nl + nr) ELGraph.empty
   in
-    g      
+    fold_pairs
+      (fun g (l1, r1) (l2, r2) ->
+	 if l1 = l2 || r1 = r2 then g else
+	   let crosses = (IntMap.get tl_pos l1 < IntMap.get tl_pos l2)
+	              <> (IntMap.get tr_pos r1 < IntMap.get tr_pos r2) in
+	   let lca_tl = last_common_elt (IntMap.get tl_parents l1) (IntMap.get tl_parents l2) in
+	   let lca_tr = last_common_elt (IntMap.get tr_parents r1) (IntMap.get tr_parents r2) in
+	     ELGraph.modify_label_default
+	       (fun label ->
+		  if not crosses
+		  then { label with Bsg.eq = label.Bsg.eq + 1}
+		  else { label with Bsg.ne = label.Bsg.ne + 1})
+	       g lca_tl (nl + lca_tr) { Bsg.eq = 0; Bsg.ne = 0 })
+      g edges
 ;;
 
 let usage_msg = "Find optimal tanglegrams";;
@@ -181,9 +174,16 @@ let () =
     exit 1;
   end;
   let s1, s2 = read_tree_file stdin in
-  let t1, t2, name_of_leaf = parse_trees s1 s2 in
+  let t1, name_of_leaf_t1, leaf_of_name_t1 = label_tree s1 in
+  let t2, name_of_leaf_t2, leaf_of_name_t2 = label_tree s2 in
   let start = Util.timer () in
-  let g = tanglegram_to_bsg t1 t2 in
+  let edges = IntMap.fold
+    (fun edges x name_x ->
+       if StringMap.mem name_x leaf_of_name_t2
+       then (x, (StringMap.find name_x leaf_of_name_t2)) :: edges
+       else edges)
+    name_of_leaf_t1 [] in
+  let g = tanglegram_to_bsg t1 t2 edges in
   if false then begin
     ELGraph.iter_edges
       (fun i j l ->
@@ -220,8 +220,8 @@ let () =
 	| leaf -> leaf, i in
       let t1', _ = loop 0 t1 in
       let t2', _ = loop n t2 in
-	output_tree (fun chan i -> output_string chan (IntMap.get name_of_leaf i)) stdout t1';
+	output_tree (fun chan i -> output_string chan (IntMap.get name_of_leaf_t1 i)) stdout t1';
 	print_newline ();
-	output_tree (fun chan i -> output_string chan (IntMap.get name_of_leaf i)) stdout t2';
+	output_tree (fun chan i -> output_string chan (IntMap.get name_of_leaf_t2 i)) stdout t2';
 	print_newline ();
 ;;
