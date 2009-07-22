@@ -68,6 +68,13 @@ let rec output_tree printer channel = function
 
 module StringMap = Map.Make(String);;
 
+let rec fold_pairs f accu = function
+    [] -> accu
+  | x :: xs ->
+      let accu = List.fold_left (fun accu y -> f accu x y) accu xs in
+	fold_pairs f accu xs
+;;
+
 let label_tree s =
   let t = parse_tree (lex (s)) in
   let name_of_leaf = IntMap.empty in
@@ -120,11 +127,6 @@ let tanglegram_to_bsg tl tr edges =
   let tr_parents, _ = loop [] 0 IntMap.empty tr in
   let tl_pos = fold_dfs (fun pos x -> IntMap.add pos x (IntMap.size pos)) IntMap.empty tl in
   let tr_pos = fold_dfs (fun pos x -> IntMap.add pos x (IntMap.size pos)) IntMap.empty tr in
-  let rec fold_pairs f accu = function
-      [] -> accu
-    | x :: xs ->
-	let accu = List.fold_left (fun accu y -> f accu x y) accu xs in
-	  fold_pairs f accu xs in
   let rec last_common_elt l1 l2 =
     let rec loop result = function
 	x :: xs, y :: ys when x = y -> loop x (xs, ys)
@@ -151,6 +153,19 @@ let tanglegram_to_bsg tl tr edges =
 		  else { label with Bsg.ne = label.Bsg.ne + 1})
 	       g lca_tl (nl + lca_tr) { Bsg.eq = 0; Bsg.ne = 0 })
       g edges
+;;
+
+let num_crossings tl tr edges =
+  let tl_pos = fold_dfs (fun pos x -> IntMap.add pos x (IntMap.size pos)) IntMap.empty tl in
+  let tr_pos = fold_dfs (fun pos x -> IntMap.add pos x (IntMap.size pos)) IntMap.empty tr
+  in
+    fold_pairs
+      (fun num_crossings (l1, r1) (l2, r2) ->
+	 let crosses = l1 <> l2 && r1 <> r2 &&
+	               (IntMap.get tl_pos l1 < IntMap.get tl_pos l2)
+	            <> (IntMap.get tr_pos r1 < IntMap.get tr_pos r2) in
+	   if crosses then num_crossings + 1 else num_crossings)
+      0 edges;
 ;;
 
 let usage_msg = "Find optimal tanglegrams";;
@@ -190,6 +205,7 @@ let () =
        else edges)
     name_of_leaf_t1 edges in
   let g = tanglegram_to_bsg t1 t2 edges in
+  if !Util.verbose then Printf.eprintf "Initial number of crossings: %d\n" (num_crossings t1 t2 edges);
   if false then begin
     ELGraph.iter_edges
       (fun i j l ->
@@ -208,26 +224,28 @@ let () =
   let colors = Solve.solve g in
   let stop = Util.timer () in
   let k = Bsg.coloring_cost g colors in
-  let n = IntMap.size name_of_leaf_t1 - 1
+  let n = IntMap.size name_of_leaf_t1 - 1 in
+  let rec loop i = function
+      Node (l, r) ->
+	let swap = IntMap.get colors i in
+	let i = i + 1 in
+	let l, i = loop i l in
+	let r, i = loop i r in
+	  if swap
+	  then Node (r, l), i
+	  else Node (l, r), i
+    | leaf -> leaf, i in
+  let t1', _ = loop 0 t1 in
+  let t2', _ = loop n t2
   in
+    assert (num_crossings t1' t2' edges = k);
     if !stats_only      
     then
       Printf.printf "%5d %10.2f %3d\n" k (stop -. start) !Util.max_unreducible_size
-    else
-      let rec loop i = function
-	  Node (l, r) ->
-	    let swap = IntMap.get colors i in
-	    let i = i + 1 in
-	    let l, i = loop i l in
-	    let r, i = loop i r in
-	      if swap
-	      then Node (r, l), i
-	      else Node (l, r), i
-	| leaf -> leaf, i in
-      let t1', _ = loop 0 t1 in
-      let t2', _ = loop n t2 in
-	output_tree (fun chan i -> output_string chan (IntMap.get name_of_leaf_t1 i)) stdout t1';
-	print_newline ();
-	output_tree (fun chan i -> output_string chan (IntMap.get name_of_leaf_t2 i)) stdout t2';
-	print_newline ();
+    else begin
+      output_tree (fun chan i -> output_string chan (IntMap.get name_of_leaf_t1 i)) stdout t1';
+      print_newline ();
+      output_tree (fun chan i -> output_string chan (IntMap.get name_of_leaf_t2 i)) stdout t2';
+      print_newline ();
+    end
 ;;
