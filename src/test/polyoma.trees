@@ -1,0 +1,20 @@
+(((((((Macaca_mulatta, Papio_ursinus), Chlorocebus_sabaeus), (Homo_sapiens, Pan_trologdytes)), Saimiri_boliviensis), (Mesocricetus_auratus, Mus_musculus)), Bos_taurus), (((Corvus_sp, Fringillidae), Melopsittacus_undulatus), Anserini))
+(((((((BKV, SA12), JCV), SV40), (KI, WU)), ((MPtyV, SquiPyV), BPyV)), (((ChPyV, MCPyV), LPyV), (HaPyV, MPyV))), ((BFPyV, FPyV), (CPyV, GHPyV)))
+Macaca_mulatta		SV40
+Papio_ursinus		SA12
+Chlorocebus_sabaeus	LPyV
+Homo_sapiens		BKV
+Homo_sapiens		JCV
+Homo_sapiens		KI
+Homo_sapiens		WU
+Homo_sapiens		MCPyV
+Pan_trologdytes		ChPyV
+Saimiri_boliviensis	SquiPyV
+Mesocricetus_auratus	HaPyV
+Mus_musculus		MPtyV
+Mus_musculus		MPyV
+Bos_taurus		BPyV
+Corvus_sp		CPyV
+Fringillidae		FPyV
+Melopsittacus_undulatus	BFPyV
+Anserini		GHPyV
