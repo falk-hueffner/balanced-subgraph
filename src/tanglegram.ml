@@ -54,16 +54,24 @@ let lex s =
 ;;
 
 let rec parse_tree = parser
-    [< 'Lparen; t = parse_tuple; 'Rparen >] -> t
+    [< 'Lparen; children = parse_treelist; 'Rparen >] -> Node (List.rev children)
   | [< 'String s >] -> Leaf s
-and parse_tuple = parser
-    [< t1 = parse_tree; 'Comma; t2 = parse_tree; >] -> Node [t1; t2]
+and parse_treelist = parser
+    [< t1 = parse_tree; rest = parse_listtail; >] -> t1 :: rest
+and parse_listtail = parser
+    [< 'Comma; rest = parse_treelist; >] -> rest
+  | [< >] -> []
 ;;
 
 let rec output_tree printer channel = function
     Leaf s -> printer channel s
-  | Node [t1; t2] ->
-      Printf.fprintf channel "(%a,%a)" (output_tree printer) t1 (output_tree printer) t2
+  | Node children ->
+      output_char channel '(';
+      let first = ref true in
+	List.iter (fun c -> if not !first then output_char channel ',';
+		     first := false;
+		     output_tree printer channel c) children;
+	output_char channel ')';
 ;;
 
 module StringMap = Map.Make(String);;
@@ -87,10 +95,15 @@ let label_tree s =
 	  ((IntMap.add name_of_leaf i s),
 	   (StringMap.add s i leaf_of_name),
 	   Leaf i)
-    | Node [t1; t2] ->
-	let name_of_leaf, leaf_of_name, t1 = loop name_of_leaf leaf_of_name t1 in
-	let name_of_leaf, leaf_of_name, t2 = loop name_of_leaf leaf_of_name t2 in
-	  name_of_leaf, leaf_of_name, Node [t1; t2] in
+    | Node children ->
+	let children, name_of_leaf, leaf_of_name =
+	  List.fold_left
+	    (fun (children, name_of_leaf, leaf_of_name) c ->
+	       let name_of_leaf, leaf_of_name, c = loop name_of_leaf leaf_of_name c in
+		 c :: children, name_of_leaf, leaf_of_name)
+	    ([], name_of_leaf, leaf_of_name) children
+	in
+	  name_of_leaf, leaf_of_name, Node children in
   let name_of_leaf, leaf_of_name, t = loop name_of_leaf leaf_of_name t in
     t, name_of_leaf, leaf_of_name
 ;;
