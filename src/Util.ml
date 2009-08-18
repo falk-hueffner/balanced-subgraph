@@ -19,7 +19,7 @@ let verbose = ref false;;
 let max_cut_size = ref 4;;
 let max_unreducible_size = ref 0;;
 let downward_compress = ref false;;
-let weighted = ref false;;
+let maxcut = ref false;;
 
 let timer () =
   let stamp = Unix.times () in

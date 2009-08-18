@@ -24,6 +24,8 @@ let specs = [
          "Set maximum cut size for data reduction (0..4)");
   ("-d", Arg.Set(Util.downward_compress),
          "Start iterative compression with heuristic solution");
+  ("-m", Arg.Set(Util.maxcut),
+         "MaxCut mode (parse edge weights, print cut size in statistics)");
   ("-s", Arg.Set(stats_only),
          "Print statistics only");
   ("-v", Arg.Set(Util.verbose),
@@ -43,8 +45,7 @@ let () =
   let start = Util.timer () in
   let colors = Solve.solve g in
   let stop = Util.timer () in
-  let k = Bsg.coloring_cost g colors in
-  let cut_weight =
+  let k = if not !Util.maxcut then Bsg.coloring_cost g colors else
     ELGraph.fold_edges
       (fun k i j { Bsg.eq = eq; Bsg.ne = ne } ->
 	 if IntMap.get colors i <> IntMap.get colors j
@@ -53,7 +54,7 @@ let () =
   in
     if !stats_only      
     then
-      Printf.printf "%5d %8d %10.2f %3d\n" k  cut_weight (stop -. start) !Util.max_unreducible_size
+      Printf.printf "%8d %10.2f %3d\n" k (stop -. start) !Util.max_unreducible_size
     else
       ELGraph.iter_edges
 	(fun i j { Bsg.eq = eq; Bsg.ne = ne } ->
