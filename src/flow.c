@@ -17,6 +17,7 @@
 
 #include <alloca.h>
 #include <assert.h>
+#include <limits.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
@@ -45,10 +46,13 @@ static inline int vertex_flow(struct vertex **g, unsigned v) {
     return flow;
 }
 
-static inline void push(struct vertex **g, unsigned v, unsigned w, unsigned n) {
+static inline unsigned push(struct vertex **g, unsigned v, unsigned w, unsigned n) {
+    unsigned res;
     for (unsigned j = 0; ; j++) {
 	if (g[v]->neighbors[j].neighbor == w) {
+	    assert(g[v]->neighbors[j].residual >= n);
 	    g[v]->neighbors[j].residual -= n;
+	    res = g[v]->neighbors[j].residual;
 	    g[v]->neighbors[j].flow += n;
 	    break;
 	}
@@ -57,7 +61,7 @@ static inline void push(struct vertex **g, unsigned v, unsigned w, unsigned n) {
 	if (g[w]->neighbors[j].neighbor == v) {
 	    g[w]->neighbors[j].residual += n;
 	    g[w]->neighbors[j].flow -= n;
-	    break;
+	    return res;
 	}
     }
 }
@@ -78,12 +82,26 @@ static unsigned augment_many_many(struct vertex **g, unsigned n,
 	    if (pred[w] == -1 && g[v]->neighbors[i].residual > 0) {
 		pred[w] = v;
 		if (is_t[w]) {
+		    unsigned min_res = UINT_MAX;
+		    unsigned target = w;
 		    while ((unsigned) pred[w] != w) {
 			unsigned v = pred[w];
-			push(g, v, w, 1);
+			unsigned res = push(g, v, w, 1);
+			if (res < min_res)
+                            min_res = res;
 			w = v;
 		    }
-		    return 1;
+                    if (min_res) {
+                        //printf("min_res = %d\n", min_res);
+                        w = target;
+                        while ((unsigned) pred[w] != w) {
+                            unsigned v = pred[w];
+                            push(g, v, w, min_res);
+                            w = v;
+                        }
+                    }
+		    
+		    return 1 + min_res;
 		}
 		*qtail++ = w;
 	    }
