@@ -78,20 +78,19 @@ static unsigned augment_many_many(struct vertex **g, unsigned n,
 	    if (pred[w] == -1 && g[v]->neighbors[i].residual > 0) {
 		pred[w] = v;
 		if (is_t[w]) {
-		    unsigned target = w;
 		    while ((unsigned) pred[w] != w) {
 			unsigned v = pred[w];
 			push(g, v, w);
 			w = v;
 		    }
-		    return target;
+		    return 1;
 		}
 		*qtail++ = w;
 	    }
 	}
     }
 
-    return -1;
+    return 0;
 }
 
 static unsigned drain_source(struct vertex **g, unsigned n,
@@ -178,12 +177,12 @@ static value find_cut_partition(struct vertex **g, unsigned n,
 				unsigned *s, unsigned n_s,
 				unsigned *t,
 				bool *is_s, bool *is_t, unsigned k) {
-    for (unsigned i = 0; i < k; i++) {	
-	if (augment_many_many(g, n, s, n_s, is_t) == (unsigned) -1) {
-	    // assertion not valid with downward compression
-	    // assert(i == k - 1);
+    unsigned flow = 0;
+    while (flow < k) {
+	unsigned dflow = augment_many_many(g, n, s, n_s, is_t);
+	if (dflow == 0)
 	    goto found_cut;
-	}
+	flow += dflow;
     }
 
     uint64_t code = 0;
@@ -194,12 +193,14 @@ static value find_cut_partition(struct vertex **g, unsigned n,
 	while (vertex_flow(g, t[a])) {
 	    ++augmentations;
 	    unsigned target = drain_target(g, n, t[a], is_s);
-	    assert(target != (unsigned) -1);	    
+	    assert(target != (unsigned) -1);
+	    --flow;
 	}
 	while (vertex_flow(g, s[a])) {
 	    ++augmentations;
 	    unsigned target = drain_source(g, n, s[a], is_t);
 	    assert(target != (unsigned) -1);
+	    --flow;
 	}
 
 	is_s[s[a]] = false;
@@ -212,13 +213,14 @@ static value find_cut_partition(struct vertex **g, unsigned n,
 	is_s[s[a]] = true;
 	is_t[t[a]] = true;
 
-	for (unsigned i = 0; i < augmentations; i++) {
-	    unsigned target = augment_many_many(g, n, s, n_s, is_t);
-	    if (target == (unsigned) -1) {
+	while (flow < k) {
+	    unsigned dflow = augment_many_many(g, n, s, n_s, is_t);
+	    if (dflow == 0) {
 		// assertion not valid with downward compression
 		// assert(i == augmentations - 1);
 		goto found_cut;
 	    }
+	    flow += dflow;
 	}
 
 	++code;
