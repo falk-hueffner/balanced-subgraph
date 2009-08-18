@@ -71,7 +71,9 @@ let input channel =
 	      | _ -> invalid_arg "bad edge syntax" in
 	    if not !Util.maxcut && s <> "0" && s <> "1"
 	    then invalid_arg "bad edge label"
-	    else loop ((v, w, s) :: lines) (lineno + 1)
+        else if not !Util.maxcut || (int_of_string s) <> 0
+        then loop ((v, w, s) :: lines) (lineno + 1)
+        else loop lines (lineno + 1)
     with End_of_file -> lines in
   let lines = loop [] 0 in
   let vertex_numbers, vertex_names, max_id =
