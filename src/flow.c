@@ -45,18 +45,18 @@ static inline int vertex_flow(struct vertex **g, unsigned v) {
     return flow;
 }
 
-static inline void push(struct vertex **g, unsigned v, unsigned w) {
+static inline void push(struct vertex **g, unsigned v, unsigned w, unsigned n) {
     for (unsigned j = 0; ; j++) {
 	if (g[v]->neighbors[j].neighbor == w) {
-	    --g[v]->neighbors[j].residual;
-	    ++g[v]->neighbors[j].flow;
+	    g[v]->neighbors[j].residual -= n;
+	    g[v]->neighbors[j].flow += n;
 	    break;
 	}
     }
     for (unsigned j = 0; ; j++) {
 	if (g[w]->neighbors[j].neighbor == v) {
-	    ++g[w]->neighbors[j].residual;
-	    --g[w]->neighbors[j].flow;
+	    g[w]->neighbors[j].residual += n;
+	    g[w]->neighbors[j].flow -= n;
 	    break;
 	}
     }
@@ -80,7 +80,7 @@ static unsigned augment_many_many(struct vertex **g, unsigned n,
 		if (is_t[w]) {
 		    while ((unsigned) pred[w] != w) {
 			unsigned v = pred[w];
-			push(g, v, w);
+			push(g, v, w, 1);
 			w = v;
 		    }
 		    return 1;
@@ -111,7 +111,7 @@ static unsigned drain_source(struct vertex **g, unsigned n,
 		    unsigned target = w;
 		    while ((unsigned) pred[w] != w) {
 			unsigned v = pred[w];
-			push(g, w, v);
+			push(g, w, v, 1);
 			w = v;
 		    }
 		    return target;
@@ -142,7 +142,7 @@ static unsigned drain_target(struct vertex **g, unsigned n,
 		    unsigned target = w;
 		    while ((unsigned) pred[w] != w) {
 			unsigned v = pred[w];
-			push(g, v, w);
+			push(g, v, w, 1);
 			w = v;
 		    }
 		    return target;
