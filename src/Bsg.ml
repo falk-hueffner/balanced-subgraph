@@ -69,7 +69,11 @@ let input channel =
 		[v; w; s] -> v, w, s
 	      | [v; w]    -> v, w, "1"
 	      | _ -> invalid_arg "bad edge syntax" in
-	    if s <> "0" && s <> "1" then invalid_arg "bad edge label"
+	    if not !Util.weighted && s <> "0" && s <> "1"
+	    then invalid_arg "bad edge label"
+(* 	    else if not !Util.weighted || (int_of_string s) <> 0 *)
+(* 	    then loop ((v, w, s) :: lines) (lineno + 1) *)
+(* 	    else loop lines (lineno + 1) *)
 	    else loop ((v, w, s) :: lines) (lineno + 1)
     with End_of_file -> lines in
   let lines = loop [] 0 in
@@ -116,9 +120,17 @@ let input channel =
 (* 	   Printf.eprintf "%s %s %d %d\n" v w i j; *)
 	   ELGraph.modify_label_default
 	     (fun label ->
-		if s = "0"
-		then { label with eq = label.eq + 1}
-		else { label with ne = label.ne + 1})
+		if not !Util.weighted
+		then
+		  if s = "0"
+		  then { label with eq = label.eq + 1}
+		  else { label with ne = label.ne + 1}
+		else
+		  let s = int_of_string s in
+		    if s = 0 then label else
+		      if s > 0 
+		      then { label with ne = label.ne + abs s}
+		      else { label with eq = label.eq + abs s})
 	     g i j { eq = 0; ne = 0 })
       g
       lines

@@ -22,6 +22,7 @@
 val verbose : bool ref			(** Option -v  *)
 val max_cut_size : int ref		(** Option -c  *)
 val downward_compress : bool ref	(** Option -d  *)
+val weighted : bool ref			(** Option -w  *)
 
 (** Statistics.  *)
 

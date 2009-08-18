@@ -39,6 +39,12 @@ struct vertex {
     struct neighbor neighbors[];
 };
 
+static inline unsigned umin(unsigned x, unsigned y) {
+    if (x < y)
+	return x;
+    return y;
+}
+
 static inline int vertex_flow(struct vertex **g, unsigned v) {
     unsigned flow = 0;
     for (unsigned i = 0; i < g[v]->deg; i++)
@@ -66,6 +72,26 @@ static inline unsigned push(struct vertex **g, unsigned v, unsigned w, unsigned 
     }
 }
 
+static inline unsigned push2(struct vertex **g, unsigned v, unsigned w, unsigned n) {
+    unsigned res;
+    for (unsigned j = 0; ; j++) {
+	if (g[v]->neighbors[j].neighbor == w) {
+	    assert(g[v]->neighbors[j].residual >= n);
+	    g[v]->neighbors[j].residual -= n;
+	    res = g[v]->neighbors[j].residual;
+	    g[v]->neighbors[j].flow += n;
+	    break;
+	}
+    }
+    for (unsigned j = 0; ; j++) {
+	if (g[w]->neighbors[j].neighbor == v) {
+	    g[w]->neighbors[j].residual += n;
+	    g[w]->neighbors[j].flow -= n;
+	    return g[w]->neighbors[j].flow;
+	}
+    }
+}
+
 static unsigned augment_many_many(struct vertex **g, unsigned n,
 				  const unsigned *s, unsigned n_s, const bool *is_t) {
     unsigned q[n];
@@ -86,13 +112,10 @@ static unsigned augment_many_many(struct vertex **g, unsigned n,
 		    unsigned target = w;
 		    while ((unsigned) pred[w] != w) {
 			unsigned v = pred[w];
-			unsigned res = push(g, v, w, 1);
-			if (res < min_res)
-                            min_res = res;
+			min_res = umin(min_res, push(g, v, w, 1));
 			w = v;
 		    }
                     if (min_res) {
-                        //printf("min_res = %d\n", min_res);
                         w = target;
                         while ((unsigned) pred[w] != w) {
                             unsigned v = pred[w];
@@ -100,7 +123,6 @@ static unsigned augment_many_many(struct vertex **g, unsigned n,
                             w = v;
                         }
                     }
-		    
 		    return 1 + min_res;
 		}
 		*qtail++ = w;
@@ -126,20 +148,30 @@ static unsigned drain_source(struct vertex **g, unsigned n,
 	    if (pred[w] == -1 && g[v]->neighbors[i].flow > 0) {
 		pred[w] = v;
 		if (is_t[w]) {
+		    unsigned min_res = umin(vertex_flow(g, s) - 1, -vertex_flow(g, w) - 1);
 		    unsigned target = w;
 		    while ((unsigned) pred[w] != w) {
 			unsigned v = pred[w];
-			push(g, w, v, 1);
+			min_res = umin(min_res, push2(g, w, v, 1));
 			w = v;
 		    }
-		    return target;
+
+		    if (min_res) {
+			w = target;
+			while ((unsigned) pred[w] != w) {
+			    unsigned v = pred[w];
+			    push(g, w, v, min_res);
+			    w = v;
+			}
+		    }
+		    return 1 + min_res;
 		}
 		*qtail++ = w;
 	    }
 	}
     }
 
-    return -1;
+    return 0;
 }
 
 static unsigned drain_target(struct vertex **g, unsigned n,
@@ -157,20 +189,29 @@ static unsigned drain_target(struct vertex **g, unsigned n,
 	    if (pred[w] == -1 && g[v]->neighbors[i].flow < 0) {
 		pred[w] = v;
 		if (is_t[w]) {
+		    unsigned min_res = umin(-vertex_flow(g, s) - 1, vertex_flow(g, w) - 1);
 		    unsigned target = w;
 		    while ((unsigned) pred[w] != w) {
 			unsigned v = pred[w];
-			push(g, v, w, 1);
+			min_res = umin(min_res, push2(g, v, w, 1));
 			w = v;
 		    }
-		    return target;
+		    if (min_res) {
+			w = target;
+			while ((unsigned) pred[w] != w) {
+			    unsigned v = pred[w];
+			    push(g, v, w, min_res);
+			    w = v;
+			}
+		    }
+		    return 1 + min_res;
 		}
 		*qtail++ = w;
 	    }
 	}
     }
 
-    return -1;
+    return 0;
 }
 
 static inline uint64_t gray_code(uint64_t x) { return x ^ (x >> 1); }
@@ -206,19 +247,16 @@ static value find_cut_partition(struct vertex **g, unsigned n,
     uint64_t code = 0;
     while (code < (((uint64_t) 1) << (n_s - 1))) {
 	unsigned a = gray_change(code);
-	unsigned augmentations = 0;
 
 	while (vertex_flow(g, t[a])) {
-	    ++augmentations;
-	    unsigned target = drain_target(g, n, t[a], is_s);
-	    assert(target != (unsigned) -1);
-	    --flow;
+	    unsigned dflow = drain_target(g, n, t[a], is_s);
+	    assert(dflow);
+	    flow -= dflow;
 	}
 	while (vertex_flow(g, s[a])) {
-	    ++augmentations;
-	    unsigned target = drain_source(g, n, s[a], is_t);
-	    assert(target != (unsigned) -1);
-	    --flow;
+	    unsigned dflow = drain_source(g, n, s[a], is_t);
+	    assert(dflow);
+	    flow -= dflow;
 	}
 
 	is_s[s[a]] = false;
@@ -233,11 +271,8 @@ static value find_cut_partition(struct vertex **g, unsigned n,
 
 	while (flow < k) {
 	    unsigned dflow = augment_many_many(g, n, s, n_s, is_t);
-	    if (dflow == 0) {
-		// assertion not valid with downward compression
-		// assert(i == augmentations - 1);
+	    if (dflow == 0)
 		goto found_cut;
-	    }
 	    flow += dflow;
 	}
 
