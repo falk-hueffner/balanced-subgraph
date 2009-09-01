@@ -136,6 +136,7 @@ let solve_iterative_compression g =
 	(fun k (i, j) -> let l = ELGraph.get_label g i j in k + l.eq + l.ne) 0 cover in
     if !Util.verbose then Printf.eprintf " m = %d/%d k = %d vc = %d cover = %d\n%!"
       (Bsg.num_edges g) m0 k (IntSet.size s) (List.length cover);
+    if k >= 63 then failwith "Instance too hard (vc too large)";
     let cover' =
       c_find_cut_partition (to_array g') (IntSet.to_array s) (IntSet.to_array t) k in
     let cover = if cover' = [] then cover else cover' in
