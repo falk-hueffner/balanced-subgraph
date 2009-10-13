@@ -244,6 +244,11 @@ static value find_cut_partition(struct vertex **g, unsigned n,
 	flow += dflow;
     }
 
+    if (n_s >= 64) {
+	fprintf(stderr, "Instance too hard (vc > 63)\n");
+	exit(1);
+    }
+
     uint64_t code = 0;
     while (code < (((uint64_t) 1) << (n_s - 1))) {
 	unsigned a = gray_change(code);
