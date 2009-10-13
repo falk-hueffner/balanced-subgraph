@@ -524,7 +524,6 @@ and solve_heavy_edge g =
   if !Util.verbose
   then Printf.eprintf "solve_heavy_edge\tn = %3d m = %4d (%4d)\n%!"
     (ELGraph.num_vertices g) (ELGraph.num_edges g) (Bsg.num_edges g);
-(*     Printf.eprintf "  initial: %a\n" Bsg.output g; *)
   let to_check = ELGraph.vertex_set g in
   let same x = x in
   let rec loop g to_check merged =
@@ -544,18 +543,15 @@ and solve_heavy_edge g =
 	if maxw >= sumw - maxw then
 	  (if !Util.verbose
 	   then Printf.eprintf " merge %d %d (w = %d sum = %d)\n" i maxj maxw sumw;
-(* 	     Printf.eprintf "  before: %a\n" Bsg.output g; *)
 	   let op = if Bsg.is_negative g i maxj then not else same in
 	   let g = merge_vertices g i maxj in
 	   let g = ELGraph.disconnect g i i in
-(* 	     Printf.eprintf "  merged: %a\n" Bsg.output g; *)
 	   let merged = IntMap.add merged maxj (i, op) in
 	   let to_check = IntSet.remove to_check maxj in
 	   let to_check =
 	     ELGraph.fold_neighbors
 	       (fun to_check j _ -> IntSet.put to_check j) g i to_check
 	   in
-(* 	     IntMap.output Util.output_int stderr merged; prerr_newline (); *)
 	     loop g to_check merged)
 	else loop g to_check merged in
   let g, merged = loop g to_check IntMap.empty in
