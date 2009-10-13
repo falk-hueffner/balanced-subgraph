@@ -520,7 +520,6 @@ and solve_cut_corner g =
     loop scs
 
 and solve_heavy_edge g =
-  if 1 = 0 then solve_brute_force g else
   if ELGraph.num_vertices g <= 5 then solve_brute_force g else let () = () in
   if !Util.verbose
   then Printf.eprintf "solve_heavy_edge\tn = %3d m = %4d (%4d)\n%!"
