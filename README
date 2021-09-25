@@ -1,19 +1,12 @@
 This package contains the source and the test data for a solver for
 the Balanced Subgraph problem, based on data reduction rules and
-iterative compression. It is described in the papers:
+iterative compression. It is described in the paper:
 
-  Falk H�ffner, Nadja Betzler, and Rolf Niedermeier:
-  Optimal Edge Deletions for Signed Graph Balancing.
-  In Proceedings of the 6th Workshop on Experimental Algorithms (WEA'07),
-  Rome, Italy. June 2007.
-  Lecture Notes in Computer Science, Springer.
-
-  Falk H�ffner, Nadja Betzler, and Rolf Niedermeier:
+  Falk Hüffner, Nadja Betzler, and Rolf Niedermeier:
   Separator-based data reduction for signed graph balancing.
-  Journal of Combinatorial Optimization.
-  Accepted for publication, January 2009.
+  Journal of Combinatorial Optimization 20(4):335–360, 2010.
   http://dx.doi.org/10.1007/s10878-009-9212-2
-  (extended version of the WEA '07 paper)
+  http://falk.hueffner.de/separator-data-reduction-joco10.pdf
 
 A signed graph is a graph whose edges are labelled positive or
 negative. A signed graph is said to be balanced if the set of negative
@@ -25,11 +18,16 @@ problem, based on a reduction to Balanced Subgraph. The Tanglegram
 Layout problem is, given two binary phylogenetic trees covering the
 same species, to arrange them leaves side-by-side such that a minimum
 number of crossings is induced by connecting pairs of identical
-species.
+species. This is described in the paper:
 
-The current version can be obtained at
-http://theinf1.informatik.uni-jena.de/bsg/. It is distributed under
-the terms of the GNU General Public License (GPL, see COPYING).
+  Sebastian Böcker, Falk Hüffner, Anke Truss, and Magnus Wahlström:
+  A faster fixed-parameter approach to drawing binary tanglegrams.
+  In Proceedings of the 4th International Workshop on Parameterized
+  and Exact Computation (IWPEC ’09), 2009.
+  Volume 5917 in Lecture Notes in Computer Science, pages 38–49, Springer.
+
+It is distributed under the terms of the GNU General Public License
+(GPL, see COPYING).
 
 The solver is written in Objective Caml and ISO C99. To build the
 program, you need Objective Caml (version 3.08 or newer), the GNU gcc
@@ -154,5 +152,4 @@ Version history
 2.0	2009-06-23	tanglegram solver, new reduction rules, "-d" option
 
 
--- Falk H�ffner (http://theinf1.informatik.uni-jena.de/~hueffner/)
-   23 June 2009
+-- Falk Hüffner (http://hueffner.de/falk/)
