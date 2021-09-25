@@ -21,12 +21,11 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdint.h>
 
 #include <caml/alloc.h>
 #include <caml/memory.h>
 #include <caml/mlvalues.h>
-
-typedef unsigned long long uint64_t;
 
 struct neighbor {
     unsigned neighbor;

@@ -26,7 +26,7 @@ OCAMLDEP  = ocamldep $(INCLUDES)
 
 CC	  = gcc
 CFLAGS    = -std=c99 -g -I $(HOME)/include
-CFLAGS   += -O3 $(shell gcc-arch) $(PROFILE) -funroll-all-loops -ffast-math
+CFLAGS   += -O3 -march=native $(PROFILE) -funroll-all-loops -ffast-math
 CFLAGS   += -W -Wall
 #CFLAGS  += -DNDEBUG
 
@@ -100,6 +100,8 @@ clean:
 realclean: clean
 	rm -rf doc
 	rm -f *~ *.old *.bak
+
+.depend: depend
 
 depend: $(SOURCES)
 	$(OCAMLDEP) -pp camlp4o *.mli *.ml > .depend
