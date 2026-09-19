@@ -25,6 +25,7 @@ let rec fold_dfs f accu = function
       let accu = fold_dfs f accu t1 in
       let accu = fold_dfs f accu t2 in
 	accu
+  | Node _ -> failwith "Tree is not binary"
 ;;
 
 type token = Lparen | Rparen | Comma | String of string;;
@@ -150,7 +151,8 @@ let tanglegram_to_bsg tl tr edges =
 	let i = i + 1 in
 	let parents, i = loop path i parents l in
 	let parents, i = loop path i parents r in
-	  parents, i in
+	  parents, i
+    | Node _ -> failwith "Tree is not binary" in
   let tl_parents, _ = loop [] 0 IntMap.empty tl in
   let tr_parents, _ = loop [] 0 IntMap.empty tr in
   let tl_pos = fold_dfs (fun pos x -> IntMap.add pos x (IntMap.size pos)) IntMap.empty tl in

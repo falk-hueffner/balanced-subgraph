@@ -72,12 +72,10 @@ static inline unsigned push(struct vertex **g, unsigned v, unsigned w, unsigned 
 }
 
 static inline unsigned push2(struct vertex **g, unsigned v, unsigned w, unsigned n) {
-    unsigned res;
     for (unsigned j = 0; ; j++) {
 	if (g[v]->neighbors[j].neighbor == w) {
 	    assert(g[v]->neighbors[j].residual >= n);
 	    g[v]->neighbors[j].residual -= n;
-	    res = g[v]->neighbors[j].residual;
 	    g[v]->neighbors[j].flow += n;
 	    break;
 	}

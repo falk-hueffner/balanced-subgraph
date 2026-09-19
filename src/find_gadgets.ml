@@ -55,9 +55,7 @@ let print_gadget costs cost edges =
 let single_edge_gadgets gadgets c_size =
   let c_set = Util.fold_n IntSet.add c_size IntSet.empty in
   let g = Util.fold_n ELGraph.add_vertex c_size ELGraph.empty in
-  let n = ELGraph.num_vertices g in
   let edges = fold_pairs (fun l i j -> if i < j then (i, j) :: l else l) c_set c_set [] in
-  let m = List.length edges in
     List.fold_left
       (fun gadgets (i, j) ->
 	 let gadgets =

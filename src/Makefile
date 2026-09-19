@@ -44,10 +44,10 @@ bsg: $(OBJS) $(C_OBJS) main.cmx
 bsg-dbg: $(C_OBJS) $(DBG_OBJS) main.cmo
 	$(OCAMLC) -custom $(PROFILE) -o $@ $(DBG_LIBS) $^
 
-gen-bsg: $(OBJS) $(C_OBJS) gen-bsg.cmx
+gen-bsg: $(OBJS) $(C_OBJS) gen_bsg.cmx
 	$(OCAMLOPT) $(PROFILE) -o $@ $(LIBS) $^
 
-find-gadgets: $(OBJS) $(C_OBJS) find-gadgets.cmx
+find-gadgets: $(OBJS) $(C_OBJS) find_gadgets.cmx
 	$(OCAMLOPT) $(PROFILE) -o $@ $(LIBS) $^
 
 tanglegram: $(OBJS) $(C_OBJS) tanglegram.cmx
@@ -65,7 +65,7 @@ dist: all
 	mkdir $(PACKAGE)-$(VER)/
 	cp COPYING README $(PACKAGE)-$(VER)/
 	cp $(SOURCES) $(MLIS) $(PACKAGE)-$(VER)/
-	cp main.ml gen-bsg.ml tanglegram.ml $(PACKAGE)-$(VER)/
+	cp main.ml gen_bsg.ml tanglegram.ml $(PACKAGE)-$(VER)/
 	cp $(C_SOURCES) $(PACKAGE)-$(VER)/
 	cp Makefile .depend $(PACKAGE)-$(VER)/
 	mkdir $(PACKAGE)-$(VER)/test/
