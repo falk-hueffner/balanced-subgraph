@@ -1,5 +1,3 @@
-PACKAGE	  = bsg
-VER	  = 2.0
 EXECS	  = bsg gen-bsg tanglegram
 
 SOURCES   = \
@@ -60,22 +58,6 @@ doc/index.html: $(MLIS)
 	mkdir -p doc
 	ocamldoc -html -d doc $^
 
-dist: all
-	rm -rf $(PACKAGE)-$(VER)/
-	mkdir $(PACKAGE)-$(VER)/
-	cp COPYING README $(PACKAGE)-$(VER)/
-	cp $(SOURCES) $(MLIS) $(PACKAGE)-$(VER)/
-	cp main.ml gen_bsg.ml tanglegram.ml $(PACKAGE)-$(VER)/
-	cp $(C_SOURCES) $(PACKAGE)-$(VER)/
-	cp Makefile .depend $(PACKAGE)-$(VER)/
-	mkdir $(PACKAGE)-$(VER)/test/
-	cp test/* $(PACKAGE)-$(VER)/test/
-	cp test.sh $(PACKAGE)-$(VER)/
-	mkdir $(PACKAGE)-$(VER)/data/
-	cp -r ../data/* $(PACKAGE)-$(VER)/data/
-	cp $(PACKAGE)-lp $(PACKAGE)-$(VER)/
-	GZIP=--best tar -cvzf $(PACKAGE)-$(VER).tar.gz $(PACKAGE)-$(VER)
-
 .SUFFIXES: .ml .mli .cmo .cmi .cmx
 
 .ml.cmo:
@@ -88,8 +70,8 @@ dist: all
 	$(OCAMLOPT) $(PROFILE) -c $<
 
 clean:
-	rm -f $(EXECS) ecc-dbg core gmon.out
-	rm -f *.cm[iox] *.o $(PROJ)
+	rm -f $(EXECS) find-gadgets bsg-dbg tanglegram-dbg core gmon.out
+	rm -f *.cm[iox] *.o .depend
 
 realclean: clean
 	rm -rf doc
@@ -103,6 +85,9 @@ depend:
 	rm -f .depend
 	$(MAKE) .depend
 
-.PHONY: all dist clean realclean depend
+.PHONY: all clean realclean depend
 
+# Don't generate .depend just to delete it again.
+ifneq ($(if $(MAKECMDGOALS),$(filter-out clean realclean,$(MAKECMDGOALS)),all),)
 include .depend
+endif

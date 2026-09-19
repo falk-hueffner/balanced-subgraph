@@ -14,10 +14,6 @@
 /tanglegram
 /tanglegram-dbg
 
-# make dist
-/bsg-[0-9]*/
-/bsg-[0-9]*.tar.gz
-
 # Profiling, crashes, editor backups
 gmon.out
 core
