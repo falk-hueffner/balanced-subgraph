@@ -1,6 +1,6 @@
-#! /usr/bin/env python
+#! /usr/bin/env python3
 
-import sys, random, string
+import sys, random
 
 if len(sys.argv) > 1:
     p = float(sys.argv[1])
@@ -11,17 +11,15 @@ while 1:
     line = sys.stdin.readline()
     if not line:
         break
-    line = string.strip(line)
+    line = line.strip()
     if not line or line[0] == '#':
         continue
-    sp = string.split(line)
+    sp = line.split()
     if len(sp) != 2:
-        print "syntax error"
+        print("syntax error", file=sys.stderr)
         sys.exit(1)
 
-    print sp[0], sp[1],
-
     if random.random() > p:
-        print 0
+        print(sp[0], sp[1], 0)
     else:
-        print 1
+        print(sp[0], sp[1], 1)

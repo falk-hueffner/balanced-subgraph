@@ -1,14 +1,14 @@
-#! /usr/bin/env python
+#! /usr/bin/env python3
 
-import string, sys, os, re, getopt, popen2
+import sys, os, re, getopt, subprocess
 
 def usage(fd):
-    print >> fd, "Usage: occ-lp [-c]"
-    print >> fd, "Calculate minimum odd cycle cover by integer linear programming."
-    print >> fd, "  -c   Print only the size of the odd cycle cover"
-    print >> fd, "  -s   Print only statistics"
-    print >> fd, "  -e   Cover by edges (default: vertices)"
-    print >> fd, "  -m   Do not solve, just print the LP in GNU MathProg format"
+    print("Usage: bsg-lp [-c]", file=fd)
+    print("Calculate minimum odd cycle cover by integer linear programming.", file=fd)
+    print("  -c   Print only the size of the odd cycle cover", file=fd)
+    print("  -s   Print only statistics", file=fd)
+    print("  -e   Cover by edges (default: vertices)", file=fd)
+    print("  -m   Do not solve, just print the LP in GNU MathProg format", file=fd)
 
 def mathprog_lp(vertex_numbers, edges, is_edge_occ):
     n = len(vertex_numbers)
@@ -66,7 +66,7 @@ end;
 
 def main():
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "hcsem", ["--help"])
+        opts, args = getopt.getopt(sys.argv[1:], "hcsem", ["help"])
     except getopt.GetoptError:
         usage(sys.stderr)
         sys.exit(2)
@@ -75,7 +75,6 @@ def main():
     stats = False
     is_edge_occ = False
     just_mathprog = False
-    just_cplex = False
     for o, a in opts:
         if o in ("-h", "--help"):
             usage(sys.stdout)
@@ -98,13 +97,13 @@ def main():
         line = sys.stdin.readline()
         if not line:
             break
-        line = string.strip(line)
+        line = line.strip()
         if not line or line[0] == '#':
             if line == "# Graph Name":
-                while string.strip(sys.stdin.readline()) != "# Edges":
+                while sys.stdin.readline().strip() != "# Edges":
                     pass
             continue
-        sp = string.split(line)
+        sp = line.split()
         if len(sp) == 3:
             a, b, s = sp
             s = int(s)
@@ -134,26 +133,21 @@ def main():
     prog = mathprog_lp(vertex_numbers, edges, is_edge_occ)
 
     if just_mathprog:
-        print prog
+        print(prog)
         sys.exit(0)
 
-    glpsol = popen2.Popen3("glpsol --math /dev/stdin --display /dev/null --output /dev/stdout")
-    glpsol_in  = glpsol.tochild
-    glpsol_out = glpsol.fromchild
-
-    print >> glpsol_in, prog
-    glpsol_in.close()
-
-    output = glpsol_out.readlines()
-    status = glpsol.wait()
-    failed = os.WIFSIGNALED(status) or os.WEXITSTATUS(status) != 0
+    glpsol = subprocess.run(["glpsol", "--math", "/dev/stdin", "--display", "/dev/null",
+                             "--output", "/dev/stdout"],
+                            input=prog + "\n", stdout=subprocess.PIPE, text=True)
+    output = glpsol.stdout.splitlines()
+    failed = glpsol.returncode != 0
 
     # example output:
     #    No. Column name       Activity     Lower bound   Upper bound
     #------ ------------    ------------- ------------- -------------
     #     1 occ[0]       *              1             0             1
     #     2 occ[1]       *              0             0             1
-    occpat = re.compile('.*occ\[(\d+)\]\s+\*\s+(\d+)')
+    occpat = re.compile(r'.*occ\[(\d+)\]\s+\*\s+(\d+)')
     occ_size = 0
     for line in output:
         match = occpat.match(line)
@@ -163,17 +157,17 @@ def main():
                     occ_el = int(match.groups()[0])
                     if is_edge_occ:
                         edge = edges[occ_el]
-                        print vertex_names[edge[0]], vertex_names[edge[1]]
+                        print(vertex_names[edge[0]], vertex_names[edge[1]])
                     else:
-                        print vertex_names[occ_el]
+                        print(vertex_names[occ_el])
                 occ_size += 1
     if stats:
         user, system, child_user, child_system, wall = os.times()
         if failed:
             occ_size = "--"
-        print "%5d %6d %5s %10.2f" % (n, m, occ_size, user + child_user)
+        print("%5d %6d %5s %10.2f" % (n, m, occ_size, user + child_user))
     elif count_only:
-        print occ_size
+        print(occ_size)
     if failed:
         sys.exit(1)
 
