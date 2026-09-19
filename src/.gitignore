@@ -1,0 +1,29 @@
+# Build products
+*.cmi
+*.cmo
+*.cmx
+*.o
+.depend
+/doc/
+
+# Executables
+/bsg
+/bsg-dbg
+/gen-bsg
+/find-gadgets
+/tanglegram
+/tanglegram-dbg
+
+# make dist
+/bsg-[0-9]*/
+/bsg-[0-9]*.tar.gz
+
+# Profiling, crashes, editor backups
+gmon.out
+core
+*~
+*.old
+*.bak
+
+# Output of find-bug.sh
+/test.graph
