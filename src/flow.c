@@ -1,5 +1,5 @@
 /* bsg -- solve the balanced subgraph problem
-   Copyright (C) 2006  Falk Hüffner
+   Copyright (C) 2006  Falk HÃ¼ffner
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by

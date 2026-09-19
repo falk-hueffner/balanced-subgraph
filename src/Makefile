@@ -56,7 +56,7 @@ tanglegram-dbg: $(C_OBJS) $(DBG_OBJS) tanglegram.cmo
 
 doc/index.html: $(MLIS)
 	mkdir -p doc
-	ocamldoc -html -d doc $^
+	ocamldoc -html -charset utf-8 -d doc $^
 
 .SUFFIXES: .ml .mli .cmo .cmi .cmx
 
