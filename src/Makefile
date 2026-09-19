@@ -50,17 +50,11 @@ gen-bsg: $(OBJS) $(C_OBJS) gen-bsg.cmx
 find-gadgets: $(OBJS) $(C_OBJS) find-gadgets.cmx
 	$(OCAMLOPT) $(PROFILE) -o $@ $(LIBS) $^
 
-tanglegram.cmx: tanglegram.ml
-	$(OCAMLOPT) -pp camlp4o $(PROFILE) -c $<
-
-tanglegram.cmo: tanglegram.ml
-	$(OCAMLC) -pp camlp4o $(PROFILE) -c $<
-
 tanglegram: $(OBJS) $(C_OBJS) tanglegram.cmx
-	$(OCAMLOPT) -pp camlp4o $(PROFILE) -o $@ $(LIBS) $^
+	$(OCAMLOPT) $(PROFILE) -o $@ $(LIBS) $^
 
 tanglegram-dbg: $(C_OBJS) $(DBG_OBJS) tanglegram.cmo 
-	$(OCAMLC) -custom -pp camlp4o $(PROFILE) -o $@ $(DBG_LIBS) $^
+	$(OCAMLC) -custom $(PROFILE) -o $@ $(DBG_LIBS) $^
 
 doc/index.html: $(MLIS)
 	mkdir -p doc
@@ -102,7 +96,7 @@ realclean: clean
 	rm -f *~ *.old *.bak
 
 .depend: $(wildcard *.ml *.mli *.c)
-	$(OCAMLDEP) -pp camlp4o *.mli *.ml > .depend
+	$(OCAMLDEP) *.mli *.ml > .depend
 	$(CC) $(CFLAGS) -MM *.c >> .depend
 
 depend:

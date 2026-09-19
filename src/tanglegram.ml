@@ -50,17 +50,32 @@ let lex s =
 	  pos := pos2;
 	  Some (String str)
   in
-    Stream.from (fun count -> next_token pos)
+  let rec loop tokens =
+    match next_token pos with
+	None -> List.rev tokens
+      | Some t -> loop (t :: tokens)
+  in
+    loop []
 ;;
 
-let rec parse_tree = parser
-    [< 'Lparen; children = parse_treelist; 'Rparen >] -> Node (List.rev children)
-  | [< 'String s >] -> Leaf s
-and parse_treelist = parser
-    [< t1 = parse_tree; rest = parse_listtail; >] -> t1 :: rest
-and parse_listtail = parser
-    [< 'Comma; rest = parse_treelist; >] -> rest
-  | [< >] -> []
+(** Parse a tree from a token list, returning it and the remaining
+    tokens.  *)
+let rec parse_tree = function
+    Lparen :: tokens ->
+      let children, tokens = parse_treelist tokens in
+	begin match tokens with
+	    Rparen :: tokens -> Node (List.rev children), tokens
+	  | _ -> failwith "Parse error: expected ')'"
+	end
+  | String s :: tokens -> Leaf s, tokens
+  | _ -> failwith "Parse error: expected tree"
+and parse_treelist tokens =
+  let t1, tokens = parse_tree tokens in
+    match tokens with
+	Comma :: tokens ->
+	  let rest, tokens = parse_treelist tokens in
+	    t1 :: rest, tokens
+      | _ -> [t1], tokens
 ;;
 
 let rec output_tree printer channel = function
@@ -84,7 +99,7 @@ let rec fold_pairs f accu = function
 ;;
 
 let label_tree s =
-  let t = parse_tree (lex (s)) in
+  let t, _ = parse_tree (lex s) in
   let name_of_leaf = IntMap.empty in
   let leaf_of_name = StringMap.empty in
   let rec loop name_of_leaf leaf_of_name = function
