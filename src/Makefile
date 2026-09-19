@@ -25,7 +25,7 @@ OCAMLOPT  = ocamlopt.opt $(INCLUDES)
 OCAMLDEP  = ocamldep $(INCLUDES)
 
 CC	  = gcc
-CFLAGS    = -std=c99 -g -I $(HOME)/include
+CFLAGS    = -std=c99 -g -I $(shell ocamlc -where)
 CFLAGS   += -O3 -march=native $(PROFILE) -funroll-all-loops -ffast-math
 CFLAGS   += -W -Wall
 #CFLAGS  += -DNDEBUG
@@ -101,10 +101,14 @@ realclean: clean
 	rm -rf doc
 	rm -f *~ *.old *.bak
 
-.depend: depend
-
-depend: $(SOURCES)
+.depend: $(wildcard *.ml *.mli *.c)
 	$(OCAMLDEP) -pp camlp4o *.mli *.ml > .depend
 	$(CC) $(CFLAGS) -MM *.c >> .depend
+
+depend:
+	rm -f .depend
+	$(MAKE) .depend
+
+.PHONY: all dist clean realclean depend
 
 include .depend
