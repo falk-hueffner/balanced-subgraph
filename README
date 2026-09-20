@@ -42,6 +42,14 @@ It has been tested on:
 * Debian GNU/Linux (alpha) 4.0 with Objective Caml 3.09.2 and gcc 4.2.0
 * Sun Solaris 10 (i386) 8/07 with Objective Caml 3.11.1 and gcc 3.4.3
 
+Note that Aref, Mason, and Wilson, "A modeling and computational study
+of the frustration index in signed networks", Networks 75 (2020),
+95–110 (https://doi.org/10.1002/net.21907, Section 6.2.1), describe
+our results of 210 for EGFR and 374 for macrophage as "proven to be
+incorrect by [their] results". This discrepancy is explained by
+different input graphs: their result is for the multigraphs where
+repeated edges with the same sign are collapsed and pairs of edges
+with opposite signs removed.
 
 Balanced Subgraph solver
 ========================
